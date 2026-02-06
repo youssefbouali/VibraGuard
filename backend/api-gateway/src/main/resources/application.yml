@@ -1,0 +1,26 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: iot-service
+          uri: lb://iot-service
+          predicates:
+            - Path=/api/v1/iot/**
+        - id: ml-service
+          uri: lb://ml-service
+          predicates:
+            - Path=/api/v1/ml/**
+        - id: blockchain-service
+          uri: lb://blockchain-service
+          predicates:
+            - Path=/api/v1/blockchain/**
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty: DEBUG
