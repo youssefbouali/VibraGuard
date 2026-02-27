@@ -95,7 +95,7 @@ echo "Initialisation du projet ${PROJECT_NAME} : Spring Boot + Next.js + Helm (v
 # rm -rf ${PROJECT_NAME}
 
 mkdir -p ${PROJECT_NAME}/backend
-mkdir -p ${PROJECT_NAME}/frontend
+#mkdir -p ${PROJECT_NAME}/frontend
 mkdir -p ${PROJECT_NAME}/helm-charts
 cd ${PROJECT_NAME}
 
@@ -256,69 +256,69 @@ echo "Backend créé et buildé avec succès !"
 cd ../../
 
 # Frontend Next.js
-echo "→ Création frontend Next.js"
-cd frontend || exit 1
-
-#curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-#sudo apt install -y nodejs
-#sudo apt install npm -y
-
-npx create-next-app@latest web \
-  --typescript \
-  --tailwind \
-  --eslint \
-  --app \
-  --src-dir \
-  --import-alias "@/*" \
-  --use-npm \
-  --yes
-
-cd web
-npm install @reduxjs/toolkit react-redux
-
-mkdir -p src/store 
-mkdir -p src/slices 
-mkdir -p src/components
-
-cat << 'EOF' > src/store/store.ts
-import { configureStore } from '@reduxjs/toolkit'
-
-export const store = configureStore({
-  reducer: {},
-})
-
-export type RootState = ReturnType<typeof store.getState>
-export type AppDispatch = typeof store.dispatch
-EOF
-
-
-# Dockerfile Next.js
-cat << 'EOF' > Dockerfile
-FROM node:20-alpine AS base
-
-FROM base AS deps
-WORKDIR /app
-COPY package.json package-lock.json* ./
-RUN npm ci
-
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-RUN npm run build
-
-FROM base AS runner
-WORKDIR /app
-ENV NODE_ENV=production
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/node_modules ./node_modules
-EXPOSE 3000
-CMD ["npm", "start"]
-EOF
-
-cd ../../
+#echo "→ Création frontend Next.js"
+#cd frontend || exit 1
+#
+##curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+##sudo apt install -y nodejs
+##sudo apt install npm -y
+#
+#npx create-next-app@latest web \
+#  --typescript \
+#  --tailwind \
+#  --eslint \
+#  --app \
+#  --src-dir \
+#  --import-alias "@/*" \
+#  --use-npm \
+#  --yes
+#
+#cd web
+#npm install @reduxjs/toolkit react-redux
+#
+#mkdir -p src/store 
+#mkdir -p src/slices 
+#mkdir -p src/components
+#
+#cat << 'EOF' > src/store/store.ts
+#import { configureStore } from '@reduxjs/toolkit'
+#
+#export const store = configureStore({
+#  reducer: {},
+#})
+#
+#export type RootState = ReturnType<typeof store.getState>
+#export type AppDispatch = typeof store.dispatch
+#EOF
+#
+#
+## Dockerfile Next.js
+#cat << 'EOF' > Dockerfile
+#FROM node:20-alpine AS base
+#
+#FROM base AS deps
+#WORKDIR /app
+#COPY package.json package-lock.json* ./
+#RUN npm ci
+#
+#FROM base AS builder
+#WORKDIR /app
+#COPY --from=deps /app/node_modules ./node_modules
+#COPY . .
+#RUN npm run build
+#
+#FROM base AS runner
+#WORKDIR /app
+#ENV NODE_ENV=production
+#COPY --from=builder /app/package.json ./
+#COPY --from=builder /app/.next ./.next
+#COPY --from=builder /app/public ./public
+#COPY --from=builder /app/node_modules ./node_modules
+#EXPOSE 3000
+#CMD ["npm", "start"]
+#EOF
+#
+#cd ../../
 
 # Helm chart
 
@@ -391,9 +391,13 @@ echo "======================================================"
 # Use Minikube Docker
 eval $(minikube docker-env)
 
+# ---------------- BUILD ----------------
+ROOT_DIR=$(pwd)
+echo "Project Root: $ROOT_DIR"
+
 # ---------------- BACKEND ----------------
 echo "Build backend image..."
-cd ~/VibraGuard2/vibraguard/backend/vibraguard-parent/api-gateway
+cd "$ROOT_DIR/vibraguard/backend/vibraguard-parent/api-gateway"
 
 mvn clean package -DskipTests
 
@@ -401,17 +405,17 @@ docker build -t vibraguard-backend:latest .
 
 # ---------------- FRONTEND ----------------
 echo "Build frontend image..."
-cd ~/VibraGuard2/vibraguard/frontend/web
+cd "$ROOT_DIR/vibraguard/frontend/Vibraguard8"
 
-npm install
-
-npm run build
+npm install -g pnpm
+pnpm install
+pnpm run build
 
 docker build -t vibraguard-frontend:latest .
 
 # ---------------- K8S FILES ----------------
 echo "Create Kubernetes manifests..."
-cd ~/VibraGuard2
+cd "$ROOT_DIR"
 mkdir -p k8s
 cd k8s
 
