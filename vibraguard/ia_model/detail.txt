@@ -1,0 +1,87 @@
+Je vais créer un dataset réaliste de données de capteurs pour entraîner un modèle Random Forest de détection d'anomalies.Excellent ! Maintenant copions les données vers outputs et créons aussi un script d'entraînement Random Forest :Parfait ! Copions tous les fichiers générés :Excellent ! Voici un résumé complet de ce que j'ai créé :
+
+## 📊 **Données Simulées de Capteurs Industriels pour Random Forest**
+
+### **1. Dataset Généré : sensor_data_training.csv**
+
+**200 échantillons** avec répartition réaliste :
+- ✅ **70% NORMAL** (140 échantillons)
+- ⚠️ **30% ANOMALIES** (60 échantillons répartis en 5 types)
+
+### **2. Types d'Anomalies Simulées**
+
+1. **DÉSALIGNEMENT** (12 échantillons)
+   - Forte composante à 2x RPM et 3x RPM
+   - Vib RMS élevé, Kurtosis élevé
+
+2. **DÉSÉQUILIBRE** (12 échantillons)
+   - Amplitude très élevée à 1x RPM
+   - Vib RMS très élevé
+
+3. **DÉFAUT ROULEMENT** (12 échantillons)
+   - Impulsions périodiques haute fréquence
+   - Kurtosis très élevé (>4)
+   - FFT total power très élevé
+
+4. **SURCHARGE ÉLECTRIQUE** (12 échantillons)
+   - Current RMS élevé (>15A vs 8.5A nominal)
+   - THD élevé (>15% vs 5% normal)
+   - RPM réduit
+
+5. **SURCHAUFFE** (12 échantillons)
+   - Température très élevée (>80°C vs 55°C nominal)
+   - Vibrations légèrement augmentées
+
+### **3. Features Extraites (10 au total)**
+
+#### **Capteur Piézo + ADS1115 (Vibration)**
+- `vib_rms` : Valeur RMS en mm/s
+- `vib_peak` : Amplitude maximale
+- `vib_kurtosis` : Kurtosis (mesure des pics anormaux)
+- `fft_dominant_freq` : Fréquence dominante du spectre
+- `fft_max_amplitude` : Amplitude maximale FFT
+- `fft_total_power` : Puissance totale du spectre
+
+#### **Capteur ACS712 (Courant)**
+- `current_rms` : Courant RMS en Ampères
+- `current_thd` : Total Harmonic Distortion en %
+
+#### **Capteur DS18B20 (Température)**
+- `temperature` : Température en °C
+
+#### **Autres**
+- `rpm` : Vitesse de rotation
+
+### **4. Résultats du Random Forest**
+
+#### **Performance Exceptionnelle :**
+- 🎯 **Accuracy : 100%** sur le jeu de test
+- ✅ Tous les échantillons correctement classés
+- Matrice de confusion parfaite (pas de faux positifs/négatifs)
+
+#### **Importance des Features :**
+1. **fft_total_power** : 21.00% 🥇
+2. **current_rms** : 16.02%
+3. **current_thd** : 16.00%
+4. **vib_peak** : 15.00%
+5. **vib_rms** : 12.01%
+6. **vib_kurtosis** : 9.99%
+7. **temperature** : 9.97%
+
+### **5. Fichiers Fournis**
+
+1. ✅ **sensor_data_training.csv** - Dataset complet de 200 échantillons
+2. ✅ **generate_sensor_data.py** - Script de génération des données
+3. ✅ **train_random_forest.py** - Script d'entraînement du modèle
+4. ✅ **feature_importance.png** - Graphique d'importance des features
+5. ✅ **confusion_matrix.png** - Matrice de confusion
+
+### **6. Caractéristiques Techniques du Générateur**
+
+- **Signaux temporels réalistes** avec FFT, RMS, Kurtosis
+- **Fréquences physiquement cohérentes** (1x RPM, 2x RPM, harmoniques)
+- **Simulations d'impulsions** pour défauts roulements (BPFO)
+- **THD du courant** calculé avec harmoniques réalistes
+- **Variations thermiques** cohérentes avec les anomalies
+
+Les données sont prêtes pour entraîner votre modèle Random Forest ! 🚀

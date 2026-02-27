@@ -1,0 +1,72 @@
+Acquisition de vibration :	Lire la tension analogique du capteur piézo via ADS1115
+Acquisition de courant    :	Lire la consommation via ACS712
+Acquisition de température :  Lire la température via DS18B20
+
+
+## 📊 **Tableau récapitulatif des unités du dataset**
+| Feature | Unité | Nom complet | Description |
+|---------|-------|-------------|-------------|
+| `rpm` | **tr/min** | Tours par minute | Vitesse de rotation du moteur |
+| `vib_rms` | **mm/s** | Millimètres par seconde | Vitesse vibratoire RMS |
+| `vib_peak` | **mm/s** | Millimètres par seconde | Amplitude maximale de vibration |
+| `vib_kurtosis` | **sans unité** | - | Coefficient d'aplatissement (nombre pur) |
+| `fft_dominant_freq` | **Hz** | Hertz | Fréquence dominante du spectre |
+| `fft_max_amplitude` | **sans unité** | - | Amplitude maximale FFT (normalisée) |
+| `fft_total_power` | **sans unité** | - | Puissance totale du spectre (normalisée) |
+| `current_rms` | **A** | Ampère | Courant électrique efficace |
+| `current_thd` | **%** | Pourcentage | Taux de distorsion harmonique |
+| `temperature` | **°C** | Degrés Celsius | Température du moteur |
+
+MTBF Global : MTBF (Mean Time Between Failures) = Temps Total de Fonctionnement / Nombre de Pannes
+MTTR Moyen : MTTR (Mean Time To Repair) = MTTR = Temps Total de Réparation / Nombre de Réparations
+Analyse FFT : FFT (Fast Fourier Transform)
+
+vib_kurtosis sans unité-Coefficient d'aplatissement (nombre pur)  Mesure de la "pointicité" d'une distribution
+Kurtosis = E[(X - μ)⁴] / σ⁴
+Où:
+- X = signal
+- μ = moyenne
+- σ = écart-type
+- E = espérance mathématique
+```
+### **Interprétation**
+Kurtosis ≈ 3   → Distribution normale (Gaussienne)
+Kurtosis > 4   → Pics anormaux (DÉFAUT ROULEMENT) ⚠️
+Kurtosis < 2   → Distribution aplatie
+
+fft_total_power sans unité-Puissance totale du spectre (normalisée)
+Somme de toutes les puissances sur toutes les fréquences
+### **Formule**
+Total Power = Σ |FFT(f)|²
+Où FFT(f) est l'amplitude à chaque fréquence f
+
+current_thd% Pourcentage Taux de distorsion harmonique
+Mesure de la distorsion du signal de courant par rapport à une sinusoïde pure
+### **Formule**
+THD = √(H₂² + H₃² + H₄² + H₅² + ...) / H₁ × 100%
+Où:
+- H₁ = amplitude de la fondamentale (50Hz)
+- H₂, H₃... = amplitudes des harmoniques
+```
+### **Interprétation**
+THD < 5%    → Excellent (signal presque sinusoïdal) ✅
+THD 5-10%   → Acceptable
+THD 10-20%  → Dégradé ⚠️
+THD > 20%   → Mauvais (SURCHARGE, problème électrique) 🔴
+
+
+
+
+rpm,
+vib_rms,
+vib_peak,
+vib_kurtosis,
+fft_dominant_freq,
+fft_max_amplitude,
+fft_total_power,
+current_rms,
+current_thd,
+temperature
+
+vib
+temperature
