@@ -1,0 +1,80 @@
+/** @import must precede all other statements */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 214 45% 7%;
+    --foreground: 0 0% 100%;
+
+    --card: 214 37% 9%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 214 37% 9%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 160 84% 39%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 214 32% 14%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 214 32% 14%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 160 84% 39%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 32% 14%;
+    --input: 214 45% 7%;
+    --ring: 160 84% 39%;
+
+    --radius: 0.625rem;
+
+    --sidebar-background: 214 45% 7%;
+    --sidebar-foreground: 215 25% 88%;
+    --sidebar-primary: 160 84% 39%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 214 32% 14%;
+    --sidebar-accent-foreground: 215 25% 88%;
+    --sidebar-border: 214 32% 14%;
+    --sidebar-ring: 160 84% 39%;
+
+    /* VibraGuard brand */
+    --vg-green: 160 84% 39%;
+    --vg-bg: 214 45% 7%;
+    --vg-card-bg: 214 37% 9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  :where(p, span, li, h1, h2, h3, h4, h5, h6, a, button, label, td, th) {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  pre,
+  code {
+    overflow-x: auto;
+    white-space: pre;
+  }
+}
