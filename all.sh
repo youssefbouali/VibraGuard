@@ -6,9 +6,10 @@ set -e  # Stop on error
 #sudo apt install docker.io -y && sudo apt install docker-compose -y
 #sudo usermod -aG docker $USER && newgrp docker
 
-mkdir VibraGuard2
+mkdir -p VibraGuard2
 cd VibraGuard2
 git init
+BASE_DIR=$(pwd)
 
 
 #git add .
@@ -98,6 +99,7 @@ mkdir -p ${PROJECT_NAME}/backend
 #mkdir -p ${PROJECT_NAME}/frontend
 mkdir -p ${PROJECT_NAME}/helm-charts
 cd ${PROJECT_NAME}
+PROJECT_ROOT=$(pwd)
 
 # Backend Spring Boot - création manuelle
 echo "→ Création backend Spring Boot (manuel, sans archetype)"
@@ -392,12 +394,12 @@ echo "======================================================"
 eval $(minikube docker-env)
 
 # ---------------- BUILD ----------------
-ROOT_DIR=$(pwd)
-echo "Project Root: $ROOT_DIR"
+# Use PROJECT_ROOT (VibraGuard2/vibraguard) captured earlier
+echo "Project Root: $PROJECT_ROOT"
 
 # ---------------- BACKEND ----------------
 echo "Build backend image..."
-cd "$ROOT_DIR/vibraguard/backend/vibraguard-parent/api-gateway"
+cd "$PROJECT_ROOT/backend/vibraguard-parent/api-gateway"
 
 mvn clean package -DskipTests
 
@@ -405,7 +407,7 @@ docker build -t vibraguard-backend:latest .
 
 # ---------------- FRONTEND ----------------
 echo "Build frontend image..."
-cd "$ROOT_DIR/vibraguard/frontend/Vibraguard8"
+cd "$PROJECT_ROOT/frontend/Vibraguard8"
 
 npm install -g pnpm
 pnpm install
@@ -415,7 +417,7 @@ docker build -t vibraguard-frontend:latest .
 
 # ---------------- K8S FILES ----------------
 echo "Create Kubernetes manifests..."
-cd "$ROOT_DIR"
+cd "$PROJECT_ROOT"
 mkdir -p k8s
 cd k8s
 
