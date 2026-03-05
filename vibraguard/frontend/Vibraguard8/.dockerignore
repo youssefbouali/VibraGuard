@@ -35,9 +35,9 @@ data
 .env
 load-ids.txt
 
-server
-tmp
-types
+# server
+# tmp
+# types
 .git
 .gitignore
 dist
