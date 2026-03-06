@@ -81,13 +81,13 @@ helm upgrade --install mosquitto k8s-at-home/mosquitto -n $NAMESPACE
 
 # Kafka: Installing Outside Docker (Locally on Host)
 echo "📦 Installing Kafka Locallly (Outside Docker)..."
-KAFKA_VERSION="3.9.0"
+KAFKA_VERSION="3.9.1"
 SCALA_VERSION="2.13"
 KAFKA_DIR="$ROOT_DIR/vibraguard/kafka_$SCALA_VERSION-$KAFKA_VERSION"
 
 if [ ! -d "$KAFKA_DIR" ]; then
     echo "Downloading Apache Kafka..."
-    curl -O https://downloads.apache.org/kafka/$KAFKA_VERSION/kafka_$SCALA_VERSION-$KAFKA_VERSION.tgz
+    curl -O https://archive.apache.org/dist/kafka/$KAFKA_VERSION/kafka_$SCALA_VERSION-$KAFKA_VERSION.tgz
     tar -xzf kafka_$SCALA_VERSION-$KAFKA_VERSION.tgz -C "$ROOT_DIR/vibraguard"
     rm kafka_$SCALA_VERSION-$KAFKA_VERSION.tgz
 fi
