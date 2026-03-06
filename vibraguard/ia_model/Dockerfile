@@ -1,8 +1,14 @@
-FROM bitnami/spark:latest
+FROM python:3.10-slim
 
 WORKDIR /app
 
-USER root
+# Install Java (required for PySpark)
+RUN apt-get update && \
+    apt-get install -y default-jre procps && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV JAVA_HOME="/usr/lib/jvm/default-java"
+
 # Install dependencies for training and execution
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
@@ -22,8 +28,9 @@ ENV MQTT_BROKER="mosquitto"
 ENV KAFKA_TOPIC="sensor-data"
 ENV MQTT_TOPIC="vibraguard/sensors"
 
-# Switch back to non-root user
-USER 1001
+# Create a non-root user and switch appropriately
+RUN useradd -m sparkuser
+USER sparkuser
 
 # Default command: Runs the Spark streaming job
 CMD ["spark-submit", "--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0", "spark_streaming_process.py"]

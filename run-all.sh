@@ -217,7 +217,7 @@ spec:
         - name: spark-processor
           image: vibraguard-ia:latest
           imagePullPolicy: Never
-          command: ["/opt/bitnami/spark/bin/spark-submit"]
+          command: ["spark-submit"]
           args: [
             "--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0",
             "spark_streaming_process.py"
