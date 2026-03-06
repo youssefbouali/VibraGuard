@@ -1,0 +1,16 @@
+const BASE_URL = "/api/v1";
+
+export async function fetchWithAuth(endpoint: string) {
+    const response = await fetch(`${BASE_URL}${endpoint}`);
+    if (!response.ok) {
+        throw new Error(`API error: ${response.statusText}`);
+    }
+    return response.json();
+}
+
+export const api = {
+    getMotors: () => fetchWithAuth("/iot/motors"),
+    getKPIs: () => fetchWithAuth("/iot/kpis"),
+    getAlerts: () => fetchWithAuth("/ml/alerts"),
+    getAudit: () => fetchWithAuth("/blockchain/audit"),
+};

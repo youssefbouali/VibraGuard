@@ -1,0 +1,8 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+# No microservice routing for now, using local controllers in API Gateway

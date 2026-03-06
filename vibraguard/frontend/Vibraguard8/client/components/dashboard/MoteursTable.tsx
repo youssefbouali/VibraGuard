@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 
 interface MoteurRow {
   id: string;
@@ -12,44 +14,13 @@ interface MoteurRow {
   trendIcon: "up" | "down" | "flat";
 }
 
-const rows: MoteurRow[] = [
-  {
-    id: "MTR-Broyeur-04",
-    type: "Broyeur Phosphate",
-    etatLabel: "22% Critique",
-    etatColor: "#EF4444",
-    etatPct: 22,
-    vibration: "14.2 mm/s",
-    vibrationColor: "#EF4444",
-    trendIcon: "up",
-  },
-  {
-    id: "MTR-Ventil-12",
-    type: "Convoyeur L-2",
-    etatLabel: "45% Alerte",
-    etatColor: "#F59E0B",
-    etatPct: 45,
-    vibration: "8.4 mm/s",
-    vibrationColor: "#F59E0B",
-    trendIcon: "up",
-  },
-  {
-    id: "MTR-Pompe-08",
-    type: "Pompe Principale",
-    etatLabel: "58% Attention",
-    etatColor: "#F59E0B",
-    etatPct: 58,
-    vibration: "6.1 mm/s",
-    vibrationColor: "#E2E8F0",
-    trendIcon: "flat",
-  },
-];
+// Data is now fetched via useQuery
 
 function TrendUp({ color }: { color: string }) {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-      <path d="M9.33337 4.08331H12.8334V7.58331" stroke={color} strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M12.8333 4.08331L7.87496 9.04165L4.95829 6.12498L1.16663 9.91665" stroke={color} strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M9.33337 4.08331H12.8334V7.58331" stroke={color} strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12.8333 4.08331L7.87496 9.04165L4.95829 6.12498L1.16663 9.91665" stroke={color} strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -57,13 +28,27 @@ function TrendUp({ color }: { color: string }) {
 function TrendFlat() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-      <path d="M2.91675 7H11.0834" stroke="#94A3B8" strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M2.91675 7H11.0834" stroke="#94A3B8" strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
 export function MoteursTable() {
   const navigate = useNavigate();
+
+  const { data: rows = [], isLoading } = useQuery<MoteurRow[]>({
+    queryKey: ["motors"],
+    queryFn: api.getMotors
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col h-full rounded-2xl border border-white/[0.08] bg-[rgba(17,26,36,0.50)] p-6">
+        <div className="text-white text-sm">Chargement des données...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full rounded-2xl border border-white/[0.08] bg-[rgba(17,26,36,0.50)] backdrop-blur-xl p-6 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.30)]">
       {/* Header */}
@@ -71,9 +56,9 @@ export function MoteursTable() {
         <div className="flex items-center gap-2">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <g clipPath="url(#mot-table-clip)">
-              <path d="M9 12H9.0075M9 6V9M11.484 1.5C11.8818 1.50008 12.2633 1.65818 12.5445 1.9395L16.0605 5.4555C16.3418 5.73674 16.4999 6.11821 16.5 6.516V11.484C16.4999 11.8818 16.3418 12.2633 16.0605 12.5445L12.5445 16.0605C12.2633 16.3418 11.8818 16.4999 11.484 16.5H6.516C6.11821 16.4999 5.73674 16.3418 5.4555 16.0605L1.9395 12.5445C1.65818 12.2633 1.50008 11.8818 1.5 11.484V6.516C1.50008 6.11821 1.65818 5.73674 1.9395 5.4555L5.4555 1.9395C5.73674 1.65818 6.11821 1.50008 6.516 1.5L9 12" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M9 12H9.0075M9 6V9M11.484 1.5C11.8818 1.50008 12.2633 1.65818 12.5445 1.9395L16.0605 5.4555C16.3418 5.73674 16.4999 6.11821 16.5 6.516V11.484C16.4999 11.8818 16.3418 12.2633 16.0605 12.5445L12.5445 16.0605C12.2633 16.3418 11.8818 16.4999 11.484 16.5H6.516C6.11821 16.4999 5.73674 16.3418 5.4555 16.0605L1.9395 12.5445C1.65818 12.2633 1.50008 11.8818 1.5 11.484V6.516C1.50008 6.11821 1.65818 5.73674 1.9395 5.4555L5.4555 1.9395C5.73674 1.65818 6.11821 1.50008 6.516 1.5L9 12" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </g>
-            <defs><clipPath id="mot-table-clip"><rect width="18" height="18" fill="white"/></clipPath></defs>
+            <defs><clipPath id="mot-table-clip"><rect width="18" height="18" fill="white" /></clipPath></defs>
           </svg>
           <span className="text-white text-base font-semibold">Moteurs Sous Surveillance</span>
         </div>
