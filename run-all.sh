@@ -51,6 +51,13 @@ pnpm install
 pnpm run build
 docker build -t vibraguard-frontend:latest .
 
+echo "🏗️  Building AI Components (PySpark & Model)..."
+cd "$ROOT_DIR/vibraguard/ia_model"
+# Install local requirements for training if needed (optional but helpful)
+pip install -r requirements.txt --quiet || echo "Warning: Local pip install failed, skipping training (using existing model if available)"
+python3 train_random_forest.py || echo "Warning: Model training failed, proceeding with build anyway"
+docker build -t vibraguard-ia:latest .
+
 # 4. Infrastructure Services (Helm)
 echo "🛠️  Deploying Infrastructure Services..."
 helm repo add bitnami https://charts.bitnami.com/bitnami
@@ -169,6 +176,59 @@ spec:
       targetPort: 3000
       nodePort: 30008
 EOF
+
+# AI PIPELINE MANIFESTS
+echo "🧠 Deploying AI Pipeline (Bridge & Spark Streaming)..."
+cat <<EOF > k8s/ai-pipeline.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mqtt-kafka-bridge
+  namespace: $NAMESPACE
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mqtt-bridge
+  template:
+    metadata:
+      labels:
+        app: mqtt-bridge
+    spec:
+      containers:
+        - name: bridge
+          image: vibraguard-ia:latest
+          imagePullPolicy: Never
+          command: ["python3", "mqtt_to_kafka.py"]
+          env:
+            - name: MQTT_BROKER
+              value: "mosquitto"
+            - name: KAFKA_BROKER
+              value: "kafka:9092"
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: spark-ai-processor
+  namespace: $NAMESPACE
+spec:
+  template:
+    spec:
+      containers:
+        - name: spark-processor
+          image: vibraguard-ia:latest
+          imagePullPolicy: Never
+          command: ["/opt/bitnami/spark/bin/spark-submit"]
+          args: [
+            "--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1",
+            "spark_streaming_process.py"
+          ]
+          env:
+            - name: KAFKA_BROKER
+              value: "kafka:9092"
+      restartPolicy: OnFailure
+EOF
+
 
 kubectl apply -f k8s/ -n $NAMESPACE
 

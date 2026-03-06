@@ -10,21 +10,20 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 print("="*80)
-print("ENTRAÎNEMENT RANDOM FOREST POUR DÉTECTION D'ANOMALIES")
+print("ENTRAINEMENT RANDOM FOREST POUR DETECTION D'ANOMALIES")
 print("="*80)
 print()
 
-# Chargement des données
-print("📊 Chargement des données...")
-# Using a relative path or making it flexible
+# Chargement des donnees
+print("Chargement des donnees...")
 data_path = 'sensor_data_training.csv'
 if not os.path.exists(data_path):
     data_path = 'sensor_data_training.csv'
 
 df = pd.read_csv(data_path)
-print(f"   ✓ {len(df)} échantillons chargés\n")
+print(f"Loaded {len(df)} samples")
 
-# Sélection des features pour l'entraînement
+# Selection des features pour l'entrainement
 feature_columns = [
     'rpm',
     'vib_rms',
@@ -39,9 +38,9 @@ feature_columns = [
 ]
 
 X = df[feature_columns]
-y = df['label']  # NORMAL ou ANOMALY
+y = df['label']
 
-# Séparation train/test
+# Separation train/test
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
@@ -51,8 +50,8 @@ scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
-# Entraînement du Random Forest
-print("🌲 Entraînement du Random Forest...")
+# Entrainement du Random Forest
+print("Training Random Forest...")
 rf_model = RandomForestClassifier(
     n_estimators=100,
     max_depth=10,
@@ -63,19 +62,19 @@ rf_model = RandomForestClassifier(
 )
 
 rf_model.fit(X_train_scaled, y_train)
-print("   ✓ Modèle entraîné !\n")
+print("Model trained!")
 
-# Sauvegarde du modèle et du scaler
-print("💾 Sauvegarde du modèle et du scaler...")
+# Sauvegarde du modele et du scaler
+print("Saving model and scaler...")
 joblib.dump(rf_model, 'vibraguard_rf_model.joblib')
 joblib.dump(scaler, 'vibraguard_scaler.joblib')
-print("   ✓ vibraguard_rf_model.joblib sauvegardé")
-print("   ✓ vibraguard_scaler.joblib sauvegardé\n")
+print("vibraguard_rf_model.joblib saved")
+print("vibraguard_scaler.joblib saved")
 
-# Prédictions et évaluation
+# Predictions et evaluation
 y_pred = rf_model.predict(X_test_scaled)
 accuracy = accuracy_score(y_test, y_pred)
-print(f"🎯 Accuracy globale: {accuracy*100:.2f}%\n")
+print(f"Global Accuracy: {accuracy*100:.2f}%")
 
 # Importance des features
 feature_importance = pd.DataFrame({
@@ -87,7 +86,7 @@ feature_importance = pd.DataFrame({
 plt.figure(figsize=(10, 6))
 plt.barh(feature_importance['feature'], feature_importance['importance'])
 plt.xlabel('Importance')
-plt.title('Importance des Features - Random Forest')
+plt.title('Feature Importance - Random Forest')
 plt.tight_layout()
 plt.savefig('feature_importance.png', dpi=150, bbox_inches='tight')
 
@@ -97,12 +96,12 @@ plt.figure(figsize=(8, 6))
 sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
             xticklabels=['ANOMALY', 'NORMAL'],
             yticklabels=['ANOMALY', 'NORMAL'])
-plt.ylabel('Vraie classe')
-plt.xlabel('Classe prédite')
-plt.title('Matrice de Confusion')
+plt.ylabel('True Class')
+plt.xlabel('Predicted Class')
+plt.title('Confusion Matrix')
 plt.tight_layout()
 plt.savefig('confusion_matrix.png', dpi=150, bbox_inches='tight')
 
 print("="*80)
-print("ENTRAÎNEMENT TERMINÉ !")
+print("TRAINING COMPLETE!")
 print("="*80)
