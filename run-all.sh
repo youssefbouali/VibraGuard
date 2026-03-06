@@ -78,7 +78,7 @@ fi
 
 # Distributed Services
 helm upgrade --install mosquitto k8s-at-home/mosquitto -n $NAMESPACE
-helm upgrade --install kafka bitnami/kafka -n $NAMESPACE --set replicaCount=1
+helm upgrade --install kafka bitnami/kafka -n $NAMESPACE --version 29.3.4 --set replicaCount=1
 #helm upgrade --install spark-operator spark/spark-kubernetes-operator -n $NAMESPACE
 #helm upgrade --install redis bitnami/redis -n $NAMESPACE --set architecture=standalone
 #helm upgrade --install elasticsearch elastic/elasticsearch -n $NAMESPACE --set replicas=1
