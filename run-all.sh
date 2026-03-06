@@ -29,7 +29,7 @@ kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f 
 
 # 3. Component Builds
 echo "🏗️  Building Backend (Spring Boot)..."
-cd "$ROOT_DIR/vibraguard/backend/vibraguard-parent"
+cd "$ROOT_DIR/vibraguard/backend"
 # Use ./mvnw if available, otherwise fallback to mvn
 if [ -f "./mvnw" ]; then
     ./mvnw clean package -DskipTests
@@ -41,7 +41,7 @@ cd api-gateway
 docker build -t vibraguard-backend:latest .
 
 echo "🏗️  Building Frontend (Next.js/Vite)..."
-cd "$ROOT_DIR/vibraguard/frontend/Vibraguard8"
+cd "$ROOT_DIR/vibraguard/frontend"
 # Ensure pnpm is available
 if ! command -v pnpm &> /dev/null; then
     echo "Installing pnpm..."

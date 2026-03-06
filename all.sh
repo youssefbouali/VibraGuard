@@ -33,7 +33,7 @@ sudo mv kubectl /usr/local/bin/
 
 # Étape 1: Démarrer Minikube (cluster from scratch)
 echo "Démarrage de Minikube..."
-minikube start --driver=docker --cpus=4 --memory=8192mb  # Ajuste selon ta machine
+minikube start --driver=docker --cpus=4 --memory=8192mb --ports=30008:30008,30007:30007,30001:30001  # Ajuste selon ta machine
 
 # Démarrer Minikube (avec Docker comme driver)
 #minikube start --driver=docker --cpus=2 --memory=4096mb
@@ -381,7 +381,7 @@ echo "Projet créé avec succès !"
 
 echo ""
 echo "Étapes suivantes :"
-echo "1. cd backend/vibraguard-parent/api-gateway && mvn spring-boot:run   # pour tester le gateway"
+echo "1. cd backend/api-gateway && mvn spring-boot:run   # pour tester le gateway"
 echo "2. cd ../../../frontend/web && npm run dev"
 echo "3. cd ../../helm-charts/vibraguard && helm dependency build"
 
@@ -399,7 +399,7 @@ echo "Project Root: $PROJECT_ROOT"
 
 # ---------------- BACKEND ----------------
 echo "Build backend image..."
-cd "$PROJECT_ROOT/backend/vibraguard-parent/api-gateway"
+cd "$PROJECT_ROOT/backend/api-gateway"
 
 mvn clean package -DskipTests
 
@@ -407,7 +407,7 @@ docker build -t vibraguard-backend:latest .
 
 # ---------------- FRONTEND ----------------
 echo "Build frontend image..."
-cd "$PROJECT_ROOT/frontend/Vibraguard8"
+cd "$PROJECT_ROOT/frontend"
 
 npm install -g pnpm
 pnpm install
