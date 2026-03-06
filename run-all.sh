@@ -60,7 +60,7 @@ docker build -t vibraguard-ia:latest .
 # 4. Infrastructure Services (Helm)
 echo "🛠️  Deploying Infrastructure Services..."
 helm repo add bitnami https://charts.bitnami.com/bitnami
-helm repo add elastic https://helm.elastic.co
+#helm repo add elastic https://helm.elastic.co
 #helm repo add spark https://apache.github.io/spark-kubernetes-operator
 helm repo add k8s-at-home https://k8s-at-home.com/charts/
 helm repo update
@@ -77,8 +77,8 @@ else
 fi
 
 # Distributed Services
-#helm upgrade --install mosquitto k8s-at-home/mosquitto -n $NAMESPACE
-#helm upgrade --install kafka bitnami/kafka -n $NAMESPACE --set replicaCount=1
+helm upgrade --install mosquitto k8s-at-home/mosquitto -n $NAMESPACE
+helm upgrade --install kafka bitnami/kafka -n $NAMESPACE --set replicaCount=1
 #helm upgrade --install spark-operator spark/spark-kubernetes-operator -n $NAMESPACE
 #helm upgrade --install redis bitnami/redis -n $NAMESPACE --set architecture=standalone
 #helm upgrade --install elasticsearch elastic/elasticsearch -n $NAMESPACE --set replicas=1
