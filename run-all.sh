@@ -79,8 +79,8 @@ fi
 # Distributed Services
 helm upgrade --install mosquitto k8s-at-home/mosquitto -n $NAMESPACE
 
-# Kafka: Installing Outside Docker (Locally on Host)
-echo "📦 Installing Kafka Locallly (Outside Docker)..."
+# Kafka: Custom Kubernetes Container Built from Apache Archive
+echo "📦 Building Custom Kafka Docker Image..."
 KAFKA_VERSION="3.9.1"
 SCALA_VERSION="2.13"
 KAFKA_DIR="$ROOT_DIR/vibraguard/kafka_$SCALA_VERSION-$KAFKA_VERSION"
@@ -92,24 +92,20 @@ if [ ! -d "$KAFKA_DIR" ]; then
     rm kafka_$SCALA_VERSION-$KAFKA_VERSION.tgz
 fi
 
-echo "Starting Local Zookeeper..."
-# Use relative paths or absolute paths for Windows/Git Bash depending on environment
-# Running in background:
-# Note: On native Windows you might need .\bin\windows\zookeeper-server-start.bat instead.
-if [ -f "$KAFKA_DIR/bin/zookeeper-server-start.sh" ]; then
-    "$KAFKA_DIR/bin/zookeeper-server-start.sh" -daemon "$KAFKA_DIR/config/zookeeper.properties"
-    sleep 5
-    echo "Starting Local Kafka Server..."
-    "$KAFKA_DIR/bin/kafka-server-start.sh" -daemon "$KAFKA_DIR/config/server.properties"
-else
-    # Fallback to windows batch if running in native windows terminal
-    cmd.exe /c "start /b $KAFKA_DIR\bin\windows\zookeeper-server-start.bat $KAFKA_DIR\config\zookeeper.properties"
-    sleep 5
-    cmd.exe /c "start /b $KAFKA_DIR\bin\windows\kafka-server-start.bat $KAFKA_DIR\config\server.properties"
-fi
-echo "✅ Local Kafka is starting on port 9092..."
+# Build a quick custom Kafka image directly inside Minikube
+cat <<EOF > "$KAFKA_DIR/Dockerfile"
+FROM eclipse-temurin:17-jre-alpine
+RUN apk add --no-cache bash
+WORKDIR /kafka
+COPY . /kafka/
+EXPOSE 9092 2181
+CMD ["/bin/bash", "-c", "bin/zookeeper-server-start.sh config/zookeeper.properties & sleep 5 && bin/kafka-server-start.sh config/server.properties"]
+EOF
 
-#helm upgrade --install kafka bitnami/kafka -n $NAMESPACE --version 29.3.4 --set replicaCount=1
+cd "$KAFKA_DIR"
+docker build -t custom-kafka:latest .
+cd "$ROOT_DIR"
+
 #helm upgrade --install spark-operator spark/spark-kubernetes-operator -n $NAMESPACE
 #helm upgrade --install redis bitnami/redis -n $NAMESPACE --set architecture=standalone
 #helm upgrade --install elasticsearch elastic/elasticsearch -n $NAMESPACE --set replicas=1
@@ -218,6 +214,50 @@ EOF
 
 
 
+# ADD KAFKA DEPLOYMENT
+cat <<EOF > k8s/kafka-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka
+  namespace: $NAMESPACE
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      containers:
+        - name: kafka
+          image: custom-kafka:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 9092
+            - containerPort: 2181
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka
+  namespace: $NAMESPACE
+spec:
+  selector:
+    app: kafka
+  ports:
+    - name: kafka-port
+      protocol: TCP
+      port: 9092
+      targetPort: 9092
+    - name: zookeeper-port
+      protocol: TCP
+      port: 2181
+      targetPort: 2181
+EOF
+
 # AI PIPELINE MANIFESTS
 echo "🧠 Deploying AI Pipeline (Bridge & Spark Streaming)..."
 cat <<EOF > k8s/ai-pipeline.yaml
@@ -245,7 +285,7 @@ spec:
             - name: MQTT_BROKER
               value: "mosquitto"
             - name: KAFKA_BROKER
-              value: "host.minikube.internal:9092"
+              value: "kafka:9092"
 ---
 apiVersion: batch/v1
 kind: Job
@@ -266,7 +306,7 @@ spec:
           ]
           env:
             - name: KAFKA_BROKER
-              value: "host.minikube.internal:9092"
+              value: "kafka:9092"
       restartPolicy: OnFailure
 EOF
 
