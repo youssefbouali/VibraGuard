@@ -32,6 +32,7 @@ export default defineConfig({
         // External dependencies that should not be bundled
         "express",
         "cors",
+        "http-proxy-middleware",
       ],
       output: {
         format: "es",
