@@ -1,4 +1,5 @@
-FROM bitnami/spark:3.4.1
+FROM bitnami/spark:3.5
+
 
 WORKDIR /app
 
@@ -20,4 +21,5 @@ ENV KAFKA_TOPIC="sensor-data"
 ENV MQTT_TOPIC="vibraguard/sensors"
 
 # Default command (can be overridden)
-CMD ["spark-submit", "--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1", "spark_streaming_process.py"]
+CMD ["spark-submit", "--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0", "spark_streaming_process.py"]
+

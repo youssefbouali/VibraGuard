@@ -53,10 +53,11 @@ docker build -t vibraguard-frontend:latest .
 
 echo "🏗️  Building AI Components (PySpark & Model)..."
 cd "$ROOT_DIR/vibraguard/ia_model"
-# Install local requirements for training if needed (optional but helpful)
-pip install -r requirements.txt --quiet || echo "Warning: Local pip install failed, skipping training (using existing model if available)"
+# Install local requirements for training
+python3 -m pip install -r requirements.txt --quiet || pip3 install -r requirements.txt --quiet || echo "Warning: Local pip install failed, skipping training"
 python3 train_random_forest.py || echo "Warning: Model training failed, proceeding with build anyway"
 docker build -t vibraguard-ia:latest .
+
 
 # 4. Infrastructure Services (Helm)
 echo "🛠️  Deploying Infrastructure Services..."
@@ -220,7 +221,7 @@ spec:
           imagePullPolicy: Never
           command: ["/opt/bitnami/spark/bin/spark-submit"]
           args: [
-            "--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1",
+            "--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0",
             "spark_streaming_process.py"
           ]
           env:
@@ -228,6 +229,7 @@ spec:
               value: "kafka:9092"
       restartPolicy: OnFailure
 EOF
+
 
 
 kubectl apply -f k8s/ -n $NAMESPACE
