@@ -51,12 +51,10 @@ pnpm install
 pnpm run build
 docker build -t vibraguard-frontend:latest .
 
-echo "🏗️  Building AI Components (PySpark & Model)..."
+echo "🏗️  Building AI Components (Dockerized training)..."
 cd "$ROOT_DIR/vibraguard/ia_model"
-# Install local requirements for training
-python3 -m pip install -r requirements.txt --quiet || pip3 install -r requirements.txt --quiet || echo "Warning: Local pip install failed, skipping training"
-python3 train_random_forest.py || echo "Warning: Model training failed, proceeding with build anyway"
 docker build -t vibraguard-ia:latest .
+
 
 
 # 4. Infrastructure Services (Helm)
