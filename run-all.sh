@@ -80,15 +80,15 @@ fi
 #helm upgrade --install mosquitto k8s-at-home/mosquitto -n $NAMESPACE
 #helm upgrade --install kafka bitnami/kafka -n $NAMESPACE --set replicaCount=1
 #helm upgrade --install spark-operator spark/spark-kubernetes-operator -n $NAMESPACE
-helm upgrade --install redis bitnami/redis -n $NAMESPACE --set architecture=standalone
-helm upgrade --install elasticsearch elastic/elasticsearch -n $NAMESPACE --set replicas=1
+#helm upgrade --install redis bitnami/redis -n $NAMESPACE --set architecture=standalone
+#helm upgrade --install elasticsearch elastic/elasticsearch -n $NAMESPACE --set replicas=1
 
 # IPFS
-if ! kubectl get deployment ipfs -n $NAMESPACE > /dev/null 2>&1; then
-    echo "🌐 Deploying IPFS..."
-    kubectl create deployment ipfs --image=ipfs/kubo:latest -n $NAMESPACE
-    kubectl expose deployment ipfs --type=NodePort --port=5001 --target-port=5001 --node-port=30001 -n $NAMESPACE || true
-fi
+#if ! kubectl get deployment ipfs -n $NAMESPACE > /dev/#null 2>&1; then
+#    echo "🌐 Deploying IPFS..."
+#    kubectl create deployment ipfs --image=ipfs/#kubo:latest -n $NAMESPACE
+#    kubectl expose deployment ipfs --type=NodePort #--port=5001 --target-port=5001 --node-port=30001 -n #$NAMESPACE || true
+#fi
 
 # 5. Apply Application Manifests
 echo "🚀 Deploying Core Applications..."
