@@ -14,7 +14,7 @@ echo "🚀 Starting VibraGuard Platform Deployment from: $ROOT_DIR"
 # 1. Verify/Start Minikube
 if ! minikube status > /dev/null 2>&1; then
     echo "📦 Starting Minikube..."
-    minikube start --driver=docker --cpus=4 --memory=8192mb
+    minikube start --driver=docker --cpus=4 --memory=8192mb --ports=30008:30008,30007:30007,30001:30001
 else
     echo "✅ Minikube is already running."
 fi
@@ -81,7 +81,7 @@ helm upgrade --install elasticsearch elastic/elasticsearch -n $NAMESPACE --set r
 if ! kubectl get deployment ipfs -n $NAMESPACE > /dev/null 2>&1; then
     echo "🌐 Deploying IPFS..."
     kubectl create deployment ipfs --image=ipfs/kubo:latest -n $NAMESPACE
-    kubectl expose deployment ipfs --type=NodePort --port=5001 -n $NAMESPACE || true
+    kubectl expose deployment ipfs --type=NodePort --port=5001 --target-port=5001 --node-port=30001 -n $NAMESPACE || true
 fi
 
 # 5. Apply Application Manifests
