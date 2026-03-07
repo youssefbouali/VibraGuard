@@ -7,4 +7,4 @@ seaborn
 joblib
 paho-mqtt
 kafka-python
-pyspark
+pyspark==3.5.0
