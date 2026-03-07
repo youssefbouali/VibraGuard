@@ -43,6 +43,10 @@ spark = SparkSession.builder \
     .appName("VibraGuardStreamingAI") \
     .getOrCreate()
 
+# Suppress verbose INFO logs, keep only WARNING and ERROR messages 
+# so the ASCII table predictions are easily visible.
+spark.sparkContext.setLogLevel("WARN")
+
 # Schema for incoming JSON data
 schema = StructType([
     StructField("rpm", DoubleType()),
