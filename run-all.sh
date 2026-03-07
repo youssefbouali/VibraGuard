@@ -99,7 +99,7 @@ RUN apk add --no-cache bash
 WORKDIR /kafka
 COPY . /kafka/
 EXPOSE 9092 2181
-CMD ["/bin/bash", "-c", "bin/zookeeper-server-start.sh config/zookeeper.properties & sleep 5 && bin/kafka-server-start.sh config/server.properties --override listeners=PLAINTEXT://0.0.0.0:9092 --override advertised.listeners=PLAINTEXT://kafka:9092"]
+CMD ["/bin/bash", "-c", "bin/zookeeper-server-start.sh config/zookeeper.properties & sleep 5 && bin/kafka-server-start.sh config/server.properties --override listeners=PLAINTEXT://0.0.0.0:9092 --override advertised.listeners=PLAINTEXT://kafka:9092 & sleep 15 && bin/kafka-topics.sh --create --topic sensor-data --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1 --if-not-exists && wait"]
 EOF
 
 cd "$KAFKA_DIR"
