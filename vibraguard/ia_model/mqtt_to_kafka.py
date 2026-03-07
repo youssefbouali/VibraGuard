@@ -37,6 +37,7 @@ def on_message(client, userdata, msg):
         data = json.loads(payload)
         if producer:
             producer.send(KAFKA_TOPIC, data)
+            producer.flush()
             print(f"Sent to Kafka: {data}")
     except Exception as e:
         print(f"Error processing message: {e}")

@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Install Java (required for PySpark)
 RUN apt-get update && \
-    apt-get install -y default-jre procps && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y default-jre procps && \
     rm -rf /var/lib/apt/lists/*
 
 ENV JAVA_HOME="/usr/lib/jvm/default-java"
