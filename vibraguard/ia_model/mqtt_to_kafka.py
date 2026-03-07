@@ -25,7 +25,7 @@ except Exception as e:
     print(f"Error creating Kafka producer: {e}")
 
 # MQTT Callbacks
-def on_connect(client, userdata, flags, rc):
+def on_connect(client, userdata, flags, rc, properties=None):
     print(f"Connected to MQTT with result code {rc}")
     client.subscribe(MQTT_TOPIC)
 
