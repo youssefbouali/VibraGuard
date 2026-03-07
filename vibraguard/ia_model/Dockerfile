@@ -18,6 +18,7 @@ COPY train_random_forest.py .
 COPY sensor_data_training.csv .
 COPY spark_streaming_process.py .
 COPY mqtt_to_kafka.py .
+COPY mqtt_sensor_simulator.py .
 
 # Run training during build to generate .joblib files
 RUN python3 train_random_forest.py

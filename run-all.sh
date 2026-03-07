@@ -59,7 +59,7 @@ docker build -t vibraguard-ia:latest .
 
 # 4. Infrastructure Services (Helm)
 echo "🛠️  Deploying Infrastructure Services..."
-helm repo add bitnami https://charts.bitnami.com/bitnami
+#helm repo add bitnami https://charts.bitnami.com/bitnami
 #helm repo add elastic https://helm.elastic.co
 #helm repo add spark https://apache.github.io/spark-kubernetes-operator
 helm repo add k8s-at-home https://k8s-at-home.com/charts/
