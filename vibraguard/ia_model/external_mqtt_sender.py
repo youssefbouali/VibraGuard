@@ -8,7 +8,7 @@ import uuid
 # CONFIGURATION
 # ==========================================
 MQTT_BROKER = "vibraguard.mywire.org"  # The target domain
-MQTT_PORT = 1883                       # Default MQTT Port (Update to 8883 if using TLS/SSL)
+MQTT_PORT = 30083                      # The Kubernetes NodePort we just opened
 MQTT_TOPIC = "vibraguard/sensors"      # Topic to publish data to
 CLIENT_ID = f"vibraguard_external_simulator_{uuid.uuid4()}" # Unique client ID
 

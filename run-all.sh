@@ -77,7 +77,9 @@ else
 fi
 
 # Distributed Services
-helm upgrade --install mosquitto k8s-at-home/mosquitto -n $NAMESPACE
+helm upgrade --install mosquitto k8s-at-home/mosquitto -n $NAMESPACE \
+    --set service.main.type=NodePort \
+    --set "service.main.ports.mqtt.nodePort=30083"
 
 # Kafka: Custom Kubernetes Container Built from Apache Archive
 echo "📦 Building Custom Kafka Docker Image..."
