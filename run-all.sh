@@ -280,8 +280,10 @@ spec:
         - name: bridge
           image: vibraguard-ia:latest
           imagePullPolicy: Never
-          command: ["python3", "mqtt_to_kafka.py"]
+          command: ["python3", "-u", "mqtt_to_kafka.py"]
           env:
+            - name: PYTHONUNBUFFERED
+              value: "1"
             - name: MQTT_BROKER
               value: "mosquitto"
             - name: KAFKA_BROKER
@@ -305,6 +307,8 @@ spec:
             "spark_streaming_process.py"
           ]
           env:
+            - name: PYTHONUNBUFFERED
+              value: "1"
             - name: KAFKA_BROKER
               value: "kafka:9092"
       restartPolicy: OnFailure
