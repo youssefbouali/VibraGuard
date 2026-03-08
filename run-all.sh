@@ -186,6 +186,9 @@ spec:
           imagePullPolicy: Never
           ports:
             - containerPort: 3000
+          env:
+            - name: BACKEND_URL
+              value: "http://backend"
 EOF
 
 cat <<EOF > k8s/frontend-service.yaml
