@@ -13,13 +13,16 @@ export function createServer() {
   app.use(express.urlencoded({ extended: true }));
 
   // Proxy API requests to backend
+  const backendUrl = process.env.BACKEND_URL || "http://localhost:30007";
+  console.log(`📡 Backend proxy target: ${backendUrl}`);
+
   app.use(
-    "/api",
     createProxyMiddleware({
-      target: process.env.BACKEND_URL || "http://localhost:30007",
+      target: backendUrl,
       changeOrigin: true,
       pathFilter: (path) => {
-        // Only proxy if not handled by existing frontend routes
+        // Only proxy if it starts with /api and is not handled by existing frontend routes
+        if (!path.startsWith("/api")) return false;
         const frontendRoutes = ["/api/ping", "/api/demo"];
         return !frontendRoutes.some(route => path.startsWith(route));
       }

@@ -486,6 +486,9 @@ spec:
           imagePullPolicy: Never
           ports:
             - containerPort: 3000
+          env:
+            - name: BACKEND_URL
+              value: "http://backend"
 EOF
 
 # FRONTEND SERVICE
