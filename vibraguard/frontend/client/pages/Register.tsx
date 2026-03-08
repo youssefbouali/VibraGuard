@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -8,10 +9,53 @@ export default function Register() {
   const [acceptTerms, setAcceptTerms] = useState(true);
   const [role, setRole] = useState("Technicien");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // For now, redirect directly to dashboard as requested
-    navigate("/dashboard");
+
+    if (password !== confirmPassword) {
+      toast.error("Les mots de passe ne correspondent pas");
+      return;
+    }
+
+    if (!acceptTerms) {
+      toast.error("Veuillez accepter les conditions d'utilisation");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/v1/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password, fullName, role }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Échec de l'inscription");
+      }
+
+      const data = await response.json();
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify({ email: data.email, fullName: data.fullName }));
+
+      toast.success("Compte créé avec succès !");
+      navigate("/dashboard");
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      toast.error(error.message || "Erreur lors de l'inscription. Veuillez réessayer.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -151,9 +195,11 @@ export default function Register() {
               <InputWrapper>
                 <input
                   type="text"
-                  defaultValue="Ahmed El Fassi"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
                   className="flex-1 bg-transparent text-white text-[15px] font-normal outline-none placeholder-[#64748B]"
                   placeholder="Votre nom complet"
+                  required
                 />
                 <CheckIcon />
               </InputWrapper>
@@ -164,9 +210,11 @@ export default function Register() {
               <InputWrapper>
                 <input
                   type="email"
-                  defaultValue="ahmed.elfassi@ocp.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="flex-1 bg-transparent text-white text-[15px] font-normal outline-none placeholder-[#64748B]"
                   placeholder="votre@email.com"
+                  required
                 />
                 <CheckIcon />
               </InputWrapper>
@@ -178,9 +226,11 @@ export default function Register() {
                 <InputWrapper>
                   <input
                     type={showPassword ? "text" : "password"}
-                    defaultValue="motdepasse123"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     className="flex-1 bg-transparent text-white text-[15px] font-normal outline-none min-w-0"
                     placeholder="••••••••"
+                    required
                   />
                   <button
                     type="button"
@@ -206,9 +256,11 @@ export default function Register() {
                 <InputWrapper>
                   <input
                     type={showConfirm ? "text" : "password"}
-                    defaultValue="motdepasse123"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     className="flex-1 bg-transparent text-white text-[15px] font-normal outline-none min-w-0"
                     placeholder="••••••••"
+                    required
                   />
                   <button
                     type="button"
@@ -279,9 +331,10 @@ export default function Register() {
             {/* Submit */}
             <button
               type="submit"
-              className="w-full h-[52px] flex items-center justify-center rounded-[10px] bg-[#10B981] shadow-[0_4px_12px_0_rgba(16,185,129,0.20)] text-white font-semibold text-base hover:bg-[#0ea572] active:bg-[#059669] transition-colors mt-1"
+              disabled={isLoading}
+              className="w-full h-[52px] flex items-center justify-center rounded-[10px] bg-[#10B981] shadow-[0_4px_12px_0_rgba(16,185,129,0.20)] text-white font-semibold text-base hover:bg-[#0ea572] active:bg-[#059669] transition-colors mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Créer un compte
+              {isLoading ? "Création en cours..." : "Créer un compte"}
             </button>
           </form>
 

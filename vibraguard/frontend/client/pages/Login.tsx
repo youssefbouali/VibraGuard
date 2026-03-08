@@ -1,17 +1,45 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export default function Login() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [email, setEmail] = useState("expert.maintenance@ocp.com");
-  const [password, setPassword] = useState("••••••••");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // For now, redirect directly to dashboard as requested
-    navigate("/dashboard");
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/v1/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Échec de la connexion");
+      }
+
+      const data = await response.json();
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify({ email: data.email, fullName: data.fullName }));
+
+      toast.success("Connexion réussie !");
+      navigate("/dashboard");
+    } catch (error: any) {
+      console.error("Login error:", error);
+      toast.error(error.message || "Erreur lors de la connexion. Veuillez vérifier vos identifiants.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -107,6 +135,7 @@ export default function Login() {
                 onChange={(e) => setEmail(e.target.value)}
                 className="flex-1 bg-transparent text-white text-xs sm:text-[15px] font-normal outline-none placeholder-[#64748B]"
                 placeholder="votre@email.com"
+                required
               />
             </div>
           </div>
@@ -127,6 +156,7 @@ export default function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="flex-1 bg-transparent text-white text-xs sm:text-[15px] font-normal outline-none"
                 placeholder="••••••••"
+                required
               />
               <button
                 type="button"
@@ -182,12 +212,15 @@ export default function Login() {
           {/* Submit button */}
           <button
             type="submit"
-            className="w-full h-10 sm:h-[52px] flex items-center justify-center gap-2.5 rounded-lg sm:rounded-[10px] bg-[#10B981] shadow-[0_4px_12px_0_rgba(16,185,129,0.20)] text-white font-semibold text-xs sm:text-base hover:bg-[#0ea572] active:bg-[#059669] transition-colors"
+            disabled={isLoading}
+            className="w-full h-10 sm:h-[52px] flex items-center justify-center gap-2.5 rounded-lg sm:rounded-[10px] bg-[#10B981] shadow-[0_4px_12px_0_rgba(16,185,129,0.20)] text-white font-semibold text-xs sm:text-base hover:bg-[#0ea572] active:bg-[#059669] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span>Se connecter</span>
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="sm:w-[20px] sm:h-[20px] hidden sm:block">
-              <path d="M4.16675 9.99996H15.8334M10.0001 4.16663L15.8334 9.99996L10.0001 15.8333" stroke="white" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <span>{isLoading ? "Connexion..." : "Se connecter"}</span>
+            {!isLoading && (
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="sm:w-[20px] sm:h-[20px] hidden sm:block">
+                <path d="M4.16675 9.99996H15.8334M10.0001 4.16663L15.8334 9.99996L10.0001 15.8333" stroke="white" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
           </button>
         </form>
 

@@ -1,8 +1,17 @@
 server:
-  port: 8080
+  port: 30007
 
 spring:
   application:
     name: api-gateway
-
-# No microservice routing for now, using local controllers in API Gateway
+  datasource:
+    url: jdbc:oracle:thin:@oracle-db.vibraguard.svc.cluster.local:1521:xe
+    driver-class-name: oracle.jdbc.OracleDriver
+    username: system
+    password: password # Replace with your actual password
+  jpa:
+    database-platform: org.hibernate.dialect.OracleDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  # H2 console removed as we are using Oracle now
