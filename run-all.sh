@@ -146,6 +146,19 @@ spec:
           imagePullPolicy: Never
           ports:
             - containerPort: 8080
+          env:
+            - name: DB_URL
+              value: "jdbc:oracle:thin:@oracle-db.vibraguard.svc.cluster.local:1521:xe"
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: oracle-db-credentials
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: oracle-db-credentials
+                  key: password
 EOF
 
 cat <<EOF > k8s/backend-service.yaml

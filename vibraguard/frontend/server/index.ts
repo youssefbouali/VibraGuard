@@ -21,10 +21,24 @@ export function createServer() {
       target: backendUrl,
       changeOrigin: true,
       pathFilter: (path) => {
-        // Only proxy if it starts with /api and is not handled by existing frontend routes
         if (!path.startsWith("/api")) return false;
         const frontendRoutes = ["/api/ping", "/api/demo"];
         return !frontendRoutes.some(route => path.startsWith(route));
+      },
+      on: {
+        error: (err, _req, res) => {
+          console.error(`❌ Proxy Error to ${backendUrl}:`, err.message);
+          // @ts-ignore
+          if (!res.headersSent) {
+            // @ts-ignore
+            res.writeHead(502, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              error: "Proxy failed",
+              details: err.message,
+              target: backendUrl
+            }));
+          }
+        }
       }
     })
   );
