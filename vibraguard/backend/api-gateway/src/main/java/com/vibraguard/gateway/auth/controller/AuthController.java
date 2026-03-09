@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
+import reactor.core.scheduler.Schedulers;
+
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
@@ -18,11 +20,13 @@ public class AuthController {
 
     @PostMapping("/register")
     public Mono<ResponseEntity<AuthResponse>> register(@RequestBody RegisterRequest request) {
-        return Mono.fromCallable(() -> ResponseEntity.ok(authService.register(request)));
+        return Mono.fromCallable(() -> ResponseEntity.ok(authService.register(request)))
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     @PostMapping("/login")
     public Mono<ResponseEntity<AuthResponse>> login(@RequestBody LoginRequest request) {
-        return Mono.fromCallable(() -> ResponseEntity.ok(authService.login(request)));
+        return Mono.fromCallable(() -> ResponseEntity.ok(authService.login(request)))
+                .subscribeOn(Schedulers.boundedElastic());
     }
 }

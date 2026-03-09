@@ -26,6 +26,14 @@ export function createServer() {
         return !frontendRoutes.some(route => path.startsWith(route));
       },
       on: {
+        proxyReq: (proxyReq, req: any) => {
+          if (req.body && (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH')) {
+            const bodyData = JSON.stringify(req.body);
+            proxyReq.setHeader('Content-Type', 'application/json');
+            proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
+            proxyReq.write(bodyData);
+          }
+        },
         error: (err, _req, res) => {
           console.error(`❌ Proxy Error to ${backendUrl}:`, err.message);
           // @ts-ignore
