@@ -55,4 +55,17 @@ public class AuthService {
                 .fullName(user.getFullName())
                 .build();
     }
+
+    public AuthResponse getMe(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return AuthResponse.builder()
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .build();
+    }
+
+    public String getMeFromToken(String token) {
+        return jwtUtil.extractEmail(token);
+    }
 }

@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/auth-context";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [email, setEmail] = useState("expert.maintenance@ocp.com");
@@ -29,8 +31,7 @@ export default function Login() {
       }
 
       const data = await response.json();
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify({ email: data.email, fullName: data.fullName }));
+      login(data.token, { email: data.email, fullName: data.fullName });
 
       toast.success("Connexion réussie !");
       navigate("/dashboard");

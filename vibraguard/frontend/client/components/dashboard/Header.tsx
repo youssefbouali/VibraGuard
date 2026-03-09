@@ -24,13 +24,16 @@ interface HeaderProps {
   onMenuClick?: () => void;
 }
 
+import { useAuth } from "@/lib/auth-context";
+
 export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenuClick }: HeaderProps) {
+  const { user, logout } = useAuth();
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // In a real app, you would clear cookies/localstorage/auth state here
+    logout();
     navigate("/login");
   };
 
@@ -237,8 +240,8 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
           <DropdownMenuTrigger asChild>
             <div className="hidden sm:flex items-center gap-3 pl-6 border-l border-white/10 cursor-pointer hover:opacity-80 transition-opacity">
               <div className="flex flex-col items-end">
-                <span className="text-[#E6F0F2] text-sm font-semibold leading-tight">Ayoub El Fassi</span>
-                <span className="text-[#C9E7E6] text-xs font-normal leading-tight">Admin Maintenance</span>
+                <span className="text-[#E6F0F2] text-sm font-semibold leading-tight">{user?.fullName || "Utilisateur"}</span>
+                <span className="text-[#C9E7E6] text-xs font-normal leading-tight">Expert Maintenance</span>
               </div>
               <img
                 src="https://api.builder.io/api/v1/image/assets/TEMP/16bc886799b3bbe8e6a643d7280a0b9514614061?width=72"
@@ -250,8 +253,8 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
           <DropdownMenuContent className="w-56 bg-[#0A1A27] border-white/10 text-[#E6F0F2] shadow-2xl" align="end" sideOffset={8}>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">Ayoub El Fassi</p>
-                <p className="text-xs leading-none text-[#98A6A8]">ayoub.elfassi@vibraguard.ma</p>
+                <p className="text-sm font-medium leading-none">{user?.fullName || "Utilisateur"}</p>
+                <p className="text-xs leading-none text-[#98A6A8]">{user?.email || ""}</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator className="bg-white/5" />

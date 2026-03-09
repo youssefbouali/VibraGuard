@@ -21,9 +21,11 @@ public class SecurityConfig {
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         http
                 .csrf(csrf -> csrf.disable())
+                .httpBasic(httpBasic -> httpBasic.disable())
+                .formLogin(formLogin -> formLogin.disable())
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/api/v1/auth/**", "/login", "/register", "/forgot-password").permitAll()
-                        .pathMatchers("/api/**").permitAll() // Keep other API open for now as before
+                        .pathMatchers("/api/v1/iot/**", "/api/v1/ml/**", "/api/v1/blockchain/**").authenticated()
                         .anyExchange().permitAll());
         return http.build();
     }

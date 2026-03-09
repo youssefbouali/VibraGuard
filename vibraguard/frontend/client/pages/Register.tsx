@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/auth-context";
 
 export default function Register() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(true);
@@ -45,8 +47,7 @@ export default function Register() {
       }
 
       const data = await response.json();
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify({ email: data.email, fullName: data.fullName }));
+      login(data.token, { email: data.email, fullName: data.fullName });
 
       toast.success("Compte créé avec succès !");
       navigate("/dashboard");

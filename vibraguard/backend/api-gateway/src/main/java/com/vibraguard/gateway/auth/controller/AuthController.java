@@ -29,4 +29,11 @@ public class AuthController {
         return Mono.fromCallable(() -> ResponseEntity.ok(authService.login(request)))
                 .subscribeOn(Schedulers.boundedElastic());
     }
+
+    @GetMapping("/me")
+    public Mono<ResponseEntity<AuthResponse>> getMe(@RequestHeader("Authorization") String token) {
+        String email = authService.getMeFromToken(token.substring(7));
+        return Mono.fromCallable(() -> ResponseEntity.ok(authService.getMe(email)))
+                .subscribeOn(Schedulers.boundedElastic());
+    }
 }

@@ -115,9 +115,11 @@ function ActivityItem({ time, title, description, isFirst }: ActivityItemProps) 
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { useAuth } from "@/lib/auth-context";
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function ProfilUtilisateur() {
+  const { user } = useAuth();
   const [pushNotif, setPushNotif] = useState(true);
   const [emailReports, setEmailReports] = useState(false);
 
@@ -164,7 +166,7 @@ export default function ProfilUtilisateur() {
                 <div className="flex items-center gap-6">
                   <img
                     src="https://api.builder.io/api/v1/image/assets/TEMP/debebd2e98692a4004e72072b04e25237419d788?width=192"
-                    alt="Karim B."
+                    alt={user?.fullName || "User Avatar"}
                     className="w-24 h-24 rounded-full border-[3px] border-[#0B1518] ring-2 ring-[#007A3D] object-cover shrink-0"
                   />
                 </div>
@@ -189,7 +191,7 @@ export default function ProfilUtilisateur() {
                         <path d="M2.66659 2.66699H13.3333C14.0691 2.66699 14.6666 3.26444 14.6666 4.00033V12.0003C14.6666 12.7362 14.0691 13.3337 13.3333 13.3337H2.66659C1.9307 13.3337 1.33325 12.7362 1.33325 12.0003V4.00033C1.33325 3.26444 1.9307 2.66699 2.66659 2.66699V2.66699" stroke="#98A6A8" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     }
-                    value="k.benali@ocpgroup.ma"
+                    value={user?.email || "chargement..."}
                   />
                   <InfoField
                     label="Numéro de Téléphone"
