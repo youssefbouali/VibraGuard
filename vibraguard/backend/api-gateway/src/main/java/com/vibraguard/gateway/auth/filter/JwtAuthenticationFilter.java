@@ -13,7 +13,8 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
+import java.util.Collections;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Component
 @RequiredArgsConstructor
@@ -30,13 +31,16 @@ public class JwtAuthenticationFilter implements WebFilter {
             try {
                 String email = jwtUtil.extractEmail(token);
                 if (email != null && !jwtUtil.extractExpiration(token).before(new java.util.Date())) {
-                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(email, null,
-                            new ArrayList<>());
+                    System.out.println("JWT Valid for: " + email);
+                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                            email,
+                            null,
+                            Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
                     return chain.filter(exchange)
                             .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth));
                 }
             } catch (Exception e) {
-                // Token invalid or expired
+                System.out.println("JWT Validation Error: " + e.getMessage());
             }
         }
 

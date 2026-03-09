@@ -14,8 +14,9 @@ import java.util.function.Function;
 
 @Component
 public class JwtUtil {
-
-    private final SecretKey secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    // Use a fixed key for development to avoid breaking tokens on restart
+    private final String SECRET_KEY_STRING = "vibraguard_super_secret_key_fixed_for_dev_1234567890";
+    private final SecretKey secretKey = Keys.hmacShaKeyFor(SECRET_KEY_STRING.getBytes());
     private final long expiration = 1000 * 60 * 60 * 10; // 10 hours
 
     public String generateToken(String email) {
