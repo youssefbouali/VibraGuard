@@ -13,7 +13,7 @@ export function createServer() {
   app.use(express.urlencoded({ extended: true }));
 
   // Proxy API requests to backend
-  const backendUrl = process.env.BACKEND_URL || "http://localhost:30007";
+  const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
   console.log(`📡 Backend proxy target: ${backendUrl}`);
 
   app.use(
