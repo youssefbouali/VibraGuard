@@ -5,10 +5,10 @@ spring:
   application:
     name: api-gateway
   datasource:
-    url: jdbc:oracle:thin:@oracle-db.vibraguard.svc.cluster.local:1521:xe
+    url: ${DB_URL:jdbc:oracle:thin:@oracle-db.vibraguard.svc.cluster.local:1521:xe}
     driver-class-name: oracle.jdbc.OracleDriver
-    username: system
-    password: password # Replace with your actual password
+    username: ${DB_USERNAME:system}
+    password: ${DB_PASSWORD:password}
   jpa:
     database-platform: org.hibernate.dialect.OracleDialect
     hibernate:
