@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Sidebar } from "@/components/dashboard/Sidebar";
-import { Header } from "@/components/dashboard/Header";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { AlertesTable, Alerte } from "@/components/alertes/AlertesTable";
 import { AlertDetail } from "@/components/alertes/AlertDetail";
 

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Sidebar } from "@/components/dashboard/Sidebar";
-import { Header } from "@/components/dashboard/Header";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { cn } from "@/lib/utils";
 
 type HealthStatus = "Critique" | "Attention" | "Normal";
