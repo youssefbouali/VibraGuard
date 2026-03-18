@@ -159,9 +159,9 @@ function ActionBtn({ children }: { children: React.ReactNode }) {
   );
 }
 
-import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { useMoteurs } from "@/hooks/use-moteurs";
 
-// ... (other imports, types, interfaces, data, and components remain the same)
+// ... (types and statusConfig remain)
 
 export default function Moteurs() {
   const navigate = useNavigate();
@@ -169,11 +169,25 @@ export default function Moteurs() {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const totalMoteurs = 42;
-  const perPage = 5;
-  const totalPages = 9;
+  const { data: apiMoteurs, isLoading } = useMoteurs();
 
-  const filtered = moteursData.filter(
+  const totalMoteurs = apiMoteurs?.length || 0;
+  const perPage = 5;
+  const totalPages = Math.ceil(totalMoteurs / perPage) || 1;
+
+  // Map backend data to frontend Moteur interface
+  const mappedMoteurs: Moteur[] = (apiMoteurs || []).map(m => ({
+    id: m.id,
+    zone: "Zone Principal", // Backend doesn't provide zone
+    localisation: "Site Alpha", // Backend doesn't provide localisation
+    type: m.type,
+    puissance: "N/A", // Backend doesn't provide puissance
+    etatSante: m.etatLabel as HealthStatus,
+    vibrationRMS: parseFloat(m.vibration.split(' ')[0]),
+    derniereAlerte: "Récemment",
+  }));
+
+  const filtered = mappedMoteurs.filter(
     (m) =>
       m.id.toLowerCase().includes(search.toLowerCase()) ||
       m.zone.toLowerCase().includes(search.toLowerCase()) ||
@@ -183,6 +197,7 @@ export default function Moteurs() {
   return (
     <DashboardLayout breadcrumb="Moteurs">
       <div className="flex flex-col gap-4 sm:gap-6">
+        {isLoading && <div className="text-white">Chargement des données...</div>}
         {/* Title row */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <h1 className="text-xl sm:text-2xl lg:text-[24px] font-semibold text-[#E6F0F2]">Liste des Moteurs</h1>

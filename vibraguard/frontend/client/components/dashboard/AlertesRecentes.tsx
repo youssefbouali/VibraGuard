@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { useAlerts } from "@/hooks/use-alerts";
 
 interface Alerte {
   id: string;
@@ -52,10 +51,7 @@ function AlerteIcon({ type }: { type: Alerte["iconType"] }) {
 export function AlertesRecentes() {
   const navigate = useNavigate();
 
-  const { data: rawAlerts = [], isLoading } = useQuery<any[]>({
-    queryKey: ["alerts"],
-    queryFn: api.getAlerts
-  });
+  const { data: rawAlerts = [], isLoading } = useAlerts();
 
   // Map backend alerts to the format expected by the frontend
   const alertes: Alerte[] = rawAlerts.map(a => ({

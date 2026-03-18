@@ -1,6 +1,5 @@
 import { cn } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { useKPIs } from "@/hooks/use-kpis";
 
 interface KPICardProps {
   title: string;
@@ -46,10 +45,7 @@ function KPICard({ title, value, trend, trendUp, trendColor, icon, iconBg }: KPI
 }
 
 export function KPICards() {
-  const { data: kpis, isLoading } = useQuery<any>({
-    queryKey: ["kpis"],
-    queryFn: api.getKPIs
-  });
+  const { data: kpis, isLoading } = useKPIs();
 
   if (isLoading) return <div className="text-white">Chargement...</div>;
 

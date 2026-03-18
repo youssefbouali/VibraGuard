@@ -51,11 +51,31 @@ const ALL_TASKS: OT[] = [
   },
 ];
 
+import { useWorkOrders } from "@/hooks/use-work-orders";
+
+// ... (KanbanColumn and OT imports remain)
+
 export function KanbanBoard() {
+  const { data: apiWorkOrders, isLoading } = useWorkOrders();
   const [search, setSearch] = useState("");
   const [view, setView] = useState<"kanban" | "tableau">("kanban");
 
-  const filtered = ALL_TASKS.filter(
+  // Map backend work orders to frontend OT interface
+  const mappedTasks: OT[] = (apiWorkOrders || []).map(wo => ({
+    id: wo.id,
+    title: wo.title,
+    machine: wo.asset,
+    priority: wo.priority.toLowerCase() === "critique" || wo.priority.toLowerCase() === "haute" 
+      ? "haute" 
+      : wo.priority.toLowerCase() === "basse" 
+        ? "basse" 
+        : "moyenne",
+    date: wo.dueDate,
+    assignee: wo.assignedTo,
+    status: wo.status === "Nouveau" ? "todo" : wo.status === "En cours" ? "inprogress" : "done",
+  }));
+
+  const filtered = mappedTasks.filter(
     (t) =>
       t.id.toLowerCase().includes(search.toLowerCase()) ||
       t.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -68,6 +88,7 @@ export function KanbanBoard() {
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
+      {isLoading && <div className="text-white px-10 py-4">Chargement des ordres de travail...</div>}
       {/* Toolbar */}
       <div className="flex items-center justify-between px-10 py-6 shrink-0">
         {/* Search */}

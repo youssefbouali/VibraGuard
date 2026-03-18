@@ -38,6 +38,16 @@ public class MainController {
         return alerts;
     }
 
+    // Work Order Endpoints
+    @GetMapping("/iot/work-orders")
+    public List<Map<String, Object>> getWorkOrders() {
+        List<Map<String, Object>> workOrders = new ArrayList<>();
+        workOrders.add(createWorkOrder("W-455", "Remplacement Roulement P1", "Pompe Principale", "En cours", "Expert Maintenance", "2026-06-20", "Haute"));
+        workOrders.add(createWorkOrder("W-456", "Inspection Broyeur 04", "Broyeur Phosphate", "Nouveau", "Agent Maintenance", "2026-06-21", "Critique"));
+        workOrders.add(createWorkOrder("W-457", "Nettoyage Filtres Ventil-12", "Convoyeur L-2", "Terminé", "Equipe B", "2026-06-18", "Basse"));
+        return workOrders;
+    }
+
     // Blockchain Endpoints
     @GetMapping("/blockchain/audit")
     public List<Map<String, Object>> getAuditHistory() {
@@ -69,5 +79,17 @@ public class MainController {
         entry.put("hash", hash); entry.put("action", action); entry.put("user", user);
         entry.put("date", date); entry.put("status", status);
         return entry;
+    }
+
+    private Map<String, Object> createWorkOrder(String id, String title, String asset, String status, String assignedTo, String dueDate, String priority) {
+        Map<String, Object> wo = new HashMap<>();
+        wo.put("id", id);
+        wo.put("title", title);
+        wo.put("asset", asset);
+        wo.put("status", status);
+        wo.put("assignedTo", assignedTo);
+        wo.put("dueDate", dueDate);
+        wo.put("priority", priority);
+        return wo;
     }
 }

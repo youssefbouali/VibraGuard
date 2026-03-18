@@ -1,21 +1,28 @@
-const BASE_URL = "/api/v1";
+export async function apiRequest<T>(
+  method: string,
+  url: string,
+  data?: unknown
+): Promise<T> {
+  const res = await fetch(url, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      ...(localStorage.getItem("token")
+        ? { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        : {}),
+    },
+    body: data ? JSON.stringify(data) : undefined,
+  });
 
-export async function fetchWithAuth(endpoint: string) {
-    const token = localStorage.getItem("token");
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
-        headers: {
-            "Authorization": token ? `Bearer ${token}` : "",
-        },
-    });
-    if (!response.ok) {
-        throw new Error(`API error: ${response.statusText}`);
-    }
-    return response.json();
+  if (res.status === 401) {
+    // Optional: handle unauthorized
+    // window.location.href = '/login';
+  }
+
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => ({}));
+    throw new Error(errorBody.message || "An error occurred");
+  }
+
+  return res.json();
 }
-
-export const api = {
-    getMotors: () => fetchWithAuth("/iot/motors"),
-    getKPIs: () => fetchWithAuth("/iot/kpis"),
-    getAlerts: () => fetchWithAuth("/ml/alerts"),
-    getAudit: () => fetchWithAuth("/blockchain/audit"),
-};

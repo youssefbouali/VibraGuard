@@ -56,18 +56,33 @@ type SeveriteFilter = "Toutes" | "Critique" | "Majeur" | "Mineur";
 type DateFilter = "7 Derniers Jours" | "30 Derniers Jours" | "Aujourd'hui";
 type MoteurFilter = "Zone Broyage" | "Zone Convoyage" | "Tous";
 
-import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { useAlerts } from "@/hooks/use-alerts";
+
+// ... (types and filters remain)
 
 export default function Alertes() {
-  const [selectedId, setSelectedId] = useState<string | null>("#ALT-\n8402");
+  const { data: apiAlerts, isLoading } = useAlerts();
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [severiteFilter, setSeveriteFilter] = useState<SeveriteFilter>("Toutes");
   const [dateFilter, setDateFilter] = useState<DateFilter>("7 Derniers Jours");
   const [moteurFilter, setMoteurFilter] = useState<MoteurFilter>("Zone Broyage");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const selectedAlerte = ALERTES_DATA.find((a) => a.id === selectedId) ?? null;
+  // Map backend alerts to frontend format
+  const mappedAlerts: Alerte[] = (apiAlerts || []).map(a => ({
+    id: a.id,
+    moteur: "MTR-Broyeur-04", // Backend doesn't provide specific motor in createAlert
+    typeDefaut: a.message,
+    severite: a.level as Alerte["severite"],
+    confiance: a.priority === "high" ? 95 : 85,
+    dateHeure: a.time,
+    statut: "Nouveau",
+  }));
 
-  const filteredAlertes = ALERTES_DATA.filter((a) => {
+  const selectedAlerte = mappedAlerts.find((a) => a.id === selectedId) ?? null;
+
+  const filteredAlertes = mappedAlerts.filter((a) => {
     if (severiteFilter !== "Toutes" && a.severite !== severiteFilter) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -96,6 +111,7 @@ export default function Alertes() {
   return (
     <DashboardLayout breadcrumb="Alertes">
       <div className="flex flex-col flex-1 min-h-[calc(100vh-72px)] overflow-hidden">
+        {isLoading && <div className="text-white p-4">Chargement des alertes...</div>}
         {/* Filters toolbar */}
         <div className="flex flex-wrap items-center justify-between gap-3 px-0 py-5 border-b border-white/5 shrink-0">
           <div className="flex flex-wrap items-center gap-3">

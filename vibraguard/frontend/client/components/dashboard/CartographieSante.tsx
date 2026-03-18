@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { useMoteurs } from "@/hooks/use-moteurs";
 
 type MoteurStatus = "ok" | "critical" | "warning";
 
@@ -7,25 +8,6 @@ interface Moteur {
   status: MoteurStatus;
   iconType: "turbine" | "cpu" | "settings" | "waves";
 }
-
-const moteurs: Moteur[] = [
-  { id: "M-01", status: "ok", iconType: "turbine" },
-  { id: "M-02", status: "ok", iconType: "turbine" },
-  { id: "M-03", status: "ok", iconType: "cpu" },
-  { id: "M-04", status: "critical", iconType: "settings" },
-  { id: "M-05", status: "ok", iconType: "cpu" },
-  { id: "M-06", status: "ok", iconType: "turbine" },
-  { id: "M-07", status: "ok", iconType: "settings" },
-  { id: "M-08", status: "warning", iconType: "waves" },
-  { id: "M-09", status: "ok", iconType: "cpu" },
-  { id: "M-10", status: "ok", iconType: "waves" },
-  { id: "M-11", status: "ok", iconType: "turbine" },
-  { id: "M-12", status: "warning", iconType: "settings" },
-  { id: "M-13", status: "ok", iconType: "cpu" },
-  { id: "M-14", status: "ok", iconType: "waves" },
-  { id: "M-15", status: "ok", iconType: "settings" },
-  { id: "M-16", status: "ok", iconType: "turbine" },
-];
 
 const statusDotColor: Record<MoteurStatus, string> = {
   ok: "#10B981",
@@ -96,6 +78,20 @@ function MoteurIcon({ type, color }: { type: Moteur["iconType"]; color: string }
 }
 
 export function CartographieSante() {
+  const { data: apiMoteurs, isLoading } = useMoteurs();
+
+  const mappedMoteurs: Moteur[] = (apiMoteurs || []).map(m => {
+    let status: MoteurStatus = "ok";
+    if (m.etatLabel === "Critique") status = "critical";
+    else if (m.etatLabel === "Attention" || m.etatLabel === "Alerte") status = "warning";
+    
+    return {
+      id: m.id,
+      status: status,
+      iconType: "turbine",
+    };
+  });
+
   return (
     <div className="flex flex-col h-full rounded-2xl border border-white/[0.08] bg-[rgba(17,26,36,0.50)] backdrop-blur-xl p-6 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.30)]">
       {/* Header */}
@@ -112,7 +108,8 @@ export function CartographieSante() {
 
       {/* Grid */}
       <div className="grid grid-cols-4 gap-3 flex-1 content-start">
-        {moteurs.map((m) => {
+        {isLoading && <div className="text-white col-span-4 italic">Chargement...</div>}
+        {mappedMoteurs.map((m) => {
           const dotColor = statusDotColor[m.status];
           const iconColor = statusIconColor[m.status];
           const textColor = statusTextColor[m.status];

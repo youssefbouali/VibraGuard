@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { useMoteurs } from "@/hooks/use-moteurs";
 
 interface MoteurRow {
   id: string;
@@ -36,10 +35,7 @@ function TrendFlat() {
 export function MoteursTable() {
   const navigate = useNavigate();
 
-  const { data: rows = [], isLoading } = useQuery<MoteurRow[]>({
-    queryKey: ["motors"],
-    queryFn: api.getMotors
-  });
+  const { data: rows = [], isLoading } = useMoteurs();
 
   if (isLoading) {
     return (
