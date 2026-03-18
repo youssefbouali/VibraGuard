@@ -1,5 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { useAudit } from "@/hooks/use-audit";
 
 interface Transaction {
   hash: string;
@@ -37,10 +36,7 @@ const VerifyIcon = () => (
 );
 
 export function TransactionTable() {
-  const { data: rawAudit = [], isLoading } = useQuery<any[]>({
-    queryKey: ["audit"],
-    queryFn: api.getAudit
-  });
+  const { data: rawAudit = [], isLoading } = useAudit();
 
   const transactions: Transaction[] = rawAudit.map((tx, idx) => ({
     hash: tx.hash,

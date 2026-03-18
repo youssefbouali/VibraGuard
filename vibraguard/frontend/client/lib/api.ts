@@ -16,7 +16,6 @@ export async function apiRequest<T>(
 
   if (res.status === 401) {
     // Optional: handle unauthorized
-    // window.location.href = '/login';
   }
 
   if (!res.ok) {
@@ -26,3 +25,11 @@ export async function apiRequest<T>(
 
   return res.json();
 }
+
+export const api = {
+  getMotors: () => apiRequest<any[]>("GET", "/api/v1/iot/motors"),
+  getAlerts: () => apiRequest<any[]>("GET", "/api/v1/ml/alerts"),
+  getKPIs: () => apiRequest<any>("GET", "/api/v1/iot/kpis"),
+  getWorkOrders: () => apiRequest<any[]>("GET", "/api/v1/iot/work-orders"),
+  getAudit: () => apiRequest<any[]>("GET", "/api/v1/blockchain/audit"),
+};
