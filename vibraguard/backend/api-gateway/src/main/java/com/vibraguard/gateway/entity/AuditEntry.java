@@ -16,7 +16,9 @@ public class AuditEntry {
     @Id
     private String hash;
     private String action;
+    @jakarta.persistence.Column(name = "AUDIT_USER")
     private String user;
+    @jakarta.persistence.Column(name = "AUDIT_DATE")
     private String date;
     private String status;
 }

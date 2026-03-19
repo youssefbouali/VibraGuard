@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 public class Motor {
     @Id
     private String id;
+    @jakarta.persistence.Column(name = "MOTOR_TYPE")
     private String type;
     private String etatLabel;
     private String etatColor;

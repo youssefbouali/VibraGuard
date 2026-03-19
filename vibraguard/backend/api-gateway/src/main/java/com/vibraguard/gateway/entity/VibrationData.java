@@ -18,6 +18,7 @@ public class VibrationData {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @jakarta.persistence.Column(name = "VIBRATION_TIME")
     private String time;
     private double x;
     private double y;

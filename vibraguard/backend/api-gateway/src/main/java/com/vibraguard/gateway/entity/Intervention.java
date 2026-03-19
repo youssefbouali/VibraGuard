@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Intervention {
     @Id
+    @jakarta.persistence.Column(name = "INTER_TYPE")
     private String type;
     private int value;
     private String color;

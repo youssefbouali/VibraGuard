@@ -20,6 +20,7 @@ public class TraceabilityStep {
     private Long id;
     private String label;
     private String sublabel;
+    @jakarta.persistence.Column(name = "STEP_STATUS")
     private String status; // done, active, pending
     private String borderColor;
     private String bgColor;

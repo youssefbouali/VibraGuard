@@ -17,6 +17,7 @@ public class WorkOrder {
     private String id;
     private String title;
     private String asset;
+    @jakarta.persistence.Column(name = "WO_STATUS")
     private String status;
     private String assignedTo;
     private String dueDate;
