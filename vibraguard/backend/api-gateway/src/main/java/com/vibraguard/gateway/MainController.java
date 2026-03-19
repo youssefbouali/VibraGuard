@@ -1,3 +1,5 @@
+package com.vibraguard.gateway;
+
 import com.vibraguard.gateway.entity.*;
 import com.vibraguard.gateway.repository.*;
 import jakarta.annotation.PostConstruct;

@@ -39,7 +39,7 @@ public class SecurityConfig {
                 .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/api/v1/auth/**", "/login", "/register", "/forgot-password").permitAll()
-                        .pathMatchers("/api/v1/iot/**", "/api/v1/ml/**", "/api/v1/blockchain/**").authenticated()
+                        .pathMatchers("/api/v1/iot/**", "/api/v1/ml/**", "/api/v1/blockchain/**", "/api/v1/bi/**").permitAll()
                         .anyExchange().permitAll());
         return http.build();
     }
