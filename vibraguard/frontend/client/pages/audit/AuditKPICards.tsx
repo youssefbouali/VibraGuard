@@ -1,4 +1,10 @@
+import { useBlockchainKPIs } from "@/hooks/use-blockchain-kpis";
+
 export function AuditKPICards() {
+  const { data: kpis, isLoading } = useBlockchainKPIs();
+
+  if (isLoading) return <div className="text-white p-6">Chargement...</div>;
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
       {/* Blocs Sécurisés */}
@@ -16,7 +22,9 @@ export function AuditKPICards() {
           </div>
         </div>
         <div className="flex justify-between items-end">
-          <span className="text-[#E6F0F2] text-2xl font-bold leading-6">104,829</span>
+          <span className="text-[#E6F0F2] text-2xl font-bold leading-6">
+            {kpis?.secureBlocks.toLocaleString() || "104,829"}
+          </span>
           <div className="flex items-end gap-[3px] h-6">
             {[9.6, 14.4, 7.2, 19.2, 24, 12, 21.6].map((h, i) => (
               <div key={i} className="w-1 rounded-sm bg-[#007A3D] opacity-80" style={{ height: `${h}px` }} />
@@ -27,7 +35,9 @@ export function AuditKPICards() {
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M4.08337 4.08301H9.91671V9.91634M4.08337 9.91634L9.91671 4.08301" stroke="#007A3D" strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <span className="text-[#007A3D] text-xs font-medium">+14 aujourd'hui</span>
+          <span className="text-[#007A3D] text-xs font-medium">
+            {kpis?.secureBlocksTrend || "+14 aujourd'hui"}
+          </span>
         </div>
       </div>
 
@@ -43,7 +53,9 @@ export function AuditKPICards() {
           </div>
         </div>
         <div className="flex items-end">
-          <span className="text-[#E6F0F2] text-2xl font-bold leading-6">42</span>
+          <span className="text-[#E6F0F2] text-2xl font-bold leading-6">
+            {kpis?.smartContracts || "42"}
+          </span>
         </div>
         <span className="text-[#98A6A8] text-xs font-medium">Actifs sur le réseau interne</span>
       </div>
@@ -60,7 +72,9 @@ export function AuditKPICards() {
           </div>
         </div>
         <div className="flex items-end">
-          <span className="text-[#E6F0F2] text-2xl font-bold leading-6">100%</span>
+          <span className="text-[#E6F0F2] text-2xl font-bold leading-6">
+            {kpis?.integrityRate || "100"}%
+          </span>
         </div>
         <div className="flex items-center gap-1">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -86,7 +100,9 @@ export function AuditKPICards() {
           </div>
         </div>
         <div className="flex items-end">
-          <span className="text-[#E6F0F2] text-2xl font-bold leading-6">2.4s</span>
+          <span className="text-[#E6F0F2] text-2xl font-bold leading-6">
+            {kpis?.validationTime || "2.4"}s
+          </span>
         </div>
         <span className="text-[#98A6A8] text-xs font-medium">Moyenne de validation par bloc</span>
       </div>

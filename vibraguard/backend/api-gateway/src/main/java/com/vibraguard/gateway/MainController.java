@@ -50,7 +50,55 @@ public class MainController {
         return workOrders;
     }
 
+    // Rapports BI Endpoints
+    @GetMapping("/bi/kpis")
+    public Map<String, Object> getBIKPIs() {
+        Map<String, Object> kpis = new HashMap<>();
+        kpis.put("mtbf", 1240); kpis.put("mtbfTrend", "+12.5% vs mois préc."); kpis.put("mtbfUp", true);
+        kpis.put("mttr", 3.2); kpis.put("mttrTrend", "-5.4% vs mois préc."); kpis.put("mttrUp", false);
+        kpis.put("availability", 98.4); kpis.put("availabilityTrend", "+0.2% vs mois préc."); kpis.put("availabilityUp", true);
+        kpis.put("maintenanceCost", 45200); kpis.put("maintenanceCostTrend", "-15.0% vs budget"); kpis.put("maintenanceCostUp", false);
+        kpis.put("sitesConnected", 5);
+        kpis.put("activeAlerts", 12);
+        return kpis;
+    }
+
+    @GetMapping("/bi/maintenance-costs")
+    public List<Map<String, Object>> getMaintenanceCosts() {
+        List<Map<String, Object>> costs = new ArrayList<>();
+        costs.add(createCost("Jan", 26000, 40000));
+        costs.add(createCost("Fév", 30000, 40500));
+        costs.add(createCost("Mar", 21000, 40000));
+        costs.add(createCost("Avr", 35000, 41000));
+        costs.add(createCost("Mai", 47000, 40000));
+        return costs;
+    }
+
+    @GetMapping("/bi/interventions")
+    public List<Map<String, Object>> getInterventions() {
+        List<Map<String, Object>> ints = new ArrayList<>();
+        ints.add(createInt("Correctif", 45, "#0EA5E9"));
+        ints.add(createInt("Préventif", 30, "#10B981"));
+        ints.add(createInt("Prédictif", 25, "#F59E0B"));
+        return ints;
+    }
+
+    @GetMapping("/bi/reports")
+    public List<Map<String, Object>> getBIReports() {
+        return new ArrayList<>(); // Stub
+    }
+
     // Blockchain Endpoints
+    @GetMapping("/blockchain/kpis")
+    public Map<String, Object> getBlockchainKPIs() {
+        Map<String, Object> kpis = new HashMap<>();
+        kpis.put("secureBlocks", 104829); kpis.put("secureBlocksTrend", "+14 aujourd'hui"); kpis.put("secureBlocksUp", true);
+        kpis.put("smartContracts", 42);
+        kpis.put("integrityRate", 100);
+        kpis.put("validationTime", 2.4);
+        return kpis;
+    }
+
     @GetMapping("/blockchain/audit")
     public List<Map<String, Object>> getAuditHistory() {
         List<Map<String, Object>> audit = new ArrayList<>();
@@ -93,5 +141,17 @@ public class MainController {
         wo.put("dueDate", dueDate);
         wo.put("priority", priority);
         return wo;
+    }
+
+    private Map<String, Object> createCost(String month, double reel, double budget) {
+        Map<String, Object> cost = new HashMap<>();
+        cost.put("month", month); cost.put("reel", reel); cost.put("budget", budget);
+        return cost;
+    }
+
+    private Map<String, Object> createInt(String type, int value, String color) {
+        Map<String, Object> i = new HashMap<>();
+        i.put("type", type); i.put("value", value); i.put("color", color);
+        return i;
     }
 }

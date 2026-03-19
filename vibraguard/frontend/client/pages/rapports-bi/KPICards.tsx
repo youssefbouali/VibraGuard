@@ -51,15 +51,21 @@ function KPICard({ title, value, unit, trend, trendUp, trendColor = "#007A3D", i
   );
 }
 
+import { useBIKPIs } from "@/hooks/use-bi-kpis";
+
 export function KPICards() {
+  const { data: kpis, isLoading } = useBIKPIs();
+
+  if (isLoading) return <div className="text-white p-6">Chargement...</div>;
+
   return (
-    <div className="flex flex-wrap gap-4">
+    <div className="flex flex-wrap gap-4 px-6 lg:px-12">
       <KPICard
         title="MTBF Global (Temps Moyen Entre Pannes)"
-        value="1,240"
+        value={String(kpis?.mtbf || "1,240")}
         unit="h"
-        trend="+12.5% vs mois préc."
-        trendUp={true}
+        trend={kpis?.mtbfTrend || "+12.5% vs mois préc."}
+        trendUp={kpis?.mtbfUp ?? true}
         trendColor="#007A3D"
         iconBg="rgba(0, 122, 61, 0.15)"
         icon={
@@ -71,10 +77,10 @@ export function KPICards() {
 
       <KPICard
         title="MTTR Global (Temps Moyen de Réparation)"
-        value="3.2"
+        value={String(kpis?.mttr || "3.2")}
         unit="h"
-        trend="-5.4% vs mois préc."
-        trendUp={false}
+        trend={kpis?.mttrTrend || "-5.4% vs mois préc."}
+        trendUp={kpis?.mttrUp ?? false}
         trendColor="#007A3D"
         iconBg="rgba(12, 108, 242, 0.15)"
         icon={
@@ -89,10 +95,10 @@ export function KPICards() {
 
       <KPICard
         title="Disponibilité Globale du Parc"
-        value="98.4"
+        value={String(kpis?.availability || "98.4")}
         unit="%"
-        trend="+0.2% vs mois préc."
-        trendUp={true}
+        trend={kpis?.availabilityTrend || "+0.2% vs mois préc."}
+        trendUp={kpis?.availabilityUp ?? true}
         trendColor="#007A3D"
         iconBg="transparent"
         icon={
@@ -110,10 +116,10 @@ export function KPICards() {
 
       <KPICard
         title="Coût de Maintenance (Période Actuelle)"
-        value="45,200"
+        value={String(kpis?.maintenanceCost || "45,200")}
         unit="MAD"
-        trend="-15.0% vs budget"
-        trendUp={false}
+        trend={kpis?.maintenanceCostTrend || "-15.0% vs budget"}
+        trendUp={kpis?.maintenanceCostUp ?? false}
         trendColor="#007A3D"
         iconBg="rgba(242, 169, 0, 0.15)"
         icon={

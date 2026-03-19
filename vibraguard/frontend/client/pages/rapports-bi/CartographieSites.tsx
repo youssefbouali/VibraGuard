@@ -1,4 +1,7 @@
+import { useBIKPIs } from "@/hooks/use-bi-kpis";
+
 export function CartographieSites() {
+  const { data: kpis, isLoading } = useBIKPIs();
   return (
     <div className="flex flex-col rounded-lg border border-black/[0.08] bg-[#0B1518] h-full">
       {/* Header */}
@@ -41,7 +44,9 @@ export function CartographieSites() {
           {/* Sites connectés */}
           <div className="flex items-center justify-between gap-4">
             <div className="flex flex-col gap-1">
-              <span className="text-[#E6F0F2] text-[24px] font-bold leading-none">5</span>
+              <span className="text-[#E6F0F2] text-[24px] font-bold leading-none">
+                {isLoading ? "..." : kpis?.sitesConnected || "5"}
+              </span>
               <span className="text-[#98A6A8] text-[12px] font-normal">Sites Connectés</span>
             </div>
             <div className="flex w-9 h-9 items-center justify-center rounded-lg bg-[rgba(0,122,61,0.15)] shrink-0">
@@ -81,7 +86,9 @@ export function CartographieSites() {
           {/* Alertes actives */}
           <div className="flex items-center justify-between gap-4">
             <div className="flex flex-col gap-1">
-              <span className="text-[#F2A900] text-[24px] font-bold leading-none">12</span>
+              <span className="text-[#F2A900] text-[24px] font-bold leading-none">
+                {isLoading ? "..." : kpis?.activeAlerts || "12"}
+              </span>
               <span className="text-[#98A6A8] text-[12px] font-normal">Alertes Actives</span>
             </div>
             <div className="flex w-9 h-9 items-center justify-center rounded-lg bg-[rgba(242,169,0,0.15)] shrink-0">

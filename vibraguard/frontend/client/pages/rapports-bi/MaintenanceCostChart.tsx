@@ -8,13 +8,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const data = [
-  { month: "Jan", reel: 26000, budget: 40000 },
-  { month: "Fév", reel: 30000, budget: 40500 },
-  { month: "Mar", reel: 21000, budget: 40000 },
-  { month: "Avr", reel: 35000, budget: 41000 },
-  { month: "Mai", reel: 47000, budget: 40000 },
-];
+import { useMaintenanceCosts } from "@/hooks/use-maintenance-costs";
 
 function formatK(value: number) {
   return `${Math.round(value / 1000)}k`;
@@ -37,6 +31,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export function MaintenanceCostChart() {
+  const { data: chartData = [], isLoading } = useMaintenanceCosts();
+
   return (
     <div className="flex flex-col rounded-lg border border-black/[0.08] bg-[#0B1518] h-full">
       {/* Header */}
@@ -64,51 +60,55 @@ export function MaintenanceCostChart() {
 
       {/* Chart */}
       <div className="flex-1 p-6 min-h-0">
-        <ResponsiveContainer width="100%" height="100%" minHeight={200}>
-          <LineChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="rgba(0,0,0,0.08)"
-              vertical={false}
-            />
-            <XAxis
-              dataKey="month"
-              tick={{ fill: "#98A6A8", fontSize: 10 }}
-              axisLine={false}
-              tickLine={false}
-              dy={8}
-            />
-            <YAxis
-              tickFormatter={formatK}
-              tick={{ fill: "#98A6A8", fontSize: 10 }}
-              axisLine={false}
-              tickLine={false}
-              domain={[10000, 50000]}
-              ticks={[10000, 20000, 30000, 40000, 50000]}
-              width={30}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Line
-              type="monotone"
-              dataKey="reel"
-              name="reel"
-              stroke="#007A3D"
-              strokeWidth={2.5}
-              dot={{ fill: "#0B1518", stroke: "#007A3D", strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 5, fill: "#007A3D" }}
-            />
-            <Line
-              type="monotone"
-              dataKey="budget"
-              name="budget"
-              stroke="#0C6CF2"
-              strokeWidth={2}
-              strokeDasharray="5 5"
-              dot={false}
-              activeDot={{ r: 4, fill: "#0C6CF2" }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        {isLoading ? (
+          <div className="text-white">Chargement...</div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%" minHeight={200}>
+            <LineChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="rgba(0,0,0,0.08)"
+                vertical={false}
+              />
+              <XAxis
+                dataKey="month"
+                tick={{ fill: "#98A6A8", fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+                dy={8}
+              />
+              <YAxis
+                tickFormatter={formatK}
+                tick={{ fill: "#98A6A8", fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+                domain={[10000, 50000]}
+                ticks={[10000, 20000, 30000, 40000, 50000]}
+                width={30}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Line
+                type="monotone"
+                dataKey="reel"
+                name="reel"
+                stroke="#007A3D"
+                strokeWidth={2.5}
+                dot={{ fill: "#0B1518", stroke: "#007A3D", strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 5, fill: "#007A3D" }}
+              />
+              <Line
+                type="monotone"
+                dataKey="budget"
+                name="budget"
+                stroke="#0C6CF2"
+                strokeWidth={2}
+                strokeDasharray="5 5"
+                dot={false}
+                activeDot={{ r: 4, fill: "#0C6CF2" }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </div>
   );
