@@ -69,15 +69,25 @@ export default function Alertes() {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Map backend alerts to frontend format
-  const mappedAlerts: Alerte[] = (apiAlerts || []).map(a => ({
-    id: a.id,
-    moteur: "MTR-Broyeur-04", // Backend doesn't provide specific motor in createAlert
-    typeDefaut: a.message,
-    severite: a.level as Alerte["severite"],
-    confiance: a.priority === "high" ? 95 : 85,
-    dateHeure: a.time,
-    statut: "Nouveau",
-  }));
+  const mappedAlerts: Alerte[] = (apiAlerts || []).map(a => {
+    let severite: Alerte["severite"] = "Mineur";
+    const level = a.level?.toLowerCase();
+    const priority = a.priority?.toLowerCase();
+    
+    if (level === "critique" || priority === "high") severite = "Critique";
+    else if (level === "alerte" || level === "warning" || priority === "medium") severite = "Majeur";
+    else severite = "Mineur";
+    
+    return {
+      id: a.id,
+      moteur: "MTR-Broyeur-04", // Backend doesn't provide specific motor in createAlert
+      typeDefaut: a.message,
+      severite: severite,
+      confiance: a.priority === "high" ? 96 : 85,
+      dateHeure: a.time,
+      statut: "Nouveau",
+    };
+  });
 
   const selectedAlerte = mappedAlerts.find((a) => a.id === selectedId) ?? null;
 

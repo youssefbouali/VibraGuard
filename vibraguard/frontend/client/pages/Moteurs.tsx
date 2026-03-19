@@ -175,16 +175,24 @@ export default function Moteurs() {
   const totalPages = Math.ceil(totalMoteurs / perPage) || 1;
 
   // Map backend data to frontend Moteur interface
-  const mappedMoteurs: Moteur[] = (apiMoteurs || []).map(m => ({
-    id: m.id,
-    zone: "Zone Principal", // Backend doesn't provide zone
-    localisation: "Site Alpha", // Backend doesn't provide localisation
-    type: m.type,
-    puissance: "N/A", // Backend doesn't provide puissance
-    etatSante: m.etatLabel as HealthStatus,
-    vibrationRMS: parseFloat(m.vibration.split(' ')[0]),
-    derniereAlerte: "Récemment",
-  }));
+  const mappedMoteurs: Moteur[] = (apiMoteurs || []).map(m => {
+    let etatSante: HealthStatus = "Normal";
+    const label = m.etatLabel || "";
+    if (label.includes("Critique") || label.includes("Alerte")) etatSante = "Critique";
+    else if (label.includes("Attention")) etatSante = "Attention";
+    else if (label.includes("Optimal")) etatSante = "Normal";
+    
+    return {
+      id: m.id,
+      zone: "Zone Principal",
+      localisation: "Site Alpha",
+      type: m.type,
+      puissance: "N/A",
+      etatSante: etatSante,
+      vibrationRMS: parseFloat(m.vibration.split(' ')[0] || "0"),
+      derniereAlerte: "Récemment",
+    };
+  });
 
   const filtered = mappedMoteurs.filter(
     (m) =>
