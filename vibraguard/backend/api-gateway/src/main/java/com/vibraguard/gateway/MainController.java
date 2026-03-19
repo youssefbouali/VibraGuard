@@ -63,6 +63,23 @@ public class MainController {
         return kpis;
     }
 
+    @GetMapping("/bi/mtbf-by-site")
+    public List<Map<String, Object>> getMtbfBySite() {
+        List<Map<String, Object>> sites = new ArrayList<>();
+        sites.add(createSite("Site Jorf Lasfar", 1450, "#007A3D"));
+        sites.add(createSite("Site Safi", 1220, "#057485"));
+        sites.add(createSite("Site Laâyoune", 1180, "#0C6CF2"));
+        sites.add(createSite("Site Khouribga", 950, "#F2A900"));
+        sites.add(createSite("Site Benguérir", 840, "#D93F3F"));
+        return sites;
+    }
+
+    private Map<String, Object> createSite(String name, int value, String color) {
+        Map<String, Object> site = new HashMap<>();
+        site.put("name", name); site.put("value", value); site.put("color", color);
+        return site;
+    }
+
     @GetMapping("/bi/maintenance-costs")
     public List<Map<String, Object>> getMaintenanceCosts() {
         List<Map<String, Object>> costs = new ArrayList<>();

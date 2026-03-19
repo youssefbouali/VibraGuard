@@ -62,9 +62,9 @@ export function KPICards() {
     <div className="flex flex-wrap gap-4 px-6 lg:px-12">
       <KPICard
         title="MTBF Global (Temps Moyen Entre Pannes)"
-        value={String(kpis?.mtbf || "1,240")}
+        value={String(kpis?.mtbf ?? "")}
         unit="h"
-        trend={kpis?.mtbfTrend || "+12.5% vs mois préc."}
+        trend={kpis?.mtbfTrend ?? ""}
         trendUp={kpis?.mtbfUp ?? true}
         trendColor="#007A3D"
         iconBg="rgba(0, 122, 61, 0.15)"
@@ -77,9 +77,9 @@ export function KPICards() {
 
       <KPICard
         title="MTTR Global (Temps Moyen de Réparation)"
-        value={String(kpis?.mttr || "3.2")}
+        value={String(kpis?.mttr ?? "")}
         unit="h"
-        trend={kpis?.mttrTrend || "-5.4% vs mois préc."}
+        trend={kpis?.mttrTrend ?? ""}
         trendUp={kpis?.mttrUp ?? false}
         trendColor="#007A3D"
         iconBg="rgba(12, 108, 242, 0.15)"
@@ -95,9 +95,9 @@ export function KPICards() {
 
       <KPICard
         title="Disponibilité Globale du Parc"
-        value={String(kpis?.availability || "98.4")}
+        value={String(kpis?.availability ?? "")}
         unit="%"
-        trend={kpis?.availabilityTrend || "+0.2% vs mois préc."}
+        trend={kpis?.availabilityTrend ?? ""}
         trendUp={kpis?.availabilityUp ?? true}
         trendColor="#007A3D"
         iconBg="transparent"
@@ -116,9 +116,9 @@ export function KPICards() {
 
       <KPICard
         title="Coût de Maintenance (Période Actuelle)"
-        value={String(kpis?.maintenanceCost || "45,200")}
+        value={String(kpis?.maintenanceCost ?? "")}
         unit="MAD"
-        trend={kpis?.maintenanceCostTrend || "-15.0% vs budget"}
+        trend={kpis?.maintenanceCostTrend ?? ""}
         trendUp={kpis?.maintenanceCostUp ?? false}
         trendColor="#007A3D"
         iconBg="rgba(242, 169, 0, 0.15)"

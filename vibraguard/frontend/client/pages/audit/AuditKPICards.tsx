@@ -23,7 +23,7 @@ export function AuditKPICards() {
         </div>
         <div className="flex justify-between items-end">
           <span className="text-[#E6F0F2] text-2xl font-bold leading-6">
-            {kpis?.secureBlocks.toLocaleString() || "104,829"}
+            {kpis?.secureBlocks.toLocaleString() ?? ""}
           </span>
           <div className="flex items-end gap-[3px] h-6">
             {[9.6, 14.4, 7.2, 19.2, 24, 12, 21.6].map((h, i) => (
@@ -36,7 +36,7 @@ export function AuditKPICards() {
             <path d="M4.08337 4.08301H9.91671V9.91634M4.08337 9.91634L9.91671 4.08301" stroke="#007A3D" strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           <span className="text-[#007A3D] text-xs font-medium">
-            {kpis?.secureBlocksTrend || "+14 aujourd'hui"}
+            {kpis?.secureBlocksTrend ?? ""}
           </span>
         </div>
       </div>
@@ -54,7 +54,7 @@ export function AuditKPICards() {
         </div>
         <div className="flex items-end">
           <span className="text-[#E6F0F2] text-2xl font-bold leading-6">
-            {kpis?.smartContracts || "42"}
+            {kpis?.smartContracts ?? ""}
           </span>
         </div>
         <span className="text-[#98A6A8] text-xs font-medium">Actifs sur le réseau interne</span>
@@ -73,7 +73,7 @@ export function AuditKPICards() {
         </div>
         <div className="flex items-end">
           <span className="text-[#E6F0F2] text-2xl font-bold leading-6">
-            {kpis?.integrityRate || "100"}%
+            {kpis?.integrityRate ?? ""}%
           </span>
         </div>
         <div className="flex items-center gap-1">
@@ -101,7 +101,7 @@ export function AuditKPICards() {
         </div>
         <div className="flex items-end">
           <span className="text-[#E6F0F2] text-2xl font-bold leading-6">
-            {kpis?.validationTime || "2.4"}s
+            {kpis?.validationTime ?? ""}s
           </span>
         </div>
         <span className="text-[#98A6A8] text-xs font-medium">Moyenne de validation par bloc</span>

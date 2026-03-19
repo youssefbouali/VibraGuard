@@ -45,7 +45,7 @@ export function CartographieSites() {
           <div className="flex items-center justify-between gap-4">
             <div className="flex flex-col gap-1">
               <span className="text-[#E6F0F2] text-[24px] font-bold leading-none">
-                {isLoading ? "..." : kpis?.sitesConnected || "5"}
+                {isLoading ? "..." : kpis?.sitesConnected ?? ""}
               </span>
               <span className="text-[#98A6A8] text-[12px] font-normal">Sites Connectés</span>
             </div>
@@ -87,7 +87,7 @@ export function CartographieSites() {
           <div className="flex items-center justify-between gap-4">
             <div className="flex flex-col gap-1">
               <span className="text-[#F2A900] text-[24px] font-bold leading-none">
-                {isLoading ? "..." : kpis?.activeAlerts || "12"}
+                {isLoading ? "..." : kpis?.activeAlerts ?? ""}
               </span>
               <span className="text-[#98A6A8] text-[12px] font-normal">Alertes Actives</span>
             </div>

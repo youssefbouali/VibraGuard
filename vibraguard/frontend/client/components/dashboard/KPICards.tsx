@@ -53,7 +53,7 @@ export function KPICards() {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
       <KPICard
         title="Moteurs Totaux"
-        value={String(kpis?.totalMotors || 0)}
+        value={String(kpis?.totalMotors ?? "")}
         trend="+12% ce mois"
         trendUp={true}
         trendColor="#10B981"
@@ -70,7 +70,7 @@ export function KPICards() {
       />
       <KPICard
         title="Moteurs Critiques"
-        value={String(kpis?.criticalMotors || 0)}
+        value={String(kpis?.criticalMotors ?? "")}
         trend="+2 aujourd'hui"
         trendUp={true}
         trendColor="#EF4444"
@@ -83,8 +83,8 @@ export function KPICards() {
       />
       <KPICard
         title="Disponibilité"
-        value={String(kpis?.uptime || "98%")}
-        trend={kpis?.uptimeTrend || "+0.4% ce mois"}
+        value={String(kpis?.uptime ?? "")}
+        trend={kpis?.uptimeTrend ?? ""}
         trendUp={kpis?.uptimeTrendUp !== undefined ? kpis.uptimeTrendUp : true}
         trendColor="#10B981"
         iconBg="bg-[rgba(16,185,129,0.10)]"
@@ -99,7 +99,7 @@ export function KPICards() {
       />
       <KPICard
         title="Alertes Totales"
-        value={String(kpis?.alerts || 0)}
+        value={String(kpis?.alerts ?? "")}
         trend="+2 aujourd'hui"
         trendUp={true}
         trendColor="#EF4444"
