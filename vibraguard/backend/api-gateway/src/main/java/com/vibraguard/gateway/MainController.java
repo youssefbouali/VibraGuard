@@ -1,5 +1,7 @@
-package com.vibraguard.gateway;
-
+import com.vibraguard.gateway.entity.*;
+import com.vibraguard.gateway.repository.*;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
@@ -7,23 +9,70 @@ import java.util.*;
 @RequestMapping("/api/v1")
 public class MainController {
 
+    @Autowired private MotorRepository motorRepository;
+    @Autowired private AlertRepository alertRepository;
+    @Autowired private WorkOrderRepository workOrderRepository;
+    @Autowired private AuditRepository auditRepository;
+    @Autowired private SiteMtbfRepository siteMtbfRepository;
+    @Autowired private MaintenanceCostRepository maintenanceCostRepository;
+    @Autowired private InterventionRepository interventionRepository;
+
+    @PostConstruct
+    public void seedData() {
+        if (motorRepository.count() == 0) {
+            motorRepository.save(new Motor("MTR-Broyeur-04", "Broyeur Phosphate", "22% Critique", "#EF4444", 22, "14.2 mm/s", "#EF4444", "up"));
+            motorRepository.save(new Motor("MTR-Ventil-12", "Convoyeur L-2", "45% Alerte", "#F59E0B", 45, "8.4 mm/s", "#F59E0B", "up"));
+            motorRepository.save(new Motor("MTR-Pompe-08", "Pompe Principale", "58% Attention", "#F59E0B", 58, "6.1 mm/s", "#E2E8F0", "flat"));
+            motorRepository.save(new Motor("MTR-Compresseur-01", "Compresseur HP", "85% Optimal", "#10B981", 85, "2.4 mm/s", "#10B981", "down"));
+        }
+        if (alertRepository.count() == 0) {
+            alertRepository.save(new Alert("ALR-098", "Vibration excessive détectée sur Broyeur L-2", "Critique", "Il y a 2 min", "#EF4444", "high"));
+            alertRepository.save(new Alert("ALR-097", "Usure anormale des roulements Pompe P1", "Alerte", "Il y a 15 min", "#F59E0B", "medium"));
+            alertRepository.save(new Alert("ALR-096", "Température moteur au-dessus du seuil", "Attention", "Il y a 1h", "#F59E0B", "low"));
+        }
+        if (workOrderRepository.count() == 0) {
+            workOrderRepository.save(new WorkOrder("W-455", "Remplacement Roulement P1", "Pompe Principale", "En cours", "Expert Maintenance", "2026-06-20", "Haute"));
+            workOrderRepository.save(new WorkOrder("W-456", "Inspection Broyeur 04", "Broyeur Phosphate", "Nouveau", "Agent Maintenance", "2026-06-21", "Critique"));
+            workOrderRepository.save(new WorkOrder("W-457", "Nettoyage Filtres Ventil-12", "Convoyeur L-2", "Terminé", "Equipe B", "2026-06-18", "Basse"));
+        }
+        if (auditRepository.count() == 0) {
+            auditRepository.save(new AuditEntry("0x7a8b...2c", "Ajout de capteur SN-203", "Expert Maintenance", "20/05/2026 14:30", "Validé"));
+            auditRepository.save(new AuditEntry("0x1d2e...4f", "Modification seuil alerte MTR-04", "Administrateur", "19/05/2026 09:15", "Validé"));
+            auditRepository.save(new AuditEntry("0x3f4g...1h", "Clôture ordre de travail W-455", "Agent Maintenance", "18/05/2026 16:45", "Validé"));
+        }
+        if (siteMtbfRepository.count() == 0) {
+            siteMtbfRepository.save(new SiteMtbf("Site Jorf Lasfar", 1450, "#007A3D"));
+            siteMtbfRepository.save(new SiteMtbf("Site Safi", 1220, "#057485"));
+            siteMtbfRepository.save(new SiteMtbf("Site Laâyoune", 1180, "#0C6CF2"));
+            siteMtbfRepository.save(new SiteMtbf("Site Khouribga", 950, "#F2A900"));
+            siteMtbfRepository.save(new SiteMtbf("Site Benguérir", 840, "#D93F3F"));
+        }
+        if (maintenanceCostRepository.count() == 0) {
+            maintenanceCostRepository.save(new MaintenanceCost(null, "Jan", 26000, 40000));
+            maintenanceCostRepository.save(new MaintenanceCost(null, "Fév", 30000, 40500));
+            maintenanceCostRepository.save(new MaintenanceCost(null, "Mar", 21000, 40000));
+            maintenanceCostRepository.save(new MaintenanceCost(null, "Avr", 35000, 41000));
+            maintenanceCostRepository.save(new MaintenanceCost(null, "Mai", 47000, 40000));
+        }
+        if (interventionRepository.count() == 0) {
+            interventionRepository.save(new Intervention("Correctif", 45, "#0EA5E9"));
+            interventionRepository.save(new Intervention("Préventif", 30, "#10B981"));
+            interventionRepository.save(new Intervention("Prédictif", 25, "#F59E0B"));
+        }
+    }
+
     // IoT Endpoints
     @GetMapping("/iot/motors")
-    public List<Map<String, Object>> getMotors() {
-        List<Map<String, Object>> motors = new ArrayList<>();
-        motors.add(createMotor("MTR-Broyeur-04", "Broyeur Phosphate", "22% Critique", "#EF4444", 22, "14.2 mm/s", "#EF4444", "up"));
-        motors.add(createMotor("MTR-Ventil-12", "Convoyeur L-2", "45% Alerte", "#F59E0B", 45, "8.4 mm/s", "#F59E0B", "up"));
-        motors.add(createMotor("MTR-Pompe-08", "Pompe Principale", "58% Attention", "#F59E0B", 58, "6.1 mm/s", "#E2E8F0", "flat"));
-        motors.add(createMotor("MTR-Compresseur-01", "Compresseur HP", "85% Optimal", "#10B981", 85, "2.4 mm/s", "#10B981", "down"));
-        return motors;
+    public List<Motor> getMotors() {
+        return motorRepository.findAll();
     }
 
     @GetMapping("/iot/kpis")
     public Map<String, Object> getKPIs() {
         Map<String, Object> kpis = new HashMap<>();
-        kpis.put("totalMotors", 124);
-        kpis.put("criticalMotors", 4);
-        kpis.put("alerts", 12);
+        kpis.put("totalMotors", motorRepository.count());
+        kpis.put("criticalMotors", motorRepository.findAll().stream().filter(m -> m.getEtatLabel().contains("Critique")).count());
+        kpis.put("alerts", alertRepository.count());
         kpis.put("uptime", "98.5%");
         kpis.put("uptimeTrend", "+0.4% ce mois");
         kpis.put("uptimeTrendUp", true);
@@ -32,22 +81,14 @@ public class MainController {
 
     // ML Endpoints
     @GetMapping("/ml/alerts")
-    public List<Map<String, Object>> getAlerts() {
-        List<Map<String, Object>> alerts = new ArrayList<>();
-        alerts.add(createAlert("ALR-098", "Vibration excessive détectée sur Broyeur L-2", "Critique", "Il y a 2 min", "#EF4444", "high"));
-        alerts.add(createAlert("ALR-097", "Usure anormale des roulements Pompe P1", "Alerte", "Il y a 15 min", "#F59E0B", "medium"));
-        alerts.add(createAlert("ALR-096", "Température moteur au-dessus du seuil", "Attention", "Il y a 1h", "#F59E0B", "low"));
-        return alerts;
+    public List<Alert> getAlerts() {
+        return alertRepository.findAll();
     }
 
     // Work Order Endpoints
     @GetMapping("/iot/work-orders")
-    public List<Map<String, Object>> getWorkOrders() {
-        List<Map<String, Object>> workOrders = new ArrayList<>();
-        workOrders.add(createWorkOrder("W-455", "Remplacement Roulement P1", "Pompe Principale", "En cours", "Expert Maintenance", "2026-06-20", "Haute"));
-        workOrders.add(createWorkOrder("W-456", "Inspection Broyeur 04", "Broyeur Phosphate", "Nouveau", "Agent Maintenance", "2026-06-21", "Critique"));
-        workOrders.add(createWorkOrder("W-457", "Nettoyage Filtres Ventil-12", "Convoyeur L-2", "Terminé", "Equipe B", "2026-06-18", "Basse"));
-        return workOrders;
+    public List<WorkOrder> getWorkOrders() {
+        return workOrderRepository.findAll();
     }
 
     // Rapports BI Endpoints
@@ -57,47 +98,26 @@ public class MainController {
         kpis.put("mtbf", 1240); kpis.put("mtbfTrend", "+12.5% vs mois préc."); kpis.put("mtbfUp", true);
         kpis.put("mttr", 3.2); kpis.put("mttrTrend", "-5.4% vs mois préc."); kpis.put("mttrUp", false);
         kpis.put("availability", 98.4); kpis.put("availabilityTrend", "+0.2% vs mois préc."); kpis.put("availabilityUp", true);
-        kpis.put("maintenanceCost", 45200); kpis.put("maintenanceCostTrend", "-15.0% vs budget"); kpis.put("maintenanceCostUp", false);
-        kpis.put("sitesConnected", 5);
-        kpis.put("activeAlerts", 12);
+        kpis.put("maintenanceCost", maintenanceCostRepository.findAll().stream().mapToDouble(MaintenanceCost::getReel).sum());
+        kpis.put("maintenanceCostTrend", "-15.0% vs budget"); kpis.put("maintenanceCostUp", false);
+        kpis.put("sitesConnected", siteMtbfRepository.count());
+        kpis.put("activeAlerts", alertRepository.count());
         return kpis;
     }
 
     @GetMapping("/bi/mtbf-by-site")
-    public List<Map<String, Object>> getMtbfBySite() {
-        List<Map<String, Object>> sites = new ArrayList<>();
-        sites.add(createSite("Site Jorf Lasfar", 1450, "#007A3D"));
-        sites.add(createSite("Site Safi", 1220, "#057485"));
-        sites.add(createSite("Site Laâyoune", 1180, "#0C6CF2"));
-        sites.add(createSite("Site Khouribga", 950, "#F2A900"));
-        sites.add(createSite("Site Benguérir", 840, "#D93F3F"));
-        return sites;
-    }
-
-    private Map<String, Object> createSite(String name, int value, String color) {
-        Map<String, Object> site = new HashMap<>();
-        site.put("name", name); site.put("value", value); site.put("color", color);
-        return site;
+    public List<SiteMtbf> getMtbfBySite() {
+        return siteMtbfRepository.findAll();
     }
 
     @GetMapping("/bi/maintenance-costs")
-    public List<Map<String, Object>> getMaintenanceCosts() {
-        List<Map<String, Object>> costs = new ArrayList<>();
-        costs.add(createCost("Jan", 26000, 40000));
-        costs.add(createCost("Fév", 30000, 40500));
-        costs.add(createCost("Mar", 21000, 40000));
-        costs.add(createCost("Avr", 35000, 41000));
-        costs.add(createCost("Mai", 47000, 40000));
-        return costs;
+    public List<MaintenanceCost> getMaintenanceCosts() {
+        return maintenanceCostRepository.findAll();
     }
 
     @GetMapping("/bi/interventions")
-    public List<Map<String, Object>> getInterventions() {
-        List<Map<String, Object>> ints = new ArrayList<>();
-        ints.add(createInt("Correctif", 45, "#0EA5E9"));
-        ints.add(createInt("Préventif", 30, "#10B981"));
-        ints.add(createInt("Prédictif", 25, "#F59E0B"));
-        return ints;
+    public List<Intervention> getInterventions() {
+        return interventionRepository.findAll();
     }
 
     @GetMapping("/bi/reports")
@@ -117,58 +137,7 @@ public class MainController {
     }
 
     @GetMapping("/blockchain/audit")
-    public List<Map<String, Object>> getAuditHistory() {
-        List<Map<String, Object>> audit = new ArrayList<>();
-        audit.add(createAuditEntry("0x7a8b...2c", "Ajout de capteur SN-203", "Expert Maintenance", "20/05/2026 14:30", "Validé"));
-        audit.add(createAuditEntry("0x1d2e...4f", "Modification seuil alerte MTR-04", "Administrateur", "19/05/2026 09:15", "Validé"));
-        audit.add(createAuditEntry("0x3f4g...1h", "Clôture ordre de travail W-455", "Agent Maintenance", "18/05/2026 16:45", "Validé"));
-        return audit;
-    }
-
-    private Map<String, Object> createMotor(String id, String type, String etatLabel, String etatColor, int etatPct, String vibration, String vibrationColor, String trendIcon) {
-        Map<String, Object> motor = new HashMap<>();
-        motor.put("id", id); motor.put("type", type); motor.put("etatLabel", etatLabel);
-        motor.put("etatColor", etatColor); motor.put("etatPct", etatPct);
-        motor.put("vibration", vibration); motor.put("vibrationColor", vibrationColor);
-        motor.put("trendIcon", trendIcon);
-        return motor;
-    }
-
-    private Map<String, Object> createAlert(String id, String message, String level, String time, String color, String priority) {
-        Map<String, Object> alert = new HashMap<>();
-        alert.put("id", id); alert.put("message", message); alert.put("level", level);
-        alert.put("time", time); alert.put("color", color); alert.put("priority", priority);
-        return alert;
-    }
-
-    private Map<String, Object> createAuditEntry(String hash, String action, String user, String date, String status) {
-        Map<String, Object> entry = new HashMap<>();
-        entry.put("hash", hash); entry.put("action", action); entry.put("user", user);
-        entry.put("date", date); entry.put("status", status);
-        return entry;
-    }
-
-    private Map<String, Object> createWorkOrder(String id, String title, String asset, String status, String assignedTo, String dueDate, String priority) {
-        Map<String, Object> wo = new HashMap<>();
-        wo.put("id", id);
-        wo.put("title", title);
-        wo.put("asset", asset);
-        wo.put("status", status);
-        wo.put("assignedTo", assignedTo);
-        wo.put("dueDate", dueDate);
-        wo.put("priority", priority);
-        return wo;
-    }
-
-    private Map<String, Object> createCost(String month, double reel, double budget) {
-        Map<String, Object> cost = new HashMap<>();
-        cost.put("month", month); cost.put("reel", reel); cost.put("budget", budget);
-        return cost;
-    }
-
-    private Map<String, Object> createInt(String type, int value, String color) {
-        Map<String, Object> i = new HashMap<>();
-        i.put("type", type); i.put("value", value); i.put("color", color);
-        return i;
+    public List<AuditEntry> getAuditHistory() {
+        return auditRepository.findAll();
     }
 }
