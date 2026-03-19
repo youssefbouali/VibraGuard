@@ -29,6 +29,8 @@ public class MainController {
     private VibrationRepository vibrationRepository;
     @Autowired
     private TraceabilityRepository traceabilityRepository;
+    @Autowired
+    private KpiValueRepository kpiValueRepository;
 
     @PostConstruct
     public void seedData() {
@@ -102,6 +104,25 @@ public class MainController {
             traceabilityRepository.save(new TraceabilityStep(null, "Bloc #104830", "Attente réseau", "pending",
                     "rgba(0,0,0,0.08)", "#071018", "#98A6A8", "block"));
         }
+        if (kpiValueRepository.count() == 0) {
+            // IoT KPIs
+            kpiValueRepository.save(new KpiValue("totalMotorsTrend", null, "+12% ce mois", null, null));
+            kpiValueRepository.save(new KpiValue("criticalMotorsTrend", null, "+2 aujourd'hui", null, null));
+            kpiValueRepository.save(new KpiValue("alertsTrend", null, "+2 aujourd'hui", null, null));
+            kpiValueRepository.save(new KpiValue("uptime", 98.5, null, "+0.4% ce mois", true));
+
+            // BI KPIs
+            kpiValueRepository.save(new KpiValue("mtbf", 1240.0, null, "+12.5% vs mois préc.", true));
+            kpiValueRepository.save(new KpiValue("mttr", 3.2, null, "-5.4% vs mois préc.", false));
+            kpiValueRepository.save(new KpiValue("availability", 98.4, null, "+0.2% vs mois préc.", true));
+            kpiValueRepository.save(new KpiValue("maintenanceCostTrend", null, "-15.0% vs budget", null, false));
+
+            // Blockchain KPIs
+            kpiValueRepository.save(new KpiValue("secureBlocks", 104829.0, null, "+14 aujourd'hui", true));
+            kpiValueRepository.save(new KpiValue("smartContracts", 42.0, null, null, null));
+            kpiValueRepository.save(new KpiValue("integrityRate", 100.0, null, null, null));
+            kpiValueRepository.save(new KpiValue("validationTime", 2.4, null, null, null));
+        }
     }
 
     // IoT Endpoints
@@ -114,15 +135,15 @@ public class MainController {
     public Map<String, Object> getKPIs() {
         Map<String, Object> kpis = new HashMap<>();
         kpis.put("totalMotors", motorRepository.count());
-        kpis.put("totalMotorsTrend", "+12% ce mois");
+        kpis.put("totalMotorsTrend", kpiValueRepository.findById("totalMotorsTrend").map(KpiValue::getTrend).orElse("+12% ce mois"));
         kpis.put("criticalMotors",
                 motorRepository.findAll().stream().filter(m -> m.getEtatLabel().contains("Critique")).count());
-        kpis.put("criticalMotorsTrend", "+2 aujourd'hui");
+        kpis.put("criticalMotorsTrend", kpiValueRepository.findById("criticalMotorsTrend").map(KpiValue::getTrend).orElse("+2 aujourd'hui"));
         kpis.put("alerts", alertRepository.count());
-        kpis.put("alertsTrend", "+2 aujourd'hui");
-        kpis.put("uptime", "98.5%");
-        kpis.put("uptimeTrend", "+0.4% ce mois");
-        kpis.put("uptimeTrendUp", true);
+        kpis.put("alertsTrend", kpiValueRepository.findById("alertsTrend").map(KpiValue::getTrend).orElse("+2 aujourd'hui"));
+        kpis.put("uptime", kpiValueRepository.findById("uptime").map(kv -> kv.getNumericValue() + "%").orElse("98.5%"));
+        kpis.put("uptimeTrend", kpiValueRepository.findById("uptime").map(KpiValue::getTrend).orElse("+0.4% ce mois"));
+        kpis.put("uptimeTrendUp", kpiValueRepository.findById("uptime").map(KpiValue::getTrendUp).orElse(true));
         return kpis;
     }
 
@@ -147,19 +168,23 @@ public class MainController {
     @GetMapping("/bi/kpis")
     public Map<String, Object> getBIKPIs() {
         Map<String, Object> kpis = new HashMap<>();
-        kpis.put("mtbf", 1240);
-        kpis.put("mtbfTrend", "+12.5% vs mois préc.");
-        kpis.put("mtbfUp", true);
-        kpis.put("mttr", 3.2);
-        kpis.put("mttrTrend", "-5.4% vs mois préc.");
-        kpis.put("mttrUp", false);
-        kpis.put("availability", 98.4);
-        kpis.put("availabilityTrend", "+0.2% vs mois préc.");
-        kpis.put("availabilityUp", true);
+        kpis.put("mtbf", kpiValueRepository.findById("mtbf").map(KpiValue::getNumericValue).orElse(1240.0));
+        kpis.put("mtbfTrend", kpiValueRepository.findById("mtbf").map(KpiValue::getTrend).orElse("+12.5% vs mois préc."));
+        kpis.put("mtbfUp", kpiValueRepository.findById("mtbf").map(KpiValue::getTrendUp).orElse(true));
+        
+        kpis.put("mttr", kpiValueRepository.findById("mttr").map(KpiValue::getNumericValue).orElse(3.2));
+        kpis.put("mttrTrend", kpiValueRepository.findById("mttr").map(KpiValue::getTrend).orElse("-5.4% vs mois préc."));
+        kpis.put("mttrUp", kpiValueRepository.findById("mttr").map(KpiValue::getTrendUp).orElse(false));
+        
+        kpis.put("availability", kpiValueRepository.findById("availability").map(KpiValue::getNumericValue).orElse(98.4));
+        kpis.put("availabilityTrend", kpiValueRepository.findById("availability").map(KpiValue::getTrend).orElse("+0.2% vs mois préc."));
+        kpis.put("availabilityUp", kpiValueRepository.findById("availability").map(KpiValue::getTrendUp).orElse(true));
+        
         kpis.put("maintenanceCost",
                 maintenanceCostRepository.findAll().stream().mapToDouble(MaintenanceCost::getReel).sum());
-        kpis.put("maintenanceCostTrend", "-15.0% vs budget");
-        kpis.put("maintenanceCostUp", false);
+        kpis.put("maintenanceCostTrend", kpiValueRepository.findById("maintenanceCostTrend").map(KpiValue::getTrend).orElse("-15.0% vs budget"));
+        kpis.put("maintenanceCostUp", kpiValueRepository.findById("maintenanceCostTrend").map(KpiValue::getTrendUp).orElse(false));
+        
         kpis.put("sitesConnected", siteMtbfRepository.count());
         kpis.put("activeAlerts", alertRepository.count());
         return kpis;
@@ -189,12 +214,12 @@ public class MainController {
     @GetMapping("/blockchain/kpis")
     public Map<String, Object> getBlockchainKPIs() {
         Map<String, Object> kpis = new HashMap<>();
-        kpis.put("secureBlocks", 104829);
-        kpis.put("secureBlocksTrend", "+14 aujourd'hui");
-        kpis.put("secureBlocksUp", true);
-        kpis.put("smartContracts", 42);
-        kpis.put("integrityRate", 100);
-        kpis.put("validationTime", 2.4);
+        kpis.put("secureBlocks", kpiValueRepository.findById("secureBlocks").map(KpiValue::getNumericValue).orElse(104829.0));
+        kpis.put("secureBlocksTrend", kpiValueRepository.findById("secureBlocks").map(KpiValue::getTrend).orElse("+14 aujourd'hui"));
+        kpis.put("secureBlocksUp", kpiValueRepository.findById("secureBlocks").map(KpiValue::getTrendUp).orElse(true));
+        kpis.put("smartContracts", kpiValueRepository.findById("smartContracts").map(KpiValue::getNumericValue).orElse(42.0));
+        kpis.put("integrityRate", kpiValueRepository.findById("integrityRate").map(KpiValue::getNumericValue).orElse(100.0));
+        kpis.put("validationTime", kpiValueRepository.findById("validationTime").map(KpiValue::getNumericValue).orElse(2.4));
         return kpis;
     }
 
