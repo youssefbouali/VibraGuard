@@ -1,4 +1,8 @@
+import { useVibrations } from "@/hooks/use-vibrations";
+
 export function VibrationChart() {
+  const { data: vibrations = [], isLoading } = useVibrations();
+
   return (
     <div className="flex flex-col h-full rounded-2xl border border-white/[0.08] bg-[rgba(17,26,36,0.50)] backdrop-blur-xl p-6 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.30)]">
       {/* Header */}
@@ -14,7 +18,12 @@ export function VibrationChart() {
       </div>
 
       {/* Chart */}
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 relative">
+        {isLoading && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-[rgba(17,26,36,0.50)] rounded-lg">
+            <span className="text-white">Chargement...</span>
+          </div>
+        )}
         <svg viewBox="0 0 606 356" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
           <g clipPath="url(#vib-clip)">
             {/* Grid lines */}
@@ -30,9 +39,9 @@ export function VibrationChart() {
             <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="12" x="0" y="302">0 mm/s</text>
 
             {/* X-axis labels */}
-            <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="12" x="72" y="334">10:00</text>
-            <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="12" x="274" y="334">10:30</text>
-            <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="12" x="476" y="334">11:00</text>
+            <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="12" x="72" y="334">{vibrations[0]?.time ?? ""}</text>
+            <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="12" x="274" y="334">{vibrations[1]?.time ?? ""}</text>
+            <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="12" x="476" y="334">{vibrations[2]?.time ?? ""}</text>
 
             {/* Axe X – filled area */}
             <path

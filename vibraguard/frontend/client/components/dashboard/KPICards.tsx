@@ -54,7 +54,7 @@ export function KPICards() {
       <KPICard
         title="Moteurs Totaux"
         value={String(kpis?.totalMotors ?? "")}
-        trend="+12% ce mois"
+        trend={kpis?.totalMotorsTrend ?? ""}
         trendUp={true}
         trendColor="#10B981"
         iconBg="bg-[rgba(14,165,233,0.10)]"
@@ -71,7 +71,7 @@ export function KPICards() {
       <KPICard
         title="Moteurs Critiques"
         value={String(kpis?.criticalMotors ?? "")}
-        trend="+2 aujourd'hui"
+        trend={kpis?.criticalMotorsTrend ?? ""}
         trendUp={true}
         trendColor="#EF4444"
         iconBg="bg-[rgba(239,68,68,0.10)]"
@@ -100,7 +100,7 @@ export function KPICards() {
       <KPICard
         title="Alertes Totales"
         value={String(kpis?.alerts ?? "")}
-        trend="+2 aujourd'hui"
+        trend={kpis?.alertsTrend ?? ""}
         trendUp={true}
         trendColor="#EF4444"
         iconBg="bg-[rgba(239,68,68,0.10)]"

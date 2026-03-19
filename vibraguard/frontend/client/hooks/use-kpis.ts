@@ -3,9 +3,14 @@ import { apiRequest } from "@/lib/api";
 
 export interface DashboardKPIs {
   totalMotors: number;
+  totalMotorsTrend: string;
   criticalMotors: number;
+  criticalMotorsTrend: string;
   alerts: number;
+  alertsTrend: string;
   uptime: string;
+  uptimeTrend: string;
+  uptimeTrendUp: boolean;
 }
 
 export function useKPIs() {
