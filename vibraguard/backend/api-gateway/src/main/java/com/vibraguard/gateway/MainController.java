@@ -25,6 +25,8 @@ public class MainController {
         kpis.put("criticalMotors", 4);
         kpis.put("alerts", 12);
         kpis.put("uptime", "98.5%");
+        kpis.put("uptimeTrend", "+0.4% ce mois");
+        kpis.put("uptimeTrendUp", true);
         return kpis;
     }
 

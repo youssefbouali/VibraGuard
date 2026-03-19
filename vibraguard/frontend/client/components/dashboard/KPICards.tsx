@@ -84,8 +84,8 @@ export function KPICards() {
       <KPICard
         title="Disponibilité"
         value={String(kpis?.uptime || "98%")}
-        trend="+0.4% ce mois"
-        trendUp={true}
+        trend={kpis?.uptimeTrend || "+0.4% ce mois"}
+        trendUp={kpis?.uptimeTrendUp !== undefined ? kpis.uptimeTrendUp : true}
         trendColor="#10B981"
         iconBg="bg-[rgba(16,185,129,0.10)]"
         icon={
