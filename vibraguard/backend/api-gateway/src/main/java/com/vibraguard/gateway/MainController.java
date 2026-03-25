@@ -3,6 +3,8 @@ package com.vibraguard.gateway;
 import com.vibraguard.gateway.entity.*;
 import com.vibraguard.gateway.repository.*;
 import jakarta.annotation.PostConstruct;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -128,10 +130,19 @@ public class MainController {
     }
 
     @GetMapping("/iot/motors/{id}")
-    public ResponseEntity<Motor> getMotorById(@PathVariable String id) {
-        return motorRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public Mono<ResponseEntity<?>> getMotorById(@PathVariable("id") String id) {
+        return Mono.fromCallable(() -> {
+            try {
+                Optional<Motor> motor = motorRepository.findById(id);
+                if (motor.isPresent()) {
+                    return ResponseEntity.ok((Object) motor.get());
+                } else {
+                    return ResponseEntity.status(404).body((Object) "Motor not found with ID: " + id);
+                }
+            } catch (Exception e) {
+                return ResponseEntity.status(500).body((Object) "Internal Error: " + e.getMessage());
+            }
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     @GetMapping("/iot/kpis")
