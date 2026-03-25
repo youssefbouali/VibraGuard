@@ -3,6 +3,7 @@ package com.vibraguard.gateway;
 import com.vibraguard.gateway.entity.*;
 import com.vibraguard.gateway.repository.*;
 import jakarta.annotation.PostConstruct;
+import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
@@ -34,16 +35,12 @@ public class MainController {
 
     @PostConstruct
     public void seedData() {
-        if (motorRepository.count() == 0) {
-            motorRepository.save(new Motor("MTR-Broyeur-04", "Broyeur Phosphate", "22% Critique", "#EF4444", 22,
-                    "14.2 mm/s", "#EF4444", "up"));
-            motorRepository.save(new Motor("MTR-Ventil-12", "Convoyeur L-2", "45% Alerte", "#F59E0B", 45, "8.4 mm/s",
-                    "#F59E0B", "up"));
-            motorRepository.save(new Motor("MTR-Pompe-08", "Pompe Principale", "58% Attention", "#F59E0B", 58,
-                    "6.1 mm/s", "#E2E8F0", "flat"));
-            motorRepository.save(new Motor("MTR-Compresseur-01", "Compresseur HP", "85% Optimal", "#10B981", 85,
-                    "2.4 mm/s", "#10B981", "down"));
-        }
+        seedMotor("MTR-Broyeur-01", "Broyeur Phosphate L-1", "92% Optimal", "#10B981", 92, "1.8 mm/s", "#10B981", "down");
+        seedMotor("MTR-Broyeur-04", "Broyeur Phosphate", "22% Critique", "#EF4444", 22, "14.2 mm/s", "#EF4444", "up");
+        seedMotor("MTR-Ventil-12", "Convoyeur L-2", "45% Alerte", "#F59E0B", 45, "8.4 mm/s", "#F59E0B", "up");
+        seedMotor("MTR-Pompe-08", "Pompe Principale", "58% Attention", "#F59E0B", 58, "6.1 mm/s", "#E2E8F0", "flat");
+        seedMotor("MTR-Compresseur-01", "Compresseur HP", "85% Optimal", "#10B981", 85, "2.4 mm/s", "#10B981", "down");
+        
         if (alertRepository.count() == 0) {
             alertRepository.save(new Alert("ALR-098", "Vibration excessive détectée sur Broyeur L-2", "Critique",
                     "Il y a 2 min", "#EF4444", "high"));
@@ -125,6 +122,12 @@ public class MainController {
         }
     }
 
+    private void seedMotor(String id, String type, String etatLabel, String etatColor, int etatPct, String vibration, String vibrationColor, String trendIcon) {
+        if (motorRepository.findById(id).isEmpty()) {
+            motorRepository.save(new Motor(id, type, etatLabel, etatColor, etatPct, vibration, vibrationColor, trendIcon));
+        }
+    }
+
     // IoT Endpoints
     @GetMapping("/iot/motors")
     public List<Motor> getMotors() {
@@ -132,9 +135,10 @@ public class MainController {
     }
 
     @GetMapping("/iot/motors/{id}")
-    public Motor getMotorById(@PathVariable String id) {
+    public ResponseEntity<Motor> getMotorById(@PathVariable String id) {
         return motorRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Motor not found"));
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/iot/kpis")
