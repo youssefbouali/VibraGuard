@@ -34,6 +34,10 @@ public class MainController {
     private TraceabilityRepository traceabilityRepository;
     @Autowired
     private KpiValueRepository kpiValueRepository;
+    @Autowired
+    private TechnicianRepository technicianRepository;
+    @Autowired
+    private InventoryPartRepository inventoryPartRepository;
 
     @PostConstruct
     public void seedData() {
@@ -125,6 +129,19 @@ public class MainController {
             kpiValueRepository.save(new KpiValue("integrityRate", 100.0, null, null, null));
             kpiValueRepository.save(new KpiValue("validationTime", 2.4, null, null, null));
         }
+
+        if (technicianRepository.count() == 0) {
+            technicianRepository.save(new Technician("TECH-01", "Karim B. (Spéc. Vibrations)", "Spécialiste Vibrations", "https://api.builder.io/api/v1/image/assets/TEMP/7b02cb388b87f56a63a235a8d02a1683e015ed41?width=56"));
+            technicianRepository.save(new Technician("TECH-02", "Ahmed S. (Mécanicien Sr)", "Mécanicien Senior", null));
+            technicianRepository.save(new Technician("TECH-03", "Youssef M. (Électricien)", "Électricien", null));
+        }
+
+        if (inventoryPartRepository.count() == 0) {
+            inventoryPartRepository.save(new InventoryPart("PART-01", "Palier SKF-6205", 4, "green"));
+            inventoryPartRepository.save(new InventoryPart("PART-02", "Capteur VibraSense", 1, "amber"));
+            inventoryPartRepository.save(new InventoryPart("PART-03", "Courroie Trapézoïdale", 12, "green"));
+            inventoryPartRepository.save(new InventoryPart("PART-04", "Joint à Lèvre", 0, "amber"));
+        }
     }
 
     // IoT Endpoints
@@ -186,6 +203,24 @@ public class MainController {
     @GetMapping("/iot/work-orders")
     public List<WorkOrder> getWorkOrders() {
         return workOrderRepository.findAll();
+    }
+
+    @PostMapping("/iot/work-orders")
+    public WorkOrder createWorkOrder(@RequestBody WorkOrder workOrder) {
+        if (workOrder.getId() == null) {
+            workOrder.setId("W-" + (workOrderRepository.count() + 458));
+        }
+        return workOrderRepository.save(workOrder);
+    }
+
+    @GetMapping("/iot/technicians")
+    public List<Technician> getTechnicians() {
+        return technicianRepository.findAll();
+    }
+
+    @GetMapping("/iot/inventory-parts")
+    public List<InventoryPart> getInventoryParts() {
+        return inventoryPartRepository.findAll();
     }
 
     // Rapports BI Endpoints

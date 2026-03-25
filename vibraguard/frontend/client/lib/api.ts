@@ -34,4 +34,7 @@ export const api = {
   getAudit: () => apiRequest<any[]>("GET", "/api/v1/blockchain/audit"),
   getMotorById: (id: string) => apiRequest<any>("GET", `/api/v1/iot/motors/${id}`),
   getMotorVibrations: (id: string) => apiRequest<any[]>("GET", `/api/v1/iot/motors/${id}/vibration`),
+  getTechnicians: () => apiRequest<any[]>("GET", "/api/v1/iot/technicians"),
+  getInventoryParts: () => apiRequest<any[]>("GET", "/api/v1/iot/inventory-parts"),
+  createWorkOrder: (data: any) => apiRequest<any>("POST", "/api/v1/iot/work-orders", data),
 };

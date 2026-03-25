@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { User } from "lucide-react";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Header } from "@/components/dashboard/Header";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
@@ -205,11 +206,9 @@ export default function ProfilUtilisateur() {
               <div className="flex flex-col gap-8 p-6">
                 {/* Avatar */}
                 <div className="flex items-center gap-6">
-                  <img
-                    src="https://api.builder.io/api/v1/image/assets/TEMP/debebd2e98692a4004e72072b04e25237419d788?width=192"
-                    alt={user?.fullName || "User Avatar"}
-                    className="w-24 h-24 rounded-full border-[3px] border-[#0B1518] ring-2 ring-[#007A3D] object-cover shrink-0"
-                  />
+                  <div className="w-24 h-24 rounded-full border-[3px] border-[#0B1518] ring-2 ring-[#007A3D] flex items-center justify-center bg-[#0D1316] shrink-0">
+                    <User className="w-12 h-12 text-[#98A6A8]" />
+                  </div>
                 </div>
 
                 {/* Fields grid */}

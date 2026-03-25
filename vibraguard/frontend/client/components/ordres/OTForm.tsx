@@ -1,16 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
+import { Loader2, User } from "lucide-react";
 
 interface Part {
+  id?: string;
   name: string;
   stock: number;
-  stockColor: "green" | "amber";
+  stockColor: string;
 }
 
-const DEFAULT_PARTS: Part[] = [
-  { name: "Palier SKF-6205", stock: 4, stockColor: "green" },
-  { name: "Capteur VibraSense", stock: 1, stockColor: "amber" },
-];
+interface Technician {
+  id: string;
+  name: string;
+  specialization: string;
+  avatarUrl?: string;
+}
+
+interface Motor {
+  id: string;
+  type: string;
+  label: string;
+}
 
 const SEVERITY_OPTIONS = ["Critique", "Élevée", "Moyenne", "Faible"];
 const SEVERITY_COLORS: Record<string, { dot: string; text: string; border: string; bg: string }> = {
@@ -25,19 +37,82 @@ interface OTFormProps {
 }
 
 export function OTForm({ onCancel }: OTFormProps) {
-  const [moteur, setMoteur] = useState("MTR-Broyeur-04 (Zone 2)");
+  const [moteur, setMoteur] = useState("");
   const [anomalie, setAnoalie] = useState("Déséquilibre Rotorique");
   const [severity, setSeverity] = useState("Critique");
-  const [date, setDate] = useState("2026-10-24T08:00");
+  const [date, setDate] = useState("2026-03-25T08:00");
   const [duree, setDuree] = useState("4h 30m");
-  const [technicien, setTechnicien] = useState("Karim B. (Spéc. Vibrations)");
-  const [parts, setParts] = useState<Part[]>(DEFAULT_PARTS);
+  const [technicien, setTechnicien] = useState("");
+  const [parts, setParts] = useState<Part[]>([]);
   const [partSearch, setPartSearch] = useState("");
   const [cout, setCout] = useState("4 500");
   const [description, setDescription] = useState(
     `Intervention urgente suite à l'alerte critique (#ALT-8402).\n\n- Sécuriser la zone de broyage et consigner l'équipement.\n- Effectuer un contrôle visuel détaillé du rotor.\n- Remplacer le palier côté accouplement si l'usure est confirmée lors du démontage.\n- Refaire l'équilibrage dynamique sur site avant la remise en service opérationnelle.`
   );
+  
+  const [availableMotors, setAvailableMotors] = useState<Motor[]>([]);
+  const [availableTechnicians, setAvailableTechnicians] = useState<Technician[]>([]);
+  const [availableParts, setAvailableParts] = useState<Part[]>([]);
+  
   const [severityOpen, setSeverityOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const [motors, technicians, invParts] = await Promise.all([
+          api.getMotors(),
+          api.getTechnicians(),
+          api.getInventoryParts()
+        ]);
+        setAvailableMotors(motors);
+        setAvailableTechnicians(technicians);
+        setAvailableParts(invParts);
+        
+        if (motors.length > 0) setMoteur(motors[0].id);
+        if (technicians.length > 0) setTechnicien(technicians[0].name);
+      } catch (error) {
+        console.error("Failed to fetch form data:", error);
+        toast.error("Erreur lors du chargement des données.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      const workOrder = {
+        title: anomalie,
+        asset: moteur,
+        status: "Nouveau",
+        assignedTo: technicien,
+        dueDate: date,
+        priority: severity,
+        // Optional: you could extend the backend to handle more fields
+      };
+      
+      await api.createWorkOrder(workOrder);
+      toast.success("Ordre de travail créé avec succès !");
+      onCancel(); // Navigate back
+    } catch (error) {
+      console.error("Failed to create work order:", error);
+      toast.error("Erreur lors de la création de l'ordre de travail.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleAddPart = (part: Part) => {
+    if (!parts.find(p => p.name === part.name)) {
+      setParts([...parts, part]);
+    }
+    setPartSearch("");
+  };
 
   const severityStyle = SEVERITY_COLORS[severity] ?? SEVERITY_COLORS["Critique"];
 
@@ -59,12 +134,21 @@ export function OTForm({ onCancel }: OTFormProps) {
                 <path d="M15.75 15.75L12.495 12.495" stroke="#98A6A8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M2.25 8.25C2.25 11.5615 4.93851 14.25 8.25 14.25C11.5615 14.25 14.25 11.5615 14.25 8.25C14.25 4.93851 11.5615 2.25 8.25 2.25C4.93851 2.25 2.25 4.93851 2.25 8.25V8.25" stroke="#98A6A8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              <input
+              <select
                 value={moteur}
                 onChange={(e) => setMoteur(e.target.value)}
-                className="flex-1 bg-transparent text-[#E6F0F2] text-[14px] font-medium outline-none placeholder:text-[#757575]"
-                placeholder="Rechercher un moteur..."
-              />
+                className="flex-1 bg-transparent text-[#E6F0F2] text-[14px] font-medium outline-none appearance-none cursor-pointer"
+              >
+                {isLoading ? (
+                  <option>Chargement...</option>
+                ) : (
+                  availableMotors.map((m) => (
+                    <option key={m.id} value={m.id} className="bg-[#0D1316]">
+                      {m.id} - {m.label}
+                    </option>
+                  ))
+                )}
+              </select>
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="shrink-0">
                 <path d="M4.5 6.75L9 11.25L13.5 6.75" stroke="#98A6A8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
@@ -182,16 +266,22 @@ export function OTForm({ onCancel }: OTFormProps) {
           <div className="flex flex-col gap-2">
             <label className="text-[#C9E7E6] text-[13px] font-medium">Technicien assigné</label>
             <div className="flex h-12 px-4 items-center gap-3 rounded-[6px] border border-black/[0.08] bg-[#0D1316] shadow-[inset_0_2px_4px_1px_rgba(0,0,0,0.10)]">
-              <img
-                src="https://api.builder.io/api/v1/image/assets/TEMP/7b02cb388b87f56a63a235a8d02a1683e015ed41?width=56"
-                alt="Technicien"
-                className="w-7 h-7 rounded-full border border-black/[0.08] object-cover shrink-0"
-              />
-              <input
+              <User className="w-5 h-5 text-[#C9E7E6]" />
+              <select
                 value={technicien}
                 onChange={(e) => setTechnicien(e.target.value)}
-                className="flex-1 bg-transparent text-[#E6F0F2] text-[14px] font-medium outline-none min-w-0"
-              />
+                className="flex-1 bg-transparent text-[#E6F0F2] text-[14px] font-medium outline-none appearance-none cursor-pointer"
+              >
+                {isLoading ? (
+                  <option>Chargement...</option>
+                ) : (
+                  availableTechnicians.map((t) => (
+                    <option key={t.id} value={t.name} className="bg-[#0D1316]">
+                      {t.name}
+                    </option>
+                  ))
+                )}
+              </select>
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="shrink-0">
                 <path d="M4.5 6.75L9 11.25L13.5 6.75" stroke="#98A6A8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
@@ -212,12 +302,33 @@ export function OTForm({ onCancel }: OTFormProps) {
                   onRemove={() => removePart(idx)}
                 />
               ))}
-              <input
-                value={partSearch}
-                onChange={(e) => setPartSearch(e.target.value)}
-                placeholder="Rechercher une pièce..."
-                className="bg-transparent text-[#E6F0F2] text-[13px] outline-none placeholder:text-[#757575] min-w-[140px] h-8"
-              />
+              <div className="relative flex-1 min-w-[140px]">
+                <input
+                  value={partSearch}
+                  onChange={(e) => setPartSearch(e.target.value)}
+                  placeholder="Rechercher une pièce..."
+                  className="w-full bg-transparent text-[#E6F0F2] text-[13px] outline-none placeholder:text-[#757575] h-8"
+                />
+                {partSearch && (
+                  <div className="absolute left-0 top-[calc(100%+6px)] z-30 w-full rounded-[6px] border border-white/[0.08] bg-[#0D1316] shadow-lg overflow-hidden">
+                    {availableParts
+                      .filter(p => p.name.toLowerCase().includes(partSearch.toLowerCase()))
+                      .map(p => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => handleAddPart(p)}
+                          className="flex items-center justify-between px-4 py-2 w-full hover:bg-white/5 transition-colors"
+                        >
+                          <span className="text-[#E6F0F2] text-[13px]">{p.name}</span>
+                          <span className={cn("text-[11px] font-bold", p.stockColor === "green" ? "text-[#007A3D]" : "text-[#F2A900]")}>
+                            (Stock: {p.stock})
+                          </span>
+                        </button>
+                      ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -267,13 +378,19 @@ export function OTForm({ onCancel }: OTFormProps) {
         </button>
         <button
           type="button"
-          className="flex h-11 px-6 items-center justify-center gap-2.5 rounded-[6px] bg-[#007A3D] hover:bg-[#006a34] transition-colors text-white text-[14px] font-semibold"
+          disabled={isSubmitting}
+          onClick={handleSubmit}
+          className="flex h-11 px-6 items-center justify-center gap-2.5 rounded-[6px] bg-[#007A3D] hover:bg-[#006a34] transition-colors text-white text-[14px] font-semibold disabled:opacity-50"
         >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path d="M11.4 2.25C11.7957 2.25564 12.1731 2.41738 12.45 2.7L15.3 5.55C15.5826 5.82695 15.7444 6.20435 15.75 6.6V14.25C15.75 15.0779 15.0779 15.75 14.25 15.75H3.75C2.92213 15.75 2.25 15.0779 2.25 14.25V3.75C2.25 2.92213 2.92213 2.25 3.75 2.25H11.4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M12.75 15.75V10.5C12.75 10.0861 12.4139 9.75 12 9.75H6C5.58606 9.75 5.25 10.0861 5.25 10.5V15.75M5.25 2.25V5.25C5.25 5.66394 5.58606 6 6 6H11.25" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          Enregistrer l'Ordre
+          {isSubmitting ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M11.4 2.25C11.7957 2.25564 12.1731 2.41738 12.45 2.7L15.3 5.55C15.5826 5.82695 15.7444 6.20435 15.75 6.6V14.25C15.75 15.0779 15.0779 15.75 14.25 15.75H3.75C2.92213 15.75 2.25 15.0779 2.25 14.25V3.75C2.25 2.92213 2.92213 2.25 3.75 2.25H11.4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12.75 15.75V10.5C12.75 10.0861 12.4139 9.75 12 9.75H6C5.58606 9.75 5.25 10.0861 5.25 10.5V15.75M5.25 2.25V5.25C5.25 5.66394 5.58606 6 6 6H11.25" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          )}
+          {isSubmitting ? "Enregistrement..." : "Enregistrer l'Ordre"}
         </button>
       </div>
     </div>
