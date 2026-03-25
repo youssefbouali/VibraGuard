@@ -42,4 +42,8 @@ export const api = {
   createMotor: (data: any) => apiRequest<any>("POST", "/api/v1/iot/motors", data),
   updateMotor: (id: string, data: any) => apiRequest<any>("PUT", `/api/v1/iot/motors/${id}`, data),
   deleteMotor: (id: string) => apiRequest<any>("DELETE", `/api/v1/iot/motors/${id}`),
+  getBIKPIs: () => apiRequest<any>("GET", "/api/v1/bi/kpis"),
+  getMtbfBySite: () => apiRequest<any[]>("GET", "/api/v1/bi/mtbf-by-site"),
+  getMaintenanceCosts: () => apiRequest<any[]>("GET", "/api/v1/bi/maintenance-costs"),
+  getInterventions: () => apiRequest<any[]>("GET", "/api/v1/bi/interventions"),
 };

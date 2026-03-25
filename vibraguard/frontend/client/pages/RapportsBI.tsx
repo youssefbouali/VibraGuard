@@ -6,12 +6,101 @@ import { InterventionChart } from "./rapports-bi/InterventionChart";
 import { CartographieSites } from "./rapports-bi/CartographieSites";
 import { MtbfBySiteChart } from "./rapports-bi/MtbfBySiteChart";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
 
 type Tab = "quotidien" | "hebdomadaire" | "mensuel";
 
 
 export default function RapportsBI() {
   const [activeTab, setActiveTab] = useState<Tab>("hebdomadaire");
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportPDF = async () => {
+    try {
+      setIsExporting(true);
+      const { jsPDF } = await import("jspdf");
+      await import("jspdf-autotable");
+      
+      const kpis = await api.getBIKPIs();
+      const mtbf = await api.getMtbfBySite();
+
+      const doc = new jsPDF() as any;
+      
+      doc.setFontSize(22);
+      doc.setTextColor(0, 122, 61); // OCP Green
+      doc.text("VibraGuard - Rapport BI", 14, 22);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`Généré le: ${new Date().toLocaleString()}`, 14, 30);
+      doc.text("Période: Octobre 2026", 14, 35);
+
+      doc.autoTable({
+        startY: 45,
+        head: [['KPI Stratégiques', 'Valeur', 'Tendance']],
+        body: [
+          ["MTBF (Mean Time Between Failures)", `${kpis.mtbf} h`, kpis.mtbfTrend],
+          ["MTTR (Mean Time To Repair)", `${kpis.mttr} h`, kpis.mttrTrend],
+          ["Disponibilité Opérationnelle", `${kpis.availability} %`, kpis.availabilityTrend],
+          ["Coût Maintenance Total", `${kpis.maintenanceCost.toLocaleString()} $`, kpis.maintenanceCostTrend]
+        ],
+        theme: 'grid',
+        headStyles: { fillStyle: 'fill', fillColor: [15, 39, 48] }
+      });
+
+      doc.autoTable({
+        startY: (doc as any).lastAutoTable.finalY + 15,
+        head: [['Site OCP', 'MTBF (Heures)']],
+        body: mtbf.map(s => [s.siteName, s.mtbfValue]),
+        theme: 'striped',
+        headStyles: { fillColor: [0, 122, 61] }
+      });
+
+      doc.save("VibraGuard_BI_Report.pdf");
+      toast.success("PDF exporté avec succès");
+    } catch (error) {
+      console.error(error);
+      toast.error("Erreur lors de l'export PDF. Vérifiez l'installation des librairies.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      setIsExporting(true);
+      const XLSX = await import("xlsx");
+      
+      const kpis = await api.getBIKPIs();
+      const mtbfArr = await api.getMtbfBySite();
+      const costs = await api.getMaintenanceCosts();
+
+      const wb = XLSX.utils.book_new();
+      
+      const kpiData = [
+        { Indicateur: "MTBF", Valeur: kpis.mtbf, Tendance: kpis.mtbfTrend },
+        { Indicateur: "MTTR", Valeur: kpis.mttr, Tendance: kpis.mttrTrend },
+        { Indicateur: "Disponibilité", Valeur: kpis.availability, Tendance: kpis.availabilityTrend },
+        { Indicateur: "Coût Maintenance", Valeur: kpis.maintenanceCost, Tendance: kpis.maintenanceCostTrend }
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(kpiData), "KPIs Globaux");
+
+      const mtbfData = mtbfArr.map(s => ({ "Site": s.siteName, "MTBF (h)": s.mtbfValue }));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mtbfData), "MTBF par Site");
+
+      const costData = costs.map(c => ({ "Mois": c.mois, "Réel": c.reel, "Budget": c.budget }));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(costData), "Coûts Maintenance");
+
+      XLSX.writeFile(wb, "VibraGuard_BI_Data.xlsx");
+      toast.success("Données Excel exportées");
+    } catch (error) {
+      console.error(error);
+      toast.error("Erreur lors de l'export Excel");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <DashboardLayout breadcrumb="Rapports BI">
@@ -43,26 +132,32 @@ export default function RapportsBI() {
 
               {/* Export PDF */}
               <button 
-                onClick={() => window.open(`${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/bi/export/pdf`, '_blank')}
-                className="flex items-center gap-2 h-10 px-4 rounded-md border border-black/[0.08] hover:bg-white/5 transition-colors"
+                onClick={handleExportPDF}
+                disabled={isExporting}
+                className="flex items-center gap-2 h-10 px-4 rounded-md border border-black/[0.08] hover:bg-white/5 transition-colors disabled:opacity-50"
               >
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                   <path d="M4.5 16.5C3.67213 16.5 3 15.8279 3 15V3C3 2.17213 3.67213 1.5 4.5 1.5H10.5C10.9795 1.49923 11.4395 1.68982 11.778 2.0295L14.469 4.7205C14.8096 5.05909 15.0008 5.51974 15 6V15C15 15.8279 14.3279 16.5 13.5 16.5H4.5" stroke="#D93F3F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M10.5 1.5V5.25C10.5 5.66394 10.8361 6 11.25 6H15M7.5 6.75H6M12 9.75H6M12 12.75H6" stroke="#D93F3F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <span className="text-[#E6F0F2] text-[14px] font-semibold">Export PDF</span>
+                <span className="text-[#E6F0F2] text-[14px] font-semibold">
+                  {isExporting ? <span className="animate-pulse">Génération...</span> : "Export PDF"}
+                </span>
               </button>
-
+  
               {/* Export Excel */}
               <button 
-                onClick={() => window.open(`${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/bi/export/excel`, '_blank')}
-                className="flex items-center gap-2 h-10 px-4 rounded-md bg-[#007A3D] hover:bg-[#006633] transition-colors"
+                onClick={handleExportExcel}
+                disabled={isExporting}
+                className="flex items-center gap-2 h-10 px-4 rounded-md bg-[#007A3D] hover:bg-[#006633] transition-colors disabled:opacity-50"
               >
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                   <path d="M4.5 16.5C3.67213 16.5 3 15.8279 3 15V3C3 2.17213 3.67213 1.5 4.5 1.5H10.5C10.9795 1.49923 11.4395 1.68982 11.778 2.0295L14.469 4.7205C14.8096 5.05909 15.0008 5.51974 15 6V15C15 15.8279 14.3279 16.5 13.5 16.5H4.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M10.5 1.5V5.25C10.5 5.66394 10.8361 6 11.25 6H15M6 9.75H7.5M10.5 9.75H12M6 12.75H7.5M10.5 12.75H12" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <span className="text-white text-[14px] font-semibold">Export Excel</span>
+                <span className="text-white text-[14px] font-semibold">
+                  {isExporting ? "Chargement..." : "Export Excel"}
+                </span>
               </button>
             </div>
           </div>

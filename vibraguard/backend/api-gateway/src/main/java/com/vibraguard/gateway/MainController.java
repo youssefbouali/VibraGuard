@@ -146,272 +146,219 @@ public class MainController {
 
     // IoT Endpoints
     @PostMapping("/iot/motors")
-    public Mono<Motor> createMotor(@RequestBody Motor motor) {
-        return Mono.fromCallable(() -> {
-            if (motor.getId() == null) {
-                motor.setId("MTR-" + (motorRepository.count() + 10));
-            }
-            return motorRepository.save(motor);
-        }).subscribeOn(Schedulers.boundedElastic());
+    public Motor createMotor(@RequestBody Motor motor) {
+        if (motor.getId() == null) {
+            motor.setId("MTR-" + (motorRepository.count() + 10));
+        }
+        return motorRepository.save(motor);
     }
 
     @PutMapping("/iot/motors/{id}")
-    public Mono<Motor> updateMotor(@PathVariable String id, @RequestBody Motor motor) {
-        return Mono.fromCallable(() -> {
-            return motorRepository.findById(id).map(existing -> {
-                existing.setType(motor.getType());
-                existing.setEtatLabel(motor.getEtatLabel());
-                existing.setEtatColor(motor.getEtatColor());
-                existing.setEtatPct(motor.getEtatPct());
-                existing.setVibration(motor.getVibration());
-                existing.setVibrationColor(motor.getVibrationColor());
-                existing.setTrendIcon(motor.getTrendIcon());
-                return motorRepository.save(existing);
-            }).orElseGet(() -> {
-                motor.setId(id);
-                return motorRepository.save(motor);
-            });
-        }).subscribeOn(Schedulers.boundedElastic());
+    public Motor updateMotor(@PathVariable String id, @RequestBody Motor motor) {
+        return motorRepository.findById(id).map(existing -> {
+            existing.setType(motor.getType());
+            existing.setEtatLabel(motor.getEtatLabel());
+            existing.setEtatColor(motor.getEtatColor());
+            existing.setEtatPct(motor.getEtatPct());
+            existing.setVibration(motor.getVibration());
+            existing.setVibrationColor(motor.getVibrationColor());
+            existing.setTrendIcon(motor.getTrendIcon());
+            return motorRepository.save(existing);
+        }).orElseGet(() -> {
+            motor.setId(id);
+            return motorRepository.save(motor);
+        });
     }
 
     @DeleteMapping("/iot/motors/{id}")
-    public Mono<Void> deleteMotor(@PathVariable String id) {
-        return Mono.fromRunnable(() -> motorRepository.deleteById(id))
-                .subscribeOn(Schedulers.boundedElastic())
-                .then();
+    public void deleteMotor(@PathVariable String id) {
+        motorRepository.deleteById(id);
     }
 
     @GetMapping("/iot/motors")
-    public Mono<List<Motor>> getMotors() {
-        return Mono.fromCallable(() -> motorRepository.findAll())
-                .subscribeOn(Schedulers.boundedElastic());
-    }
-
-    @GetMapping("/iot/motors/{id}/vibration")
-    public Mono<ResponseEntity<List<VibrationData>>> getMotorVibration(@PathVariable("id") String id) {
-        return Mono.fromCallable(() -> ResponseEntity.ok(vibrationRepository.findByMotorId(id)))
-                .subscribeOn(Schedulers.boundedElastic());
+    public List<Motor> getMotors() {
+        return motorRepository.findAll();
     }
 
     @GetMapping("/iot/motors/{id}")
-    public Mono<ResponseEntity<Motor>> getMotorById(@PathVariable String id) {
-        return Mono.fromCallable(() -> motorRepository.findById(id))
-                .subscribeOn(Schedulers.boundedElastic())
-                .map(motor -> motor.map(ResponseEntity::ok)
-                        .orElseGet(() -> ResponseEntity.notFound().build()));
+    public ResponseEntity<?> getMotorById(@PathVariable("id") String id) {
+        return motorRepository.findById(id)
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/iot/motors/{id}/vibration")
+    public ResponseEntity<List<VibrationData>> getMotorVibration(@PathVariable("id") String id) {
+        return ResponseEntity.ok(vibrationRepository.findByMotorId(id));
     }
 
     @GetMapping("/iot/kpis")
-    public Mono<Map<String, Object>> getKPIs() {
-        return Mono.fromCallable(() -> {
-            Map<String, Object> kpis = new HashMap<>();
-            kpis.put("totalMotors", motorRepository.count());
-            kpis.put("totalMotorsTrend", kpiValueRepository.findById("totalMotorsTrend").map(KpiValue::getTrend).orElse("+12% ce mois"));
-            kpis.put("criticalMotors",
-                    motorRepository.findAll().stream().filter(m -> m.getEtatLabel().contains("Critique")).count());
-            kpis.put("criticalMotorsTrend", kpiValueRepository.findById("criticalMotorsTrend").map(KpiValue::getTrend).orElse("+2 aujourd'hui"));
-            kpis.put("alerts", alertRepository.count());
-            kpis.put("alertsTrend", kpiValueRepository.findById("alertsTrend").map(KpiValue::getTrend).orElse("+2 aujourd'hui"));
-            kpis.put("uptime", kpiValueRepository.findById("uptime").map(kv -> kv.getNumericValue() + "%").orElse("98.5%"));
-            kpis.put("uptimeTrend", kpiValueRepository.findById("uptime").map(KpiValue::getTrend).orElse("+0.4% ce mois"));
-            kpis.put("uptimeTrendUp", kpiValueRepository.findById("uptime").map(KpiValue::getTrendUp).orElse(true));
-            return kpis;
-        }).subscribeOn(Schedulers.boundedElastic());
+    public Map<String, Object> getKPIs() {
+        Map<String, Object> kpis = new HashMap<>();
+        kpis.put("totalMotors", motorRepository.count());
+        kpis.put("totalMotorsTrend", kpiValueRepository.findById("totalMotorsTrend").map(KpiValue::getTrend).orElse("+12% ce mois"));
+        kpis.put("criticalMotors",
+                motorRepository.findAll().stream().filter(m -> m.getEtatLabel().contains("Critique")).count());
+        kpis.put("criticalMotorsTrend", kpiValueRepository.findById("criticalMotorsTrend").map(KpiValue::getTrend).orElse("+2 aujourd'hui"));
+        kpis.put("alerts", alertRepository.count());
+        kpis.put("alertsTrend", kpiValueRepository.findById("alertsTrend").map(KpiValue::getTrend).orElse("+2 aujourd'hui"));
+        kpis.put("uptime", kpiValueRepository.findById("uptime").map(kv -> kv.getNumericValue() + "%").orElse("98.5%"));
+        kpis.put("uptimeTrend", kpiValueRepository.findById("uptime").map(KpiValue::getTrend).orElse("+0.4% ce mois"));
+        kpis.put("uptimeTrendUp", kpiValueRepository.findById("uptime").map(KpiValue::getTrendUp).orElse(true));
+        return kpis;
     }
 
     @GetMapping("/iot/vibrations")
-    public Mono<List<VibrationData>> getVibrations() {
-        return Mono.fromCallable(() -> vibrationRepository.findAll())
-                .subscribeOn(Schedulers.boundedElastic());
+    public List<VibrationData> getVibrations() {
+        return vibrationRepository.findAll();
     }
 
     // ML Endpoints
     @GetMapping("/ml/alerts")
-    public Mono<List<Alert>> getAlerts() {
-        return Mono.fromCallable(() -> alertRepository.findAll())
-                .subscribeOn(Schedulers.boundedElastic());
+    public List<Alert> getAlerts() {
+        return alertRepository.findAll();
     }
 
     @GetMapping("/ml/alerts/{id}")
-    public Mono<ResponseEntity<Alert>> getAlertById(@PathVariable String id) {
-        return Mono.fromCallable(() -> alertRepository.findById(id))
-                .subscribeOn(Schedulers.boundedElastic())
-                .map(alert -> alert.map(ResponseEntity::ok)
-                        .orElseGet(() -> ResponseEntity.notFound().build()));
+    public ResponseEntity<Alert> getAlertById(@PathVariable String id) {
+        return alertRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/ml/alerts/{id}")
-    public Mono<Alert> updateAlert(@PathVariable String id, @RequestBody Alert alert) {
-        return Mono.fromCallable(() -> {
-            return alertRepository.findById(id).map(existing -> {
-                existing.setStatus(alert.getStatus());
-                existing.setMessage(alert.getMessage());
-                existing.setLevel(alert.getLevel());
-                existing.setPriority(alert.getPriority());
-                return alertRepository.save(existing);
-            }).orElseGet(() -> {
-                alert.setId(id);
-                return alertRepository.save(alert);
-            });
-        }).subscribeOn(Schedulers.boundedElastic());
+    public Alert updateAlert(@PathVariable String id, @RequestBody Alert alert) {
+        return alertRepository.findById(id).map(existing -> {
+            existing.setStatus(alert.getStatus());
+            existing.setMessage(alert.getMessage());
+            existing.setLevel(alert.getLevel());
+            existing.setPriority(alert.getPriority());
+            return alertRepository.save(existing);
+        }).orElseGet(() -> {
+            alert.setId(id);
+            return alertRepository.save(alert);
+        });
     }
 
     // Work Order Endpoints
     @GetMapping("/iot/work-orders")
-    public Mono<List<WorkOrder>> getWorkOrders() {
-        return Mono.fromCallable(() -> workOrderRepository.findAll())
-                .subscribeOn(Schedulers.boundedElastic());
+    public List<WorkOrder> getWorkOrders() {
+        return workOrderRepository.findAll();
     }
 
     @GetMapping("/iot/work-orders/{id}")
-    public Mono<ResponseEntity<WorkOrder>> getWorkOrderById(@PathVariable String id) {
-        return Mono.fromCallable(() -> workOrderRepository.findById(id))
-                .subscribeOn(Schedulers.boundedElastic())
-                .map(order -> order.map(ResponseEntity::ok)
-                        .orElseGet(() -> ResponseEntity.notFound().build()));
+    public ResponseEntity<WorkOrder> getWorkOrderById(@PathVariable String id) {
+        return workOrderRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/iot/work-orders")
-    public Mono<WorkOrder> createWorkOrder(@RequestBody WorkOrder workOrder) {
-        return Mono.fromCallable(() -> {
-            if (workOrder.getId() == null) {
-                workOrder.setId("W-" + (workOrderRepository.count() + 458));
-            }
-            return workOrderRepository.save(workOrder);
-        }).subscribeOn(Schedulers.boundedElastic());
+    public WorkOrder createWorkOrder(@RequestBody WorkOrder workOrder) {
+        if (workOrder.getId() == null) {
+            workOrder.setId("W-" + (workOrderRepository.count() + 458));
+        }
+        return workOrderRepository.save(workOrder);
     }
 
     @PutMapping("/iot/work-orders/{id}")
-    public Mono<WorkOrder> updateWorkOrder(@PathVariable String id, @RequestBody WorkOrder workOrder) {
-        return Mono.fromCallable(() -> {
-            return workOrderRepository.findById(id).map(existing -> {
-                existing.setTitle(workOrder.getTitle());
-                existing.setAsset(workOrder.getAsset());
-                existing.setStatus(workOrder.getStatus());
-                existing.setPriority(workOrder.getPriority());
-                existing.setAssignedTo(workOrder.getAssignedTo());
-                existing.setDueDate(workOrder.getDueDate());
-                return workOrderRepository.save(existing);
-            }).orElseGet(() -> {
-                workOrder.setId(id);
-                return workOrderRepository.save(workOrder);
-            });
-        }).subscribeOn(Schedulers.boundedElastic());
+    public WorkOrder updateWorkOrder(@PathVariable String id, @RequestBody WorkOrder workOrder) {
+        return workOrderRepository.findById(id).map(existing -> {
+            existing.setTitle(workOrder.getTitle());
+            existing.setAsset(workOrder.getAsset());
+            existing.setStatus(workOrder.getStatus());
+            existing.setPriority(workOrder.getPriority());
+            existing.setAssignedTo(workOrder.getAssignedTo());
+            existing.setDueDate(workOrder.getDueDate());
+            return workOrderRepository.save(existing);
+        }).orElseGet(() -> {
+            workOrder.setId(id);
+            return workOrderRepository.save(workOrder);
+        });
     }
 
     @DeleteMapping("/iot/work-orders/{id}")
-    public Mono<Void> deleteWorkOrder(@PathVariable String id) {
-        return Mono.fromRunnable(() -> workOrderRepository.deleteById(id))
-                .subscribeOn(Schedulers.boundedElastic())
-                .then();
+    public void deleteWorkOrder(@PathVariable String id) {
+        workOrderRepository.deleteById(id);
     }
 
     @GetMapping("/iot/technicians")
-    public Mono<List<Technician>> getTechnicians() {
-        return Mono.fromCallable(() -> technicianRepository.findAll())
-                .subscribeOn(Schedulers.boundedElastic());
+    public List<Technician> getTechnicians() {
+        return technicianRepository.findAll();
     }
 
     @GetMapping("/iot/inventory-parts")
-    public Mono<List<InventoryPart>> getInventoryParts() {
-        return Mono.fromCallable(() -> inventoryPartRepository.findAll())
-                .subscribeOn(Schedulers.boundedElastic());
+    public List<InventoryPart> getInventoryParts() {
+        return inventoryPartRepository.findAll();
     }
 
     // Rapports BI Endpoints
     @GetMapping("/bi/kpis")
-    public Mono<Map<String, Object>> getBIKPIs() {
-        return Mono.fromCallable(() -> {
-            Map<String, Object> kpis = new HashMap<>();
-            kpis.put("mtbf", kpiValueRepository.findById("mtbf").map(KpiValue::getNumericValue).orElse(1240.0));
-            kpis.put("mtbfTrend", kpiValueRepository.findById("mtbf").map(KpiValue::getTrend).orElse("+12.5% vs mois préc."));
-            kpis.put("mtbfUp", kpiValueRepository.findById("mtbf").map(KpiValue::getTrendUp).orElse(true));
-            
-            kpis.put("mttr", kpiValueRepository.findById("mttr").map(KpiValue::getNumericValue).orElse(3.2));
-            kpis.put("mttrTrend", kpiValueRepository.findById("mttr").map(KpiValue::getTrend).orElse("-5.4% vs mois préc."));
-            kpis.put("mttrUp", kpiValueRepository.findById("mttr").map(KpiValue::getTrendUp).orElse(false));
-            
-            kpis.put("availability", kpiValueRepository.findById("availability").map(KpiValue::getNumericValue).orElse(98.4));
-            kpis.put("availabilityTrend", kpiValueRepository.findById("availability").map(KpiValue::getTrend).orElse("+0.2% vs mois préc."));
-            kpis.put("availabilityUp", kpiValueRepository.findById("availability").map(KpiValue::getTrendUp).orElse(true));
-            
-            kpis.put("maintenanceCost",
-                    maintenanceCostRepository.findAll().stream().mapToDouble(MaintenanceCost::getReel).sum());
-            kpis.put("maintenanceCostTrend", kpiValueRepository.findById("maintenanceCostTrend").map(KpiValue::getTrend).orElse("-15.0% vs budget"));
-            kpis.put("maintenanceCostUp", kpiValueRepository.findById("maintenanceCostTrend").map(KpiValue::getTrendUp).orElse(false));
-            
-            kpis.put("sitesConnected", siteMtbfRepository.count());
-            kpis.put("activeAlerts", alertRepository.count());
-            return kpis;
-        }).subscribeOn(Schedulers.boundedElastic());
+    public Map<String, Object> getBIKPIs() {
+        Map<String, Object> kpis = new HashMap<>();
+        kpis.put("mtbf", kpiValueRepository.findById("mtbf").map(KpiValue::getNumericValue).orElse(1240.0));
+        kpis.put("mtbfTrend", kpiValueRepository.findById("mtbf").map(KpiValue::getTrend).orElse("+12.5% vs mois préc."));
+        kpis.put("mtbfUp", kpiValueRepository.findById("mtbf").map(KpiValue::getTrendUp).orElse(true));
+        
+        kpis.put("mttr", kpiValueRepository.findById("mttr").map(KpiValue::getNumericValue).orElse(3.2));
+        kpis.put("mttrTrend", kpiValueRepository.findById("mttr").map(KpiValue::getTrend).orElse("-5.4% vs mois préc."));
+        kpis.put("mttrUp", kpiValueRepository.findById("mttr").map(KpiValue::getTrendUp).orElse(false));
+        
+        kpis.put("availability", kpiValueRepository.findById("availability").map(KpiValue::getNumericValue).orElse(98.4));
+        kpis.put("availabilityTrend", kpiValueRepository.findById("availability").map(KpiValue::getTrend).orElse("+0.2% vs mois préc."));
+        kpis.put("availabilityUp", kpiValueRepository.findById("availability").map(KpiValue::getTrendUp).orElse(true));
+        
+        kpis.put("maintenanceCost",
+                maintenanceCostRepository.findAll().stream().mapToDouble(MaintenanceCost::getReel).sum());
+        kpis.put("maintenanceCostTrend", kpiValueRepository.findById("maintenanceCostTrend").map(KpiValue::getTrend).orElse("-15.0% vs budget"));
+        kpis.put("maintenanceCostUp", kpiValueRepository.findById("maintenanceCostTrend").map(KpiValue::getTrendUp).orElse(false));
+        
+        kpis.put("sitesConnected", siteMtbfRepository.count());
+        kpis.put("activeAlerts", alertRepository.count());
+        return kpis;
     }
 
     @GetMapping("/bi/mtbf-by-site")
-    public Mono<List<SiteMtbf>> getMtbfBySite() {
-        return Mono.fromCallable(() -> siteMtbfRepository.findAll())
-                .subscribeOn(Schedulers.boundedElastic());
+    public List<SiteMtbf> getMtbfBySite() {
+        return siteMtbfRepository.findAll();
     }
 
     @GetMapping("/bi/maintenance-costs")
-    public Mono<List<MaintenanceCost>> getMaintenanceCosts() {
-        return Mono.fromCallable(() -> maintenanceCostRepository.findAll())
-                .subscribeOn(Schedulers.boundedElastic());
+    public List<MaintenanceCost> getMaintenanceCosts() {
+        return maintenanceCostRepository.findAll();
     }
 
     @GetMapping("/bi/interventions")
-    public Mono<List<Intervention>> getInterventions() {
-        return Mono.fromCallable(() -> interventionRepository.findAll())
-                .subscribeOn(Schedulers.boundedElastic());
+    public List<Intervention> getInterventions() {
+        return interventionRepository.findAll();
     }
 
     @GetMapping("/bi/reports")
-    public Mono<List<Map<String, Object>>> getBIReports() {
-        return Mono.just(new ArrayList<>()); // Stub
+    public List<Map<String, Object>> getBIReports() {
+        return new ArrayList<>(); // Stub
     }
 
     // Blockchain Endpoints
     @GetMapping("/blockchain/kpis")
-    public Mono<Map<String, Object>> getBlockchainKPIs() {
-        return Mono.fromCallable(() -> {
-            Map<String, Object> kpis = new HashMap<>();
-            kpis.put("secureBlocks", kpiValueRepository.findById("secureBlocks").map(KpiValue::getNumericValue).orElse(104829.0));
-            kpis.put("secureBlocksTrend", kpiValueRepository.findById("secureBlocks").map(KpiValue::getTrend).orElse("+14 aujourd'hui"));
-            kpis.put("secureBlocksUp", kpiValueRepository.findById("secureBlocks").map(KpiValue::getTrendUp).orElse(true));
-            kpis.put("smartContracts", kpiValueRepository.findById("smartContracts").map(KpiValue::getNumericValue).orElse(42.0));
-            kpis.put("integrityRate", kpiValueRepository.findById("integrityRate").map(KpiValue::getNumericValue).orElse(100.0));
-            kpis.put("validationTime", kpiValueRepository.findById("validationTime").map(KpiValue::getNumericValue).orElse(2.4));
-            return kpis;
-        }).subscribeOn(Schedulers.boundedElastic());
+    public Map<String, Object> getBlockchainKPIs() {
+        Map<String, Object> kpis = new HashMap<>();
+        kpis.put("secureBlocks", kpiValueRepository.findById("secureBlocks").map(KpiValue::getNumericValue).orElse(104829.0));
+        kpis.put("secureBlocksTrend", kpiValueRepository.findById("secureBlocks").map(KpiValue::getTrend).orElse("+14 aujourd'hui"));
+        kpis.put("secureBlocksUp", kpiValueRepository.findById("secureBlocks").map(KpiValue::getTrendUp).orElse(true));
+        kpis.put("smartContracts", kpiValueRepository.findById("smartContracts").map(KpiValue::getNumericValue).orElse(42.0));
+        kpis.put("integrityRate", kpiValueRepository.findById("integrityRate").map(KpiValue::getNumericValue).orElse(100.0));
+        kpis.put("validationTime", kpiValueRepository.findById("validationTime").map(KpiValue::getNumericValue).orElse(2.4));
+        return kpis;
     }
 
     @GetMapping("/blockchain/audit")
-    public Mono<List<AuditEntry>> getAuditHistory() {
-        return Mono.fromCallable(() -> auditRepository.findAll())
-                .subscribeOn(Schedulers.boundedElastic());
+    public List<AuditEntry> getAuditHistory() {
+        return auditRepository.findAll();
     }
 
     @GetMapping("/blockchain/traceability")
-    public Mono<List<TraceabilityStep>> getTraceability() {
-        return Mono.fromCallable(() -> traceabilityRepository.findAll())
-                .subscribeOn(Schedulers.boundedElastic());
-    }
-
-    @GetMapping("/bi/export/pdf")
-    public ResponseEntity<byte[]> exportPDF() {
-        String content = "--- VIBRAGUARD BI REPORT ---\nDate: " + new Date() + "\n\nAsset Performance Summary\nMTBF: 1240h\nMTTR: 3.2h\nAvailability: 98.5%\n";
-        return ResponseEntity.ok()
-                .header("Content-Disposition", "attachment; filename=Rapport_BI.txt")
-                .header("Content-Type", "text/plain")
-                .body(content.getBytes());
-    }
-
-    @GetMapping("/bi/export/excel")
-    public ResponseEntity<byte[]> exportExcel() {
-        String csv = "KPI,Value,Trend\nMTBF,1240h,+12.5%\nMTTR,3.2h,-5.4%\nAvailability,98.5%,+0.4%\n";
-        return ResponseEntity.ok()
-                .header("Content-Disposition", "attachment; filename=Rapport_BI.csv")
-                .header("Content-Type", "text/csv")
-                .body(csv.getBytes());
+    public List<TraceabilityStep> getTraceability() {
+        return traceabilityRepository.findAll();
     }
 
     private void seedMotor(String id, String type, String label, String color, int pct, String vib, String vibCol, String trend) {
