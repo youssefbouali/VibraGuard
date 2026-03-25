@@ -22,4 +22,5 @@ public class Alert {
     private String time;
     private String color;
     private String priority;
+    private String status; // Nouveau, Acquittée, Escaladée
 }

@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Moteurs from "./pages/Moteurs";
 import MoteurDetail from "./pages/MoteurDetail";
+import AjouterMoteur from "./pages/AjouterMoteur";
 import Alertes from "./pages/Alertes";
 import AlerteDetail from "./pages/AlerteDetail";
 import OrdresDeTravail from "./pages/OrdresDeTravail";
@@ -48,6 +49,7 @@ const App = () => (
             {/* Protected Routes */}
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/moteurs" element={<ProtectedRoute><Moteurs /></ProtectedRoute>} />
+            <Route path="/moteurs/ajouter" element={<ProtectedRoute><AjouterMoteur /></ProtectedRoute>} />
             <Route path="/moteurs/:id" element={<ProtectedRoute><MoteurDetail /></ProtectedRoute>} />
             <Route path="/alertes" element={<ProtectedRoute><Alertes /></ProtectedRoute>} />
             <Route path="/alertes/:id" element={<ProtectedRoute><AlerteDetail /></ProtectedRoute>} />

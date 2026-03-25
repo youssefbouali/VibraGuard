@@ -2,6 +2,9 @@ import { useState } from "react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { AlertesTable, Alerte } from "@/components/alertes/AlertesTable";
 import { AlertDetail } from "@/components/alertes/AlertDetail";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 const ALERTES_DATA: Alerte[] = [
   {
@@ -60,7 +63,7 @@ import { useAlerts } from "@/hooks/use-alerts";
 // ... (types and filters remain)
 
 export default function Alertes() {
-  const { data: apiAlerts, isLoading } = useAlerts();
+  const { data: apiAlerts, isLoading, refetch } = useAlerts() as any;
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [severiteFilter, setSeveriteFilter] = useState<SeveriteFilter>("Toutes");
@@ -109,12 +112,26 @@ export default function Alertes() {
     setSelectedId(id === selectedId ? null : id);
   };
 
-  const handleAcquitter = (id: string) => {
-    console.log("Acquitter", id);
+  const handleAcquitter = async (id: string) => {
+    try {
+      const original = apiAlerts.find((a: any) => a.id === id);
+      await api.updateAlert(id, { ...original, status: "Acquittée" });
+      toast.success("Alerte acquittée");
+      refetch();
+    } catch (err) {
+      toast.error("Erreur lors de l'acquittement");
+    }
   };
 
-  const handleEscalader = (id: string) => {
-    console.log("Escalader", id);
+  const handleEscalader = async (id: string) => {
+    try {
+      const original = apiAlerts.find((a: any) => a.id === id);
+      await api.updateAlert(id, { ...original, status: "Escaladée" });
+      toast.success("Alerte escaladée");
+      refetch();
+    } catch (err) {
+      toast.error("Erreur lors de l'escalade");
+    }
   };
 
   return (

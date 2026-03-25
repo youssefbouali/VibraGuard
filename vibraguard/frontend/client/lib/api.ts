@@ -37,4 +37,9 @@ export const api = {
   getTechnicians: () => apiRequest<any[]>("GET", "/api/v1/iot/technicians"),
   getInventoryParts: () => apiRequest<any[]>("GET", "/api/v1/iot/inventory-parts"),
   createWorkOrder: (data: any) => apiRequest<any>("POST", "/api/v1/iot/work-orders", data),
+  updateWorkOrder: (id: string, data: any) => apiRequest<any>("PUT", `/api/v1/iot/work-orders/${id}`, data),
+  updateAlert: (id: string, data: any) => apiRequest<any>("PUT", `/api/v1/ml/alerts/${id}`, data),
+  createMotor: (data: any) => apiRequest<any>("POST", "/api/v1/iot/motors", data),
+  updateMotor: (id: string, data: any) => apiRequest<any>("PUT", `/api/v1/iot/motors/${id}`, data),
+  deleteMotor: (id: string) => apiRequest<any>("DELETE", `/api/v1/iot/motors/${id}`),
 };

@@ -6,6 +6,7 @@ interface KanbanColumnProps {
   title: string;
   status: ColumnStatus;
   tasks: OT[];
+  onCardClick?: (ot: OT) => void;
 }
 
 const dotColor: Record<ColumnStatus, string> = {
@@ -14,7 +15,7 @@ const dotColor: Record<ColumnStatus, string> = {
   done: "bg-[#00924A]",
 };
 
-export function KanbanColumn({ title, status, tasks }: KanbanColumnProps) {
+export function KanbanColumn({ title, status, tasks, onCardClick }: KanbanColumnProps) {
   return (
     <div className="flex flex-col flex-1 min-w-[280px] max-w-[400px] rounded-lg border border-black/[0.08] bg-[rgba(11,21,24,0.40)] overflow-hidden">
       {/* Column header */}
@@ -31,7 +32,7 @@ export function KanbanColumn({ title, status, tasks }: KanbanColumnProps) {
       {/* Tasks */}
       <div className="flex flex-col gap-4 p-5 overflow-y-auto flex-1">
         {tasks.map((ot) => (
-          <KanbanCard key={ot.id} ot={ot} />
+          <KanbanCard key={ot.id} ot={ot} onClick={() => onCardClick?.(ot)} />
         ))}
       </div>
     </div>

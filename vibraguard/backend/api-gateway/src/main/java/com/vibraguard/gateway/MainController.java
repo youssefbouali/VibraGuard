@@ -145,6 +145,36 @@ public class MainController {
     }
 
     // IoT Endpoints
+    @PostMapping("/iot/motors")
+    public Motor createMotor(@RequestBody Motor motor) {
+        if (motor.getId() == null) {
+            motor.setId("MTR-" + (motorRepository.count() + 10));
+        }
+        return motorRepository.save(motor);
+    }
+
+    @PutMapping("/iot/motors/{id}")
+    public Motor updateMotor(@PathVariable String id, @RequestBody Motor motor) {
+        return motorRepository.findById(id).map(existing -> {
+            existing.setType(motor.getType());
+            existing.setEtatLabel(motor.getEtatLabel());
+            existing.setEtatColor(motor.getEtatColor());
+            existing.setEtatPct(motor.getEtatPct());
+            existing.setVibration(motor.getVibration());
+            existing.setVibrationColor(motor.getVibrationColor());
+            existing.setTrendIcon(motor.getTrendIcon());
+            return motorRepository.save(existing);
+        }).orElseGet(() -> {
+            motor.setId(id);
+            return motorRepository.save(motor);
+        });
+    }
+
+    @DeleteMapping("/iot/motors/{id}")
+    public void deleteMotor(@PathVariable String id) {
+        motorRepository.deleteById(id);
+    }
+
     @GetMapping("/iot/motors")
     public List<Motor> getMotors() {
         return motorRepository.findAll();
@@ -199,6 +229,20 @@ public class MainController {
         return alertRepository.findAll();
     }
 
+    @PutMapping("/ml/alerts/{id}")
+    public Alert updateAlert(@PathVariable String id, @RequestBody Alert alert) {
+        return alertRepository.findById(id).map(existing -> {
+            existing.setStatus(alert.getStatus());
+            existing.setMessage(alert.getMessage());
+            existing.setLevel(alert.getLevel());
+            existing.setPriority(alert.getPriority());
+            return alertRepository.save(existing);
+        }).orElseGet(() -> {
+            alert.setId(id);
+            return alertRepository.save(alert);
+        });
+    }
+
     // Work Order Endpoints
     @GetMapping("/iot/work-orders")
     public List<WorkOrder> getWorkOrders() {
@@ -211,6 +255,27 @@ public class MainController {
             workOrder.setId("W-" + (workOrderRepository.count() + 458));
         }
         return workOrderRepository.save(workOrder);
+    }
+
+    @PutMapping("/iot/work-orders/{id}")
+    public WorkOrder updateWorkOrder(@PathVariable String id, @RequestBody WorkOrder workOrder) {
+        return workOrderRepository.findById(id).map(existing -> {
+            existing.setTitle(workOrder.getTitle());
+            existing.setAsset(workOrder.getAsset());
+            existing.setStatus(workOrder.getStatus());
+            existing.setPriority(workOrder.getPriority());
+            existing.setAssignedTo(workOrder.getAssignedTo());
+            existing.setDueDate(workOrder.getDueDate());
+            return workOrderRepository.save(existing);
+        }).orElseGet(() -> {
+            workOrder.setId(id);
+            return workOrderRepository.save(workOrder);
+        });
+    }
+
+    @DeleteMapping("/iot/work-orders/{id}")
+    public void deleteWorkOrder(@PathVariable String id) {
+        workOrderRepository.deleteById(id);
     }
 
     @GetMapping("/iot/technicians")

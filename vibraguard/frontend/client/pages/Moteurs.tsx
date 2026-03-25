@@ -2,6 +2,22 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Loader2, Trash2, Edit, MoreHorizontal, Save, X } from "lucide-react";
 
 type HealthStatus = "Critique" | "Attention" | "Normal";
 
@@ -168,7 +184,15 @@ export default function Moteurs() {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const { data: apiMoteurs, isLoading } = useMoteurs();
+  const { data: apiMoteurs, isLoading, refetch } = useMoteurs() as any;
+  const [selectedMotor, setSelectedMotor] = useState<Moteur | null>(null);
+  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Form state for update
+  const [editType, setEditType] = useState("");
+  const [editEtat, setEditEtat] = useState<HealthStatus>("Normal");
+  const [editVibration, setEditVibration] = useState("");
 
   const totalMoteurs = apiMoteurs?.length || 0;
   const perPage = 5;
@@ -208,7 +232,10 @@ export default function Moteurs() {
         {/* Title row */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <h1 className="text-xl sm:text-2xl lg:text-[24px] font-semibold text-[#E6F0F2]">Liste des Moteurs</h1>
-          <button className="flex items-center gap-2 px-4 h-10 rounded-md bg-[#007A3D] hover:bg-[#006633] transition-colors text-white text-sm font-medium whitespace-nowrap">
+          <button 
+            onClick={() => navigate("/moteurs/ajouter")}
+            className="flex items-center gap-2 px-4 h-10 rounded-md bg-[#007A3D] hover:bg-[#006633] transition-colors text-white text-sm font-medium whitespace-nowrap"
+          >
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path d="M3.75 9H14.25M9 3.75V14.25" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -377,25 +404,72 @@ export default function Moteurs() {
                   )}
                 </div>
 
-                {/* Actions */}
                 <div className="flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-[19px] justify-end">
-                  <ActionBtn>
-                    <VibrationIcon />
-                  </ActionBtn>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/moteurs/${moteur.id}`);
-                    }}
-                    className="flex w-8 h-8 items-center justify-center rounded bg-[#0F2730] hover:bg-[#163340] transition-colors shrink-0"
-                    title="Voir les détails"
-                  >
-                    <EyeIcon />
-                  </button>
-                  <ActionBtn>
-                    <DotsIcon />
-                  </ActionBtn>
-                </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // View Trend
+                      }}
+                      className="flex w-8 h-8 items-center justify-center rounded bg-[#0F2730] hover:bg-[#163340] transition-colors shrink-0"
+                    >
+                      <VibrationIcon />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/moteurs/${moteur.id}`);
+                      }}
+                      className="flex w-8 h-8 items-center justify-center rounded bg-[#0F2730] hover:bg-[#163340] transition-colors shrink-0"
+                      title="Voir les détails"
+                    >
+                      <EyeIcon />
+                    </button>
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button 
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex w-8 h-8 items-center justify-center rounded bg-[#0F2730] hover:bg-[#163340] transition-colors shrink-0"
+                        >
+                          <MoreHorizontal className="w-4 h-4 text-[#C9E7E6]" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="bg-[#0D1316] border-white/10 text-white">
+                        <DropdownMenuItem 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedMotor(moteur);
+                            setEditType(moteur.type);
+                            setEditEtat(moteur.etatSante);
+                            setEditVibration(moteur.vibrationRMS.toString() + " mm/s");
+                            setIsUpdateDialogOpen(true);
+                          }}
+                          className="hover:bg-white/5 cursor-pointer flex items-center gap-2"
+                        >
+                          <Edit className="w-4 h-4" />
+                          Modifier
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (confirm(`Voulez-vous vraiment supprimer le moteur ${moteur.id} ?`)) {
+                              try {
+                                await api.deleteMotor(moteur.id);
+                                toast.success("Moteur supprimé");
+                                refetch();
+                              } catch (err) {
+                                toast.error("Erreur lors de la suppression");
+                              }
+                            }
+                          }}
+                          className="hover:bg-red-500/20 text-red-500 cursor-pointer flex items-center gap-2"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Supprimer
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
               </div>
             ))}
           </div>
@@ -454,6 +528,99 @@ export default function Moteurs() {
             </div>
           </div>
         </div>
+
+        {/* Update Dialog */}
+        <Dialog open={isUpdateDialogOpen} onOpenChange={setIsUpdateDialogOpen}>
+          <DialogContent className="bg-[#0A1114] border-white/10 text-white max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-[#E6F0F2]">
+                Modifier le Moteur {selectedMotor?.id}
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="py-6 flex flex-col gap-6">
+              <div className="flex flex-col gap-2">
+                <label className="text-[#98A6A8] text-xs font-semibold uppercase tracking-wider">Type de Moteur</label>
+                <input
+                  value={editType}
+                  onChange={(e) => setEditType(e.target.value)}
+                  className="w-full h-11 px-4 rounded-md border border-white/10 bg-[#0D1316] text-white outline-none focus:border-[#0C6CF2]/50"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-[#98A6A8] text-xs font-semibold uppercase tracking-wider">Vibration (mm/s)</label>
+                <input
+                  value={editVibration}
+                  onChange={(e) => setEditVibration(e.target.value)}
+                  className="w-full h-11 px-4 rounded-md border border-white/10 bg-[#0D1316] text-white outline-none focus:border-[#0C6CF2]/50"
+                />
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <label className="text-[#98A6A8] text-xs font-semibold uppercase tracking-wider">État de Santé</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(["Normal", "Attention", "Critique"] as HealthStatus[]).map((st) => (
+                    <button
+                      key={st}
+                      type="button"
+                      onClick={() => setEditEtat(st)}
+                      className={cn(
+                        "flex flex-col items-center gap-2 p-3 rounded-md border transition-all",
+                        editEtat === st 
+                          ? "border-[#0EA5E9] bg-[#0EA5E9]/10" 
+                          : "border-white/5 bg-white/5 hover:bg-white/10"
+                      )}
+                    >
+                      <div className={cn("w-2 h-2 rounded-full", 
+                        st === "Normal" ? "bg-[#007A3D]" : st === "Attention" ? "bg-[#F2A900]" : "bg-[#D93F3F]"
+                      )} />
+                      <span className="text-[12px] font-medium">{st}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="gap-3 sm:gap-0">
+              <button
+                onClick={() => setIsUpdateDialogOpen(false)}
+                className="px-4 py-2 rounded-md border border-white/10 text-sm font-medium hover:bg-white/5 transition-colors"
+                disabled={isUpdating}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={async () => {
+                  if (!selectedMotor) return;
+                  setIsUpdating(true);
+                  try {
+                    const original = apiMoteurs.find((m: any) => m.id === selectedMotor.id);
+                    await api.updateMotor(selectedMotor.id, {
+                      ...original,
+                      type: editType,
+                      vibration: editVibration,
+                      etatLabel: editEtat + " (Manuel)",
+                      etatColor: editEtat === "Normal" ? "bg-[#007A3D]" : editEtat === "Attention" ? "bg-[#F2A900]" : "bg-[#D93F3F]"
+                    });
+                    toast.success("Moteur mis à jour");
+                    refetch();
+                    setIsUpdateDialogOpen(false);
+                  } catch (err) {
+                    toast.error("Erreur lors de la mise à jour");
+                  } finally {
+                    setIsUpdating(false);
+                  }
+                }}
+                disabled={isUpdating}
+                className="px-4 py-2 rounded-md bg-[#007A3D] hover:bg-[#006a34] text-white text-sm font-semibold transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {isUpdating && <Loader2 className="w-4 h-4 animate-spin" />}
+                Enregistrer
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

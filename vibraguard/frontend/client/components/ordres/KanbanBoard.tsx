@@ -1,6 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { KanbanColumn } from "./KanbanColumn";
 import { OT } from "./KanbanCard";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Loader2 } from "lucide-react";
 
 const ALL_TASKS: OT[] = [
   {
@@ -56,9 +66,12 @@ import { useWorkOrders } from "@/hooks/use-work-orders";
 // ... (KanbanColumn and OT imports remain)
 
 export function KanbanBoard() {
-  const { data: apiWorkOrders, isLoading } = useWorkOrders();
+  const { data: apiWorkOrders, isLoading, refetch } = useWorkOrders();
   const [search, setSearch] = useState("");
-  const [view, setView] = useState<"kanban" | "tableau">("kanban");
+  const [selectedOT, setSelectedOT] = useState<OT | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [newStatus, setNewStatus] = useState<string>("");
 
   // Map backend work orders to frontend OT interface
   const mappedTasks: OT[] = (apiWorkOrders || []).map(wo => ({
@@ -104,98 +117,121 @@ export function KanbanBoard() {
             className="flex-1 bg-transparent text-[14px] text-[#98A6A8] placeholder:text-[#98A6A8] outline-none"
           />
         </div>
-
-        {/* View toggle */}
-        <div className="flex items-center gap-1 p-1 rounded-md border border-black/[0.08] bg-[#0D1316]">
-          <button
-            onClick={() => setView("kanban")}
-            className={`flex items-center gap-2 px-4 py-2 rounded text-[13px] font-semibold transition-colors ${
-              view === "kanban"
-                ? "bg-[#0B1518] text-[#E6F0F2] shadow-[0_2px_8px_rgba(0,0,0,0.20)]"
-                : "text-[#98A6A8] hover:text-white"
-            }`}
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M3.33325 2V11.3333M7.99992 2V7.33333M12.6666 2V14" stroke="currentColor" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            Kanban
-          </button>
-          <button
-            onClick={() => setView("tableau")}
-            className={`flex items-center gap-2 px-4 py-2 rounded text-[13px] font-semibold transition-colors ${
-              view === "tableau"
-                ? "bg-[#0B1518] text-[#E6F0F2] shadow-[0_2px_8px_rgba(0,0,0,0.20)]"
-                : "text-[#98A6A8] hover:text-white"
-            }`}
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M2 3.3335H2.00667M2 8.00016H2.00667M2 12.6668H2.00667M5.33333 3.3335H14M5.33333 8.00016H14M5.33333 12.6668H14" stroke="currentColor" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            Tableau
-          </button>
-        </div>
       </div>
 
-      {/* Board */}
-      {view === "kanban" ? (
-        <div className="flex gap-6 px-10 pb-10 flex-1 min-h-0 overflow-x-auto overflow-y-hidden">
-          <KanbanColumn title="À faire" status="todo" tasks={todo} />
-          <KanbanColumn title="En cours" status="inprogress" tasks={inprogress} />
-          <KanbanColumn title="Terminé" status="done" tasks={done} />
-        </div>
-      ) : (
-        <div className="px-10 pb-10 flex-1 overflow-auto">
-          <div className="rounded-lg border border-black/[0.08] bg-[rgba(11,21,24,0.40)] overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-black/[0.08] bg-[rgba(11,21,24,0.80)]">
-                  <th className="text-left px-4 py-3 text-[#98A6A8] font-semibold text-[13px]">ID</th>
-                  <th className="text-left px-4 py-3 text-[#98A6A8] font-semibold text-[13px]">Titre</th>
-                  <th className="text-left px-4 py-3 text-[#98A6A8] font-semibold text-[13px]">Machine</th>
-                  <th className="text-left px-4 py-3 text-[#98A6A8] font-semibold text-[13px]">Priorité</th>
-                  <th className="text-left px-4 py-3 text-[#98A6A8] font-semibold text-[13px]">Statut</th>
-                  <th className="text-left px-4 py-3 text-[#98A6A8] font-semibold text-[13px]">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((t) => (
-                  <tr key={t.id} className="border-b border-black/[0.08] hover:bg-white/[0.02] transition-colors">
-                    <td className="px-4 py-3 font-mono text-[13px] text-[#C9E7E6]">{t.id}</td>
-                    <td className="px-4 py-3 text-[#E6F0F2] font-medium">{t.title}</td>
-                    <td className="px-4 py-3 text-[#98A6A8]">{t.machine}</td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase ${
-                        t.priority === "haute"
-                          ? "bg-[rgba(217,63,63,0.15)] text-[#D93F3F]"
-                          : t.priority === "moyenne"
-                          ? "bg-[rgba(242,169,0,0.15)] text-[#F2A900]"
-                          : "bg-[rgba(0,146,74,0.15)] text-[#00924A]"
-                      }`}>
-                        {t.priority}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center gap-1.5 text-[12px] font-medium ${
-                        t.status === "todo"
-                          ? "text-[#98A6A8]"
-                          : t.status === "inprogress"
-                          ? "text-[#0C6CF2]"
-                          : "text-[#00924A]"
-                      }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${
-                          t.status === "todo" ? "bg-[#98A6A8]" : t.status === "inprogress" ? "bg-[#0C6CF2]" : "bg-[#00924A]"
-                        }`} />
-                        {t.status === "todo" ? "À faire" : t.status === "inprogress" ? "En cours" : "Terminé"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-[#C9E7E6] text-[12px]">{t.date}</td>
-                  </tr>
+      <div className="flex gap-6 px-10 pb-10 flex-1 min-h-0 overflow-x-auto overflow-y-hidden">
+        <KanbanColumn 
+          title="À faire" 
+          status="todo" 
+          tasks={todo} 
+          onCardClick={(ot) => {
+            setSelectedOT(ot);
+            setNewStatus(ot.status === "todo" ? "Nouveau" : ot.status === "inprogress" ? "En cours" : "Terminé");
+            setIsDialogOpen(true);
+          }}
+        />
+        <KanbanColumn 
+          title="En cours" 
+          status="inprogress" 
+          tasks={inprogress} 
+          onCardClick={(ot) => {
+            setSelectedOT(ot);
+            setNewStatus(ot.status === "todo" ? "Nouveau" : ot.status === "inprogress" ? "En cours" : "Terminé");
+            setIsDialogOpen(true);
+          }}
+        />
+        <KanbanColumn 
+          title="Terminé" 
+          status="done" 
+          tasks={done} 
+          onCardClick={(ot) => {
+            setSelectedOT(ot);
+            setNewStatus(ot.status === "todo" ? "Nouveau" : ot.status === "inprogress" ? "En cours" : "Terminé");
+            setIsDialogOpen(true);
+          }}
+        />
+      </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="bg-[#0A1114] border-white/10 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-[#E6F0F2]">
+              Mettre à jour l'Ordre de Travail
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-6 flex flex-col gap-6">
+            <div className="flex flex-col gap-2">
+              <label className="text-[#98A6A8] text-xs font-semibold uppercase tracking-wider">ID de l'OT</label>
+              <div className="text-[#0C6CF2] font-mono font-bold text-lg">{selectedOT?.id}</div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[#98A6A8] text-xs font-semibold uppercase tracking-wider">Titre</label>
+              <div className="text-[#E6F0F2] font-medium">{selectedOT?.title}</div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <label className="text-[#98A6A8] text-xs font-semibold uppercase tracking-wider">Statut de l'intervention</label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: "À faire", value: "Nouveau", color: "bg-[#98A6A8]" },
+                  { label: "En cours", value: "En cours", color: "bg-[#0C6CF2]" },
+                  { label: "Terminé", value: "Terminé", color: "bg-[#00924A]" }
+                ].map((s) => (
+                  <button
+                    key={s.value}
+                    onClick={() => setNewStatus(s.value)}
+                    className={`flex flex-col items-center gap-2 p-3 rounded-md border transition-all ${
+                      newStatus === s.value 
+                        ? "border-[#007A3D] bg-[#007A3D]/10" 
+                        : "border-white/5 bg-white/5 hover:bg-white/10"
+                    }`}
+                  >
+                    <div className={`w-2 h-2 rounded-full ${s.color}`} />
+                    <span className="text-[12px] font-medium">{s.label}</span>
+                  </button>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+
+          <DialogFooter className="gap-3 sm:gap-0">
+            <button
+              onClick={() => setIsDialogOpen(false)}
+              className="px-4 py-2 rounded-md border border-white/10 text-sm font-medium hover:bg-white/5 transition-colors"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={async () => {
+                if (!selectedOT) return;
+                setIsUpdating(true);
+                try {
+                  const originalWO = apiWorkOrders.find((wo: any) => wo.id === selectedOT.id);
+                  await api.updateWorkOrder(selectedOT.id, {
+                    ...originalWO,
+                    status: newStatus
+                  });
+                  toast.success("Statut mis à jour avec succès");
+                  refetch();
+                  setIsDialogOpen(true); // Keep it open for user to see or close? User said pop up update.
+                  setIsDialogOpen(false);
+                } catch (err) {
+                  toast.error("Erreur lors de la mise à jour");
+                } finally {
+                  setIsUpdating(false);
+                }
+              }}
+              disabled={isUpdating}
+              className="px-4 py-2 rounded-md bg-[#007A3D] hover:bg-[#006a34] text-white text-sm font-semibold transition-colors disabled:opacity-50 flex items-center gap-2"
+            >
+              {isUpdating && <Loader2 className="w-4 h-4 animate-spin" />}
+              Mettre à jour
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

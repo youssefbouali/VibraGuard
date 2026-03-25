@@ -38,17 +38,15 @@ interface OTFormProps {
 
 export function OTForm({ onCancel }: OTFormProps) {
   const [moteur, setMoteur] = useState("");
-  const [anomalie, setAnoalie] = useState("Déséquilibre Rotorique");
+  const [anomalie, setAnoalie] = useState("");
   const [severity, setSeverity] = useState("Critique");
-  const [date, setDate] = useState("2026-03-25T08:00");
-  const [duree, setDuree] = useState("4h 30m");
+  const [date, setDate] = useState("");
+  const [duree, setDuree] = useState("");
   const [technicien, setTechnicien] = useState("");
   const [parts, setParts] = useState<Part[]>([]);
   const [partSearch, setPartSearch] = useState("");
-  const [cout, setCout] = useState("4 500");
-  const [description, setDescription] = useState(
-    `Intervention urgente suite à l'alerte critique (#ALT-8402).\n\n- Sécuriser la zone de broyage et consigner l'équipement.\n- Effectuer un contrôle visuel détaillé du rotor.\n- Remplacer le palier côté accouplement si l'usure est confirmée lors du démontage.\n- Refaire l'équilibrage dynamique sur site avant la remise en service opérationnelle.`
-  );
+  const [cout, setCout] = useState("");
+  const [description, setDescription] = useState("");
   
   const [availableMotors, setAvailableMotors] = useState<Motor[]>([]);
   const [availableTechnicians, setAvailableTechnicians] = useState<Technician[]>([]);

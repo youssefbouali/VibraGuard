@@ -258,11 +258,7 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
                 <span className="text-[#E6F0F2] text-sm font-semibold leading-tight">{user?.fullName || "Utilisateur"}</span>
                 <span className="text-[#C9E7E6] text-xs font-normal leading-tight">Expert Maintenance</span>
               </div>
-              <img
-                src="https://api.builder.io/api/v1/image/assets/TEMP/16bc886799b3bbe8e6a643d7280a0b9514614061?width=72"
-                alt="User avatar"
-                className="w-10 h-10 rounded-full border-2 border-white/10 object-cover"
-              />
+                <User className="w-5 h-5 text-[#C9E7E6]" />
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56 bg-[#0A1A27] border-white/10 text-[#E6F0F2] shadow-2xl" align="end" sideOffset={8}>
