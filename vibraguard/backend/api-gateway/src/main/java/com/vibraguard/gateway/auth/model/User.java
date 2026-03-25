@@ -25,4 +25,8 @@ public class User {
 
     private String fullName;
     private String role;
+
+    private String employeeId;
+    private String phoneNumber;
+    private String department;
 }

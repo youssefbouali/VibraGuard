@@ -32,4 +32,5 @@ export const api = {
   getKPIs: () => apiRequest<any>("GET", "/api/v1/iot/kpis"),
   getWorkOrders: () => apiRequest<any[]>("GET", "/api/v1/iot/work-orders"),
   getAudit: () => apiRequest<any[]>("GET", "/api/v1/blockchain/audit"),
+  getMotorById: (id: string) => apiRequest<any>("GET", `/api/v1/iot/motors/${id}`),
 };

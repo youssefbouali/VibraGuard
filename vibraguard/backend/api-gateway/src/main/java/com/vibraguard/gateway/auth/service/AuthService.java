@@ -28,6 +28,9 @@ public class AuthService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .fullName(request.getFullName())
                 .role("USER")
+                .employeeId("TECH-" + (int)(Math.random() * 9000 + 1000))
+                .phoneNumber(request.getPhoneNumber() != null ? request.getPhoneNumber() : "")
+                .department(request.getDepartment() != null ? request.getDepartment() : "Maintenance")
                 .build();
 
         userRepository.save(user);
@@ -37,6 +40,9 @@ public class AuthService {
                 .token(token)
                 .email(user.getEmail())
                 .fullName(user.getFullName())
+                .employeeId(user.getEmployeeId())
+                .phoneNumber(user.getPhoneNumber())
+                .department(user.getDepartment())
                 .build();
     }
 
@@ -53,6 +59,9 @@ public class AuthService {
                 .token(token)
                 .email(user.getEmail())
                 .fullName(user.getFullName())
+                .employeeId(user.getEmployeeId())
+                .phoneNumber(user.getPhoneNumber())
+                .department(user.getDepartment())
                 .build();
     }
 
@@ -62,7 +71,26 @@ public class AuthService {
         return AuthResponse.builder()
                 .email(user.getEmail())
                 .fullName(user.getFullName())
+                .employeeId(user.getEmployeeId())
+                .phoneNumber(user.getPhoneNumber())
+                .department(user.getDepartment())
                 .build();
+    }
+
+    @jakarta.annotation.PostConstruct
+    public void seedUser() {
+        if (userRepository.findByEmail("mr.boualiyoussef@gmail.com").isEmpty()) {
+            User user = User.builder()
+                    .email("mr.boualiyoussef@gmail.com")
+                    .fullName("Youssef Bouali")
+                    .password(passwordEncoder.encode("password"))
+                    .role("ADMIN")
+                    .employeeId("TECH-4892")
+                    .phoneNumber("+212 6 00 11 22 33")
+                    .department("Maintenance Prédictive")
+                    .build();
+            userRepository.save(user);
+        }
     }
 
     public String getMeFromToken(String token) {

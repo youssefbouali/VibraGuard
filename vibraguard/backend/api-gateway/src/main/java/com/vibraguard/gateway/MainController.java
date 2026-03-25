@@ -131,6 +131,12 @@ public class MainController {
         return motorRepository.findAll();
     }
 
+    @GetMapping("/iot/motors/{id}")
+    public Motor getMotorById(@PathVariable String id) {
+        return motorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Motor not found"));
+    }
+
     @GetMapping("/iot/kpis")
     public Map<String, Object> getKPIs() {
         Map<String, Object> kpis = new HashMap<>();

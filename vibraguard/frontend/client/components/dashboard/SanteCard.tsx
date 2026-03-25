@@ -1,12 +1,10 @@
-const HEALTH_PERCENT = 78;
-// SVG circle: cx=70, cy=70, r=52.5
-// Circumference = 2 * π * 52.5 ≈ 329.87
-const R = 52.5;
-const CIRCUMFERENCE = 2 * Math.PI * R;
-const DASH = CIRCUMFERENCE * (HEALTH_PERCENT / 100);
-const GAP = CIRCUMFERENCE - DASH;
+export function SanteCard({ motor }: { motor: any }) {
+  const healthPercent = motor.etatPct;
+  const R = 52.5;
+  const CIRCUMFERENCE = 2 * Math.PI * R;
+  const DASH = CIRCUMFERENCE * (healthPercent / 100);
+  const GAP = CIRCUMFERENCE - DASH;
 
-export function SanteCard() {
   return (
     <div className="flex flex-col rounded-lg border border-black/[0.08] bg-[#0B1518] p-6">
       {/* Card title */}
@@ -37,7 +35,7 @@ export function SanteCard() {
                 cx="70"
                 cy="70"
                 r={R}
-                stroke="#F2A900"
+                stroke={`#${motor.etatColor}`}
                 strokeWidth="11.6667"
                 fill="none"
                 strokeLinecap="round"
@@ -47,15 +45,22 @@ export function SanteCard() {
             </svg>
             {/* Center percentage text */}
             <div className="absolute flex items-start">
-              <span className="text-[36px] font-bold text-[#EAF6F5] leading-none">78</span>
+              <span className="text-[36px] font-bold text-[#EAF6F5] leading-none">{healthPercent}</span>
               <span className="text-[18px] font-semibold text-[#C9EDEB] mt-1 ml-0.5">%</span>
             </div>
           </div>
 
           {/* État badge - overlaps bottom of circle */}
           <div className="-mt-3 z-10">
-            <span className="inline-flex items-center px-[14px] py-1 rounded-[12px] border border-[rgba(242,169,0,0.30)] bg-[#2E2B14] text-[#F2A900] text-[13px] font-semibold">
-              État Dégradé
+            <span 
+              className="inline-flex items-center px-[14px] py-1 rounded-[12px] font-semibold text-[13px]"
+              style={{ 
+                color: `#${motor.etatColor}`, 
+                backgroundColor: `rgba(${parseInt(motor.etatColor.slice(0,2), 16)}, ${parseInt(motor.etatColor.slice(2,4), 16)}, ${parseInt(motor.etatColor.slice(4,6), 16)}, 0.15)`, 
+                border: `1px solid #${motor.etatColor}4D` 
+              }}
+            >
+              {motor.etatLabel}
             </span>
           </div>
         </div>

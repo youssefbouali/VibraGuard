@@ -1,4 +1,6 @@
-export function MoteurDetailHeader() {
+export function MoteurDetailHeader({ motor }: { motor: any }) {
+  const isCritique = motor.etatLabel.includes("Critique") || motor.etatLabel.includes("Alerte");
+  
   return (
     <div className="relative rounded-lg border border-black/[0.08] bg-[#0B1518] overflow-hidden">
       {/* Top gradient border */}
@@ -8,7 +10,7 @@ export function MoteurDetailHeader() {
         {/* Motor image */}
         <img
           src="https://api.builder.io/api/v1/image/assets/TEMP/f93ab530be3aa3f9cf08b15729571e3e3eeaa4d8?width=280"
-          alt="Moteur M-0456"
+          alt={motor.type}
           className="w-[140px] h-[140px] rounded-md border border-black/[0.08] object-cover shrink-0"
         />
 
@@ -17,31 +19,34 @@ export function MoteurDetailHeader() {
           {/* Badges */}
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center px-3 py-1.5 rounded text-[12px] font-semibold text-[#0C6CF2] bg-[rgba(12,108,242,0.15)] border border-[rgba(12,108,242,0.30)]">
-              Broyeur Phosphate
+              {motor.type}
             </span>
             <span className="inline-flex items-center px-3 py-1.5 rounded text-[12px] font-semibold text-[#C9EDEB] bg-[rgba(201,237,235,0.10)] border border-[rgba(201,237,235,0.20)]">
               Zone 2
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[12px] font-semibold text-[#D93F3F] bg-[rgba(217,63,63,0.15)] border border-[rgba(217,63,63,0.30)]">
+            <span 
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[12px] font-semibold"
+              style={{ color: `#${motor.etatColor}`, backgroundColor: `rgba(${parseInt(motor.etatColor.slice(0,2), 16)}, ${parseInt(motor.etatColor.slice(2,4), 16)}, ${parseInt(motor.etatColor.slice(4,6), 16)}, 0.15)`, border: `1px solid #${motor.etatColor}4D` }}
+            >
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                 <g clipPath="url(#critique-clip)">
-                  <path d="M1 6C1 8.75958 3.24042 11 6 11C8.75958 11 11 8.75958 11 6C11 3.24042 8.75958 1 6 1C3.24042 1 1 3.24042 1 6V6" stroke="#D93F3F" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M6 4V6M6 8H6.005" stroke="#D93F3F" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M1 6C1 8.75958 3.24042 11 6 11C8.75958 11 11 8.75958 11 6C11 3.24042 8.75958 1 6 1C3.24042 1 1 3.24042 1 6V6" stroke={`#${motor.etatColor}`} strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M6 4V6M6 8H6.005" stroke={`#${motor.etatColor}`} strokeLinecap="round" strokeLinejoin="round"/>
                 </g>
                 <defs><clipPath id="critique-clip"><rect width="12" height="12" fill="white"/></clipPath></defs>
               </svg>
-              Critique
+              {motor.etatLabel}
             </span>
           </div>
 
           {/* Title */}
-          <h1 className="text-[28px] font-bold text-[#EAF6F5] leading-tight">Moteur M-0456</h1>
+          <h1 className="text-[28px] font-bold text-[#EAF6F5] leading-tight">{motor.id}</h1>
 
           {/* Specs */}
           <div className="flex flex-wrap items-center gap-6 sm:gap-8">
             <div className="flex items-center gap-2">
               <span className="text-[14px] font-medium text-[#C9EDEB]">ID:</span>
-              <span className="text-[14px] font-medium text-[#EAF6F5]">#MTR-0456</span>
+              <span className="text-[14px] font-medium text-[#EAF6F5]">#{motor.id}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[14px] font-medium text-[#C9EDEB]">Puissance:</span>

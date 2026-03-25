@@ -222,7 +222,7 @@ export default function ProfilUtilisateur() {
                         <path d="M2.66663 6H13.3333M2.66663 10H13.3333M6.66663 2L5.33329 14M10.6666 2L9.33329 14" stroke="#98A6A8" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     }
-                    value="TECH-4892"
+                    value={user?.employeeId || "chargement..."}
                   />
                   <InfoField
                     label="Adresse Email"
@@ -241,7 +241,7 @@ export default function ProfilUtilisateur() {
                         <path d="M9.22137 11.045C9.50498 11.1753 9.84099 11.0913 10.03 10.843L10.2667 10.533C10.5185 10.1973 10.9137 9.99967 11.3334 9.99967H13.3334C14.0693 9.99967 14.6667 10.5971 14.6667 11.333V13.333C14.6667 14.0689 14.0693 14.6663 13.3334 14.6663C6.70596 14.6663 1.33337 9.29376 1.33337 2.66634C1.33337 1.93045 1.93082 1.33301 2.66671 1.33301H4.66671C5.40259 1.33301 6.00004 1.93045 6.00004 2.66634V4.66634C6.00004 5.08602 5.80245 5.4812 5.46671 5.73301L5.15471 5.96701C4.90236 6.15969 4.82091 6.50361 4.96004 6.78901C5.87116 8.63959 7.36966 10.1362 9.22137 11.045" stroke="#98A6A8" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     }
-                    value="+212 6 00 11 22 33"
+                    value={user?.phoneNumber || "chargement..."}
                   />
                   <InfoField
                     label="Département"
@@ -251,7 +251,7 @@ export default function ProfilUtilisateur() {
                         <path d="M2.66659 4H13.3333C14.0691 4 14.6666 4.59745 14.6666 5.33333V12C14.6666 12.7359 14.0691 13.3333 13.3333 13.3333H2.66659C1.9307 13.3333 1.33325 12.7359 1.33325 12V5.33333C1.33325 4.59745 1.9307 4 2.66659 4V4" stroke="#98A6A8" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     }
-                    value="Maintenance Prédictive"
+                    value={user?.department || "chargement..."}
                   />
                 </div>
               </div>

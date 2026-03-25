@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useParams } from "react-router-dom";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { cn } from "@/lib/utils";
 import { MoteurDetailHeader } from "@/components/dashboard/MoteurDetailHeader";
@@ -8,6 +8,7 @@ import { TendanceVibratoire } from "@/components/dashboard/TendanceVibratoire";
 import { FFTChart } from "@/components/dashboard/FFTChart";
 import { DernieresAlertes } from "@/components/dashboard/DernieresAlertes";
 import { Header } from "@/components/dashboard/Header";
+import { api } from "@/lib/api";
 
 const tabs = [
   "Vue d'ensemble",
@@ -21,13 +22,41 @@ const tabs = [
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 
 export default function MoteurDetail() {
+  const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState("Vue d'ensemble");
+  const [motor, setMotor] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (id) {
+      api.getMotorById(id)
+        .then(setMotor)
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    }
+  }, [id]);
+
+  if (loading) {
+    return (
+      <DashboardLayout breadcrumb={`Moteurs / ${id}`}>
+        <div className="p-8 text-center text-[#98A6A8] italic">Chargement du moteur...</div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!motor) {
+    return (
+      <DashboardLayout breadcrumb={`Moteurs / ${id}`}>
+        <div className="p-8 text-center text-[#E6F0F2]">Moteur non trouvé.</div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout breadcrumb="Moteurs / Détails">
       <div className="flex flex-col gap-4 sm:gap-6 lg:gap-8 max-w-full lg:max-w-[1400px]">
         {/* Motor Header Card */}
-        <MoteurDetailHeader />
+        <MoteurDetailHeader motor={motor} />
 
         {/* Tabs */}
         <div className="flex items-start gap-3 sm:gap-6 lg:gap-8 border-b border-black/[0.08] overflow-x-auto">
@@ -52,7 +81,7 @@ export default function MoteurDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-4 sm:gap-6">
           {/* Left column */}
           <div className="flex flex-col gap-4 sm:gap-6">
-            <SanteCard />
+            <SanteCard motor={motor} />
           </div>
 
           {/* Right column */}
