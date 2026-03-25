@@ -94,11 +94,6 @@ public class MainController {
             interventionRepository.save(new Intervention("Préventif", 30, "#10B981"));
             interventionRepository.save(new Intervention("Prédictif", 25, "#F59E0B"));
         }
-        if (vibrationRepository.count() == 0) {
-            vibrationRepository.save(new VibrationData(null, "10:00", 2.4, 3.1, 1.2));
-            vibrationRepository.save(new VibrationData(null, "10:30", 8.5, 4.2, 2.1));
-            vibrationRepository.save(new VibrationData(null, "11:00", 14.2, 6.1, 2.4));
-        }
         if (traceabilityRepository.count() == 0) {
             traceabilityRepository.save(new TraceabilityStep(null, "Alerte #8402", "24 Oct, 08:15", "done", "#007A3D",
                     "#061B1C", "#98A6A8", "alert"));
