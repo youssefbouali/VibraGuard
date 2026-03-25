@@ -8,6 +8,11 @@ export interface Alerte {
   time: string;
   color: string;
   priority: string;
+  velociteRms?: number;
+  accelerationPeak?: number;
+  temperature?: number;
+  scoreConfianceIA?: number;
+  depassementSeuil?: number;
 }
 
 export function useAlerts() {

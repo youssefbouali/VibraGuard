@@ -11,6 +11,11 @@ export interface Alerte {
   confiance: number;
   dateHeure: string;
   statut: Statut;
+  velociteRms?: number;
+  accelerationPeak?: number;
+  temperature?: number;
+  scoreConfianceIA?: number;
+  depassementSeuil?: number;
 }
 
 interface AlertesTableProps {

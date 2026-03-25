@@ -20,7 +20,7 @@ export default function RapportsBI() {
     try {
       setIsExporting(true);
       const { jsPDF } = await import("jspdf");
-      await import("jspdf-autotable");
+      const { default: autoTable } = await import("jspdf-autotable");
       
       const kpis = await api.getBIKPIs();
       const mtbf = await api.getMtbfBySite();
@@ -36,7 +36,7 @@ export default function RapportsBI() {
       doc.text(`Généré le: ${new Date().toLocaleString()}`, 14, 30);
       doc.text("Période: Octobre 2026", 14, 35);
 
-      doc.autoTable({
+      autoTable(doc, {
         startY: 45,
         head: [['KPI Stratégiques', 'Valeur', 'Tendance']],
         body: [
@@ -49,7 +49,7 @@ export default function RapportsBI() {
         headStyles: { fillStyle: 'fill', fillColor: [15, 39, 48] }
       });
 
-      doc.autoTable({
+      autoTable(doc, {
         startY: (doc as any).lastAutoTable.finalY + 15,
         head: [['Site OCP', 'MTBF (Heures)']],
         body: mtbf.map(s => [s.siteName, s.mtbfValue]),

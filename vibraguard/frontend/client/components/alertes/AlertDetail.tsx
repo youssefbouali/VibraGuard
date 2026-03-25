@@ -7,12 +7,7 @@ interface AlertDetailProps {
   onEscalader: (id: string) => void;
 }
 
-const metriques = {
-  velociteRMS: { label: "Vélocité RMS", value: "14.8 mm/s", highlight: true },
-  accelerationPeak: { label: "Accélération Peak", value: "9.2 g", highlight: true },
-  temperature: { label: "Température", value: "86 °C", highlight: false },
-  scoreConfiance: { label: "Score Confiance IA", value: "96 %", highlight: false },
-};
+
 
 export function AlertDetail({ alerte, onClose, onAcquitter, onEscalader }: AlertDetailProps) {
   return (
@@ -102,9 +97,11 @@ export function AlertDetail({ alerte, onClose, onAcquitter, onEscalader }: Alert
             </g>
           </svg>
           {/* Threshold badge */}
-          <div className="absolute top-2 right-2 flex items-center px-1.5 py-0.5 rounded border border-[rgba(239,68,68,0.20)] bg-[rgba(239,68,68,0.10)]">
-            <span className="text-[#EF4444] text-[11px] font-semibold">Dépassement Seuil: +42%</span>
-          </div>
+          {alerte.depassementSeuil != null && (
+            <div className="absolute top-2 right-2 flex items-center px-1.5 py-0.5 rounded border border-[rgba(239,68,68,0.20)] bg-[rgba(239,68,68,0.10)]">
+              <span className="text-[#EF4444] text-[11px] font-semibold">Dépassement Seuil: +{alerte.depassementSeuil}%</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -123,25 +120,25 @@ export function AlertDetail({ alerte, onClose, onAcquitter, onEscalader }: Alert
           {/* Vélocité RMS */}
           <div className="flex flex-col gap-2 p-4 rounded-lg border border-white/5 bg-[rgba(10,17,24,0.60)]">
             <span className="text-[#64748B] text-xs">Vélocité RMS</span>
-            <span className="text-[#EF4444] text-xl font-bold">14.8 mm/s</span>
+            <span className="text-[#EF4444] text-xl font-bold">{alerte.velociteRms != null ? `${alerte.velociteRms} mm/s` : 'N/A'}</span>
           </div>
 
           {/* Accélération Peak */}
           <div className="flex flex-col gap-2 p-4 rounded-lg border border-white/5 bg-[rgba(10,17,24,0.60)]">
             <span className="text-[#64748B] text-xs">Accélération Peak</span>
-            <span className="text-[#EF4444] text-xl font-bold">9.2 g</span>
+            <span className="text-[#EF4444] text-xl font-bold">{alerte.accelerationPeak != null ? `${alerte.accelerationPeak} g` : 'N/A'}</span>
           </div>
 
           {/* Température */}
           <div className="flex flex-col gap-2 p-4 rounded-lg border border-white/5 bg-[rgba(10,17,24,0.60)]">
             <span className="text-[#64748B] text-xs">Température</span>
-            <span className="text-[#E2E8F0] text-xl font-bold">86 °C</span>
+            <span className="text-[#E2E8F0] text-xl font-bold">{alerte.temperature != null ? `${alerte.temperature} °C` : 'N/A'}</span>
           </div>
 
           {/* Score Confiance IA */}
           <div className="flex flex-col gap-2 p-4 rounded-lg border border-white/5 bg-[rgba(10,17,24,0.60)]">
             <span className="text-[#64748B] text-xs">Score Confiance IA</span>
-            <span className="text-[#E2E8F0] text-xl font-bold">96 %</span>
+            <span className="text-[#E2E8F0] text-xl font-bold">{alerte.scoreConfianceIA != null ? `${alerte.scoreConfianceIA} %` : 'N/A'}</span>
           </div>
         </div>
       </div>

@@ -23,4 +23,9 @@ public class Alert {
     private String color;
     private String priority;
     private String status; // Nouveau, Acquittée, Escaladée
+    private Double velociteRms;
+    private Double accelerationPeak;
+    private Double temperature;
+    private Double scoreConfianceIA;
+    private Double depassementSeuil;
 }

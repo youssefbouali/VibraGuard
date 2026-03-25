@@ -86,9 +86,14 @@ export default function Alertes() {
       moteur: "MTR-Broyeur-04", // Backend doesn't provide specific motor in createAlert
       typeDefaut: a.message,
       severite: severite,
-      confiance: a.priority === "high" ? 96 : 85,
+      confiance: a.scoreConfianceIA ?? (a.priority === "high" ? 96 : 85),
       dateHeure: a.time,
       statut: "Nouveau",
+      velociteRms: a.velociteRms,
+      accelerationPeak: a.accelerationPeak,
+      temperature: a.temperature,
+      scoreConfianceIA: a.scoreConfianceIA,
+      depassementSeuil: a.depassementSeuil,
     };
   });
 
