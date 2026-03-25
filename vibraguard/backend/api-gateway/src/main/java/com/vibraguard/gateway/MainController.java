@@ -263,14 +263,6 @@ public class MainController {
                         .orElseGet(() -> ResponseEntity.notFound().build()));
     }
 
-    @GetMapping("/iot/work-orders/{id}")
-    public Mono<ResponseEntity<WorkOrder>> getWorkOrderById(@PathVariable String id) {
-        return Mono.fromCallable(() -> workOrderRepository.findById(id))
-                .subscribeOn(Schedulers.boundedElastic())
-                .map(order -> order.map(ResponseEntity::ok)
-                        .orElseGet(() -> ResponseEntity.notFound().build()));
-    }
-
     @PostMapping("/iot/work-orders")
     public WorkOrder createWorkOrder(@RequestBody WorkOrder workOrder) {
         if (workOrder.getId() == null) {
@@ -359,8 +351,8 @@ public class MainController {
     }
 
     @GetMapping("/bi/reports")
-    public List<Map<String, Object>> getBIReports() {
-        return new ArrayList<>(); // Stub
+    public Mono<List<Map<String, Object>>> getBIReports() {
+        return Mono.just(new ArrayList<>()); // Stub
     }
 
     // Blockchain Endpoints
@@ -385,8 +377,9 @@ public class MainController {
     }
 
     @GetMapping("/blockchain/traceability")
-    public List<TraceabilityStep> getTraceability() {
-        return traceabilityRepository.findAll();
+    public Mono<List<TraceabilityStep>> getTraceability() {
+        return Mono.fromCallable(() -> traceabilityRepository.findAll())
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     @GetMapping("/bi/export/pdf")
