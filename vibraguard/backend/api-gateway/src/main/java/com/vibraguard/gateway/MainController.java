@@ -157,7 +157,7 @@ public class MainController {
     }
 
     @PutMapping("/iot/motors/{id}")
-    public Mono<Motor> updateMotor(@PathVariable String id, @RequestBody Motor motor) {
+    public Mono<Motor> updateMotor(@PathVariable("id") String id, @RequestBody Motor motor) {
         return Mono.fromCallable(() -> {
             return motorRepository.findById(id).map(existing -> {
                 existing.setType(motor.getType());
@@ -176,7 +176,7 @@ public class MainController {
     }
 
     @DeleteMapping("/iot/motors/{id}")
-    public Mono<Void> deleteMotor(@PathVariable String id) {
+    public Mono<Void> deleteMotor(@PathVariable("id") String id) {
         return Mono.fromRunnable(() -> motorRepository.deleteById(id))
                 .subscribeOn(Schedulers.boundedElastic())
                 .then();
@@ -233,14 +233,14 @@ public class MainController {
     }
 
     @GetMapping("/ml/alerts/{id}")
-    public Mono<ResponseEntity<Alert>> getAlertById(@PathVariable String id) {
+    public Mono<ResponseEntity<Alert>> getAlertById(@PathVariable("id") String id) {
         return Mono.fromCallable(() -> alertRepository.findById(id))
                 .subscribeOn(Schedulers.boundedElastic())
                 .map(opt -> opt.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build()));
     }
 
     @PutMapping("/ml/alerts/{id}")
-    public Mono<Alert> updateAlert(@PathVariable String id, @RequestBody Alert alert) {
+    public Mono<Alert> updateAlert(@PathVariable("id") String id, @RequestBody Alert alert) {
         return Mono.fromCallable(() -> {
             return alertRepository.findById(id).map(existing -> {
                 existing.setStatus(alert.getStatus());
@@ -263,7 +263,7 @@ public class MainController {
     }
 
     @GetMapping("/iot/work-orders/{id}")
-    public Mono<ResponseEntity<WorkOrder>> getWorkOrderById(@PathVariable String id) {
+    public Mono<ResponseEntity<WorkOrder>> getWorkOrderById(@PathVariable("id") String id) {
         return Mono.fromCallable(() -> workOrderRepository.findById(id))
                 .subscribeOn(Schedulers.boundedElastic())
                 .map(opt -> opt.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build()));
@@ -280,7 +280,7 @@ public class MainController {
     }
 
     @PutMapping("/iot/work-orders/{id}")
-    public Mono<WorkOrder> updateWorkOrder(@PathVariable String id, @RequestBody WorkOrder workOrder) {
+    public Mono<WorkOrder> updateWorkOrder(@PathVariable("id") String id, @RequestBody WorkOrder workOrder) {
         return Mono.fromCallable(() -> {
             return workOrderRepository.findById(id).map(existing -> {
                 existing.setTitle(workOrder.getTitle());
@@ -298,7 +298,7 @@ public class MainController {
     }
 
     @DeleteMapping("/iot/work-orders/{id}")
-    public Mono<Void> deleteWorkOrder(@PathVariable String id) {
+    public Mono<Void> deleteWorkOrder(@PathVariable("id") String id) {
         return Mono.fromRunnable(() -> workOrderRepository.deleteById(id))
                 .subscribeOn(Schedulers.boundedElastic())
                 .then();
