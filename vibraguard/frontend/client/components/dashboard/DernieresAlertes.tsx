@@ -1,48 +1,24 @@
-const alerts = [
-  {
-    id: 1,
-    title: "Déséquilibre Rotorique (2X)",
-    subtitle: "Aujourd'hui, 10:42 • Seuil Critique",
-    iconColor: "#D93F3F",
-    bgColor: "rgba(217,63,63,0.15)",
-    icon: (
+export function DernieresAlertes({ alerts = [] }: { alerts?: any[] }) {
+  const getIcon = (level: string, color: string) => {
+    const stroke = color.startsWith("#") ? color : `#${color}`;
+    if (level.toLowerCase().includes("critique")) {
+      return (
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M18.1083 15.0001L11.4416 3.33344C11.1457 2.81126 10.5918 2.48853 9.99161 2.48853C9.3914 2.48853 8.83754 2.81126 8.54161 3.33344L1.87494 15.0001C1.57585 15.5181 1.57726 16.1566 1.87865 16.6733C2.18003 17.1899 2.73516 17.5055 3.33327 17.5001H16.6666C17.2617 17.4995 17.8114 17.1816 18.1087 16.666C18.406 16.1505 18.4058 15.5155 18.1083 15.0001M9.99994 7.50011V10.8334M9.99994 14.1668H10.0083" stroke={stroke} strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      );
+    }
+    return (
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path d="M18.1083 15.0001L11.4416 3.33344C11.1457 2.81126 10.5918 2.48853 9.99161 2.48853C9.3914 2.48853 8.83754 2.81126 8.54161 3.33344L1.87494 15.0001C1.57585 15.5181 1.57726 16.1566 1.87865 16.6733C2.18003 17.1899 2.73516 17.5055 3.33327 17.5001H16.6666C17.2617 17.4995 17.8114 17.1816 18.1087 16.666C18.406 16.1505 18.4058 15.5155 18.1083 15.0001M9.99994 7.50011V10.8334M9.99994 14.1668H10.0083" stroke="#D93F3F" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M11.6666 3.33341V12.1167C12.9731 12.8711 13.6101 14.409 13.2196 15.8662C12.8292 17.3235 11.5086 18.3368 9.99989 18.3368C8.49121 18.3368 7.17062 17.3235 6.78014 15.8662C6.38967 14.409 7.02667 12.8711 8.33323 12.1167V3.33341C8.33323 2.41356 9.08004 1.66675 9.99989 1.66675C10.9198 1.66675 11.6666 2.41356 11.6666 3.33341" stroke={stroke} strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
-    ),
-  },
-  {
-    id: 2,
-    title: "Échauffement Palier Avant",
-    subtitle: "Hier, 14:15 • +12°C anormal",
-    iconColor: "#F2A900",
-    bgColor: "rgba(242,169,0,0.15)",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path d="M11.6666 3.33341V12.1167C12.9731 12.8711 13.6101 14.409 13.2196 15.8662C12.8292 17.3235 11.5086 18.3368 9.99989 18.3368C8.49121 18.3368 7.17062 17.3235 6.78014 15.8662C6.38967 14.409 7.02667 12.8711 8.33323 12.1167V3.33341C8.33323 2.41356 9.08004 1.66675 9.99989 1.66675C10.9198 1.66675 11.6666 2.41356 11.6666 3.33341" stroke="#F2A900" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    ),
-  },
-  {
-    id: 3,
-    title: "Bruit Anormal Détecté",
-    subtitle: "Lun 12 Oct, 08:30 • IA: Frottement",
-    iconColor: "#EAB308",
-    bgColor: "rgba(234,179,8,0.15)",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <g clipPath="url(#bruit-clip)">
-          <path d="M18.3334 10.0001H16.2667C15.5183 9.99848 14.8605 10.4961 14.6584 11.2167L12.7001 18.1834C12.6742 18.2723 12.5927 18.3334 12.5001 18.3334C12.4075 18.3334 12.326 18.2723 12.3001 18.1834L7.70008 1.81675C7.67416 1.72786 7.59267 1.66675 7.50008 1.66675C7.40749 1.66675 7.32601 1.72786 7.30008 1.81675L5.34175 8.78341C5.14049 9.50113 4.48715 9.99795 3.74175 10.0001H1.66675" stroke="#EAB308" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
-        </g>
-        <defs>
-          <clipPath id="bruit-clip"><rect width="20" height="20" fill="white"/></clipPath>
-        </defs>
-      </svg>
-    ),
-  },
-];
+    );
+  };
 
-export function DernieresAlertes() {
+  const displayAlerts = alerts.length > 0 ? alerts : [
+    { id: "fake-1", message: "Aucune alerte récente", level: "Info", time: "-", color: "#C9EDEB" }
+  ];
+
   return (
     <div className="flex flex-col rounded-lg border border-black/[0.08] bg-[#0B1518] p-6">
       {/* Header */}
@@ -63,26 +39,26 @@ export function DernieresAlertes() {
 
       {/* Alert list */}
       <div className="flex flex-col gap-5 pt-2">
-        {alerts.map((alert, idx) => (
+        {displayAlerts.map((alert, idx) => (
           <div
             key={alert.id}
-            className={`flex items-start gap-4 ${idx < alerts.length - 1 ? "pb-5 border-b border-black/[0.08]" : ""}`}
+            className={`flex items-start gap-4 ${idx < displayAlerts.length - 1 ? "pb-5 border-b border-black/[0.08]" : ""}`}
           >
             {/* Icon */}
             <div
               className="flex w-10 h-10 shrink-0 items-center justify-center rounded-full"
-              style={{ background: alert.bgColor }}
+              style={{ background: `${alert.color}26` }}
             >
-              {alert.icon}
+              {getIcon(alert.level, alert.color)}
             </div>
 
             {/* Text */}
             <div className="flex flex-col gap-1.5 flex-1 min-w-0">
               <span className="text-[15px] font-semibold text-[#EAF6F5] leading-tight">
-                {alert.title}
+                {alert.message}
               </span>
               <span className="text-[13px] text-[#C9EDEB] leading-tight">
-                {alert.subtitle}
+                {alert.time} • {alert.level}
               </span>
             </div>
           </div>

@@ -1,46 +1,34 @@
-export function TendanceVibratoire() {
-  // Data points mapped to a 0-100 scale (inverted: 0 = top, 100 = bottom)
-  // Original: y values in 0-220 range (0 = high vibration, 220 = baseline)
-  // Line points from design: (0,188.8),(64,180.8),(128,185.6),(192,164.8),(256,156.8),(320,137.6),(384,148.8),(448,108.8),(512,68.8),(576,36.8),(640,0)
+export function TendanceVibratoire({ vibrations = [] }: { vibrations?: any[] }) {
   const chartW = 640;
   const chartH = 200;
-  const origH = 220;
-  const origW = 640;
+  const maxVib = 15;
 
-  const rawPoints = [
-    [0, 188.8],
-    [64, 180.8],
-    [128, 185.6],
-    [192, 164.8],
-    [256, 156.8],
-    [320, 137.6],
-    [384, 148.8],
-    [448, 108.8],
-    [512, 68.8],
-    [576, 36.8],
-    [640, 0],
-  ];
-
-  const scaleX = chartW / origW;
-  const scaleY = chartH / origH;
-
-  const points = rawPoints.map(([x, y]) => [x * scaleX, y * scaleY]);
+  // Map vibrations to points
+  // x: spread across chartW
+  // y: 0 at top (maxVib), chartH at bottom (0)
+  const points = vibrations.length > 0 
+    ? vibrations.map((v, i) => [
+        (i / (vibrations.length - 1)) * chartW,
+        chartH - (v.x / maxVib) * chartH
+      ])
+    : [];
 
   const polyline = points.map(([x, y]) => `${x},${y}`).join(" ");
-  const areaPath =
-    `M${points[0][0]},${points[0][1]} ` +
-    points
-      .slice(1)
-      .map(([x, y]) => `L${x},${y}`)
-      .join(" ") +
-    ` L${chartW},${chartH} L0,${chartH} Z`;
+  const areaPath = points.length > 0
+    ? `M${points[0][0]},${points[0][1]} ` +
+      points
+        .slice(1)
+        .map(([x, y]) => `L${x},${y}`)
+        .join(" ") +
+      ` L${points[points.length - 1][0]},${chartH} L0,${chartH} Z`
+    : "";
 
-  // Alert line Y: original 80/220 * chartH
-  const alertY = (80 / origH) * chartH;
-  // Critical line Y: original 32/220 * chartH
-  const criticalY = (32 / origH) * chartH;
+  // Alert line Y (8 mm/s)
+  const alertY = chartH - (8 / maxVib) * chartH;
+  // Critical line Y (12 mm/s)
+  const criticalY = chartH - (12 / maxVib) * chartH;
 
-  const days = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Auj"];
+  const days = vibrations.map(v => v.time);
 
   return (
     <div className="flex flex-col rounded-lg border border-black/[0.08] bg-[#0B1518] p-6">
@@ -134,8 +122,12 @@ export function TendanceVibratoire() {
             />
 
             {/* End dot */}
-            <circle cx={chartW} cy={0} r="8" fill="#071423" stroke="#D93F3F" strokeWidth="3.2" />
-            <circle cx={chartW} cy={0} r="22" fill="#D93F3F" fillOpacity="0.2" />
+            {points.length > 0 && (
+              <>
+                <circle cx={points[points.length-1][0]} cy={points[points.length-1][1]} r="8" fill="#071423" stroke="#D93F3F" strokeWidth="3.2" />
+                <circle cx={points[points.length-1][0]} cy={points[points.length-1][1]} r="22" fill="#D93F3F" fillOpacity="0.2" />
+              </>
+            )}
 
             {/* Baseline */}
             <line

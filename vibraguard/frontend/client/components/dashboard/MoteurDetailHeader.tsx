@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export function MoteurDetailHeader({ motor }: { motor: any }) {
   const isCritique = motor.etatLabel.includes("Critique") || motor.etatLabel.includes("Alerte");
   
@@ -65,12 +67,15 @@ export function MoteurDetailHeader({ motor }: { motor: any }) {
 
         {/* Action buttons */}
         <div className="flex flex-col gap-3 shrink-0 sm:items-end">
-          <button className="flex items-center gap-2 px-5 h-11 rounded-md bg-[#007A3D] hover:bg-[#006633] transition-colors text-white text-[14px] font-semibold whitespace-nowrap">
+          <Link 
+            to="/ordres-de-travail/creer"
+            className="flex items-center gap-2 px-5 h-11 rounded-md bg-[#007A3D] hover:bg-[#006633] transition-colors text-white text-[14px] font-semibold whitespace-nowrap"
+          >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <path d="M2.91675 6.99996H11.0834M7.00008 2.91663V11.0833" stroke="white" strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
             Créer OT
-          </button>
+          </Link>
           <button className="flex items-center gap-2 px-5 h-11 rounded-md border border-black/[0.08] bg-transparent hover:bg-white/5 transition-colors text-[#EAF6F5] text-[14px] font-semibold whitespace-nowrap">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <path d="M3.49992 12.8333C2.85602 12.8333 2.33325 12.3105 2.33325 11.6666V2.33329C2.33325 1.68939 2.85602 1.16663 3.49992 1.16663H8.16658C8.53955 1.16602 8.89734 1.31426 9.16058 1.57846L11.2536 3.67146C11.5185 3.9348 11.6672 4.29309 11.6666 4.66663V11.6666C11.6666 12.3105 11.1438 12.8333 10.4999 12.8333H3.49992" stroke="#EAF6F5" strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round"/>

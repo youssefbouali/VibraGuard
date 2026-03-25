@@ -27,10 +27,22 @@ export default function MoteurDetail() {
   const [motor, setMotor] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  const [vibrations, setVibrations] = useState<any[]>([]);
+  const [alerts, setAlerts] = useState<any[]>([]);
+
   useEffect(() => {
     if (id) {
-      api.getMotorById(id)
-        .then(setMotor)
+      setLoading(true);
+      Promise.all([
+        api.getMotorById(id),
+        api.getMotorVibrations(id),
+        api.getAlerts() // Normally we would fetch motor-specific alerts, but for now we'll filter them or use all
+      ])
+        .then(([motorData, vibData, alertData]) => {
+          setMotor(motorData);
+          setVibrations(vibData);
+          setAlerts(alertData.filter((a: any) => a.message.includes(id) || a.message.includes(motorData.id)));
+        })
         .catch(console.error)
         .finally(() => setLoading(false));
     }
@@ -86,14 +98,14 @@ export default function MoteurDetail() {
 
           {/* Right column */}
           <div className="flex flex-col gap-4 sm:gap-6">
-            <TendanceVibratoire />
+            <TendanceVibratoire vibrations={vibrations} />
           </div>
         </div>
 
         {/* Bottom Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-4 sm:gap-6">
           <FFTChart />
-          <DernieresAlertes />
+          <DernieresAlertes alerts={alerts} />
         </div>
       </div>
     </DashboardLayout>

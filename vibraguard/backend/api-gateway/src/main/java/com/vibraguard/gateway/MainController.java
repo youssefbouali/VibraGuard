@@ -42,6 +42,15 @@ public class MainController {
         seedMotor("MTR-Pompe-08", "Pompe Principale", "58% Attention", "#F59E0B", 58, "6.1 mm/s", "#E2E8F0", "flat");
         seedMotor("MTR-Compresseur-01", "Compresseur HP", "85% Optimal", "#10B981", 85, "2.4 mm/s", "#10B981", "down");
         
+        if (vibrationRepository.findByMotorId("MTR-Broyeur-04").isEmpty()) {
+            vibrationRepository.save(new VibrationData(null, "MTR-Broyeur-04", "Lun", 8.2, 0, 0));
+            vibrationRepository.save(new VibrationData(null, "MTR-Broyeur-04", "Mar", 9.1, 0, 0));
+            vibrationRepository.save(new VibrationData(null, "MTR-Broyeur-04", "Mer", 10.5, 0, 0));
+            vibrationRepository.save(new VibrationData(null, "MTR-Broyeur-04", "Jeu", 12.8, 0, 0));
+            vibrationRepository.save(new VibrationData(null, "MTR-Broyeur-04", "Ven", 11.2, 0, 0));
+            vibrationRepository.save(new VibrationData(null, "MTR-Broyeur-04", "Auj", 14.2, 0, 0));
+        }
+        
         if (alertRepository.count() == 0) {
             alertRepository.save(new Alert("ALR-098", "Vibration excessive détectée sur Broyeur L-2", "Critique",
                     "Il y a 2 min", "#EF4444", "high"));
@@ -127,6 +136,12 @@ public class MainController {
     @GetMapping("/iot/motors")
     public List<Motor> getMotors() {
         return motorRepository.findAll();
+    }
+
+    @GetMapping("/iot/motors/{id}/vibration")
+    public Mono<ResponseEntity<List<VibrationData>>> getMotorVibration(@PathVariable("id") String id) {
+        return Mono.fromCallable(() -> ResponseEntity.ok(vibrationRepository.findByMotorId(id)))
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     @GetMapping("/iot/motors/{id}")
