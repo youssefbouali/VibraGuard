@@ -42,7 +42,10 @@ export default function RapportsBI() {
               </div>
 
               {/* Export PDF */}
-              <button className="flex items-center gap-2 h-10 px-4 rounded-md border border-black/[0.08] hover:bg-white/5 transition-colors">
+              <button 
+                onClick={() => window.open(`${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/bi/export/pdf`, '_blank')}
+                className="flex items-center gap-2 h-10 px-4 rounded-md border border-black/[0.08] hover:bg-white/5 transition-colors"
+              >
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                   <path d="M4.5 16.5C3.67213 16.5 3 15.8279 3 15V3C3 2.17213 3.67213 1.5 4.5 1.5H10.5C10.9795 1.49923 11.4395 1.68982 11.778 2.0295L14.469 4.7205C14.8096 5.05909 15.0008 5.51974 15 6V15C15 15.8279 14.3279 16.5 13.5 16.5H4.5" stroke="#D93F3F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M10.5 1.5V5.25C10.5 5.66394 10.8361 6 11.25 6H15M7.5 6.75H6M12 9.75H6M12 12.75H6" stroke="#D93F3F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -51,7 +54,10 @@ export default function RapportsBI() {
               </button>
 
               {/* Export Excel */}
-              <button className="flex items-center gap-2 h-10 px-4 rounded-md bg-[#007A3D] hover:bg-[#006633] transition-colors">
+              <button 
+                onClick={() => window.open(`${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/bi/export/excel`, '_blank')}
+                className="flex items-center gap-2 h-10 px-4 rounded-md bg-[#007A3D] hover:bg-[#006633] transition-colors"
+              >
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                   <path d="M4.5 16.5C3.67213 16.5 3 15.8279 3 15V3C3 2.17213 3.67213 1.5 4.5 1.5H10.5C10.9795 1.49923 11.4395 1.68982 11.778 2.0295L14.469 4.7205C14.8096 5.05909 15.0008 5.51974 15 6V15C15 15.8279 14.3279 16.5 13.5 16.5H4.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M10.5 1.5V5.25C10.5 5.66394 10.8361 6 11.25 6H15M6 9.75H7.5M10.5 9.75H12M6 12.75H7.5M10.5 12.75H12" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
