@@ -57,11 +57,11 @@ public class MainController {
         
         if (alertRepository.count() == 0) {
             alertRepository.save(new Alert("ALR-098", "Vibration excessive détectée sur Broyeur L-2", "Critique",
-                    "Il y a 2 min", "#EF4444", "high"));
+                    "Il y a 2 min", "#EF4444", "high", "Nouveau"));
             alertRepository.save(new Alert("ALR-097", "Usure anormale des roulements Pompe P1", "Alerte",
-                    "Il y a 15 min", "#F59E0B", "medium"));
+                    "Il y a 15 min", "#F59E0B", "medium", "Nouveau"));
             alertRepository.save(new Alert("ALR-096", "Température moteur au-dessus du seuil", "Attention", "Il y a 1h",
-                    "#F59E0B", "low"));
+                    "#F59E0B", "low", "Nouveau"));
         }
         if (workOrderRepository.count() == 0) {
             workOrderRepository.save(new WorkOrder("W-455", "Remplacement Roulement P1", "Pompe Principale", "En cours",
