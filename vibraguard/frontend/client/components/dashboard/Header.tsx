@@ -25,16 +25,72 @@ interface HeaderProps {
 }
 
 import { useAuth } from "@/lib/auth-context";
+import { api } from "@/lib/api";
+
+interface Alert {
+  id: string;
+  message: string;
+  level: string;
+  time: string;
+  color: string;
+  priority: string;
+}
 
 export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenuClick }: HeaderProps) {
   const { user, logout } = useAuth();
   const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [loading, setLoading] = useState(true);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        const data = await api.getAlerts();
+        setAlerts(data);
+      } catch (error) {
+        console.error("Failed to fetch alerts:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAlerts();
+  }, []);
+
+  const getAlertIcon = (level: string) => {
+    switch (level) {
+      case "Critique":
+        return (
+          <div className="flex-shrink-0 w-9 h-9 rounded-full bg-red-500/10 flex items-center justify-center">
+            <AlertCircle className="w-5 h-5 text-red-500" />
+          </div>
+        );
+      case "Alerte":
+        return (
+          <div className="flex-shrink-0 w-9 h-9 rounded-full bg-amber-500/10 flex items-center justify-center">
+            <AlertCircle className="w-5 h-5 text-amber-500" />
+          </div>
+        );
+      case "Attention":
+        return (
+          <div className="flex-shrink-0 w-9 h-9 rounded-full bg-blue-500/10 flex items-center justify-center">
+            <Info className="w-5 h-5 text-blue-500" />
+          </div>
+        );
+      default:
+        return (
+          <div className="flex-shrink-0 w-9 h-9 rounded-full bg-indigo-500/10 flex items-center justify-center">
+            <Bell className="w-5 h-5 text-indigo-500" />
+          </div>
+        );
+    }
   };
 
   useEffect(() => {
@@ -139,7 +195,9 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                 <path d="M8.55656 17.5C8.85429 18.0156 9.40448 18.3333 9.9999 18.3333C10.5953 18.3333 11.1455 18.0156 11.4432 17.5M2.71823 12.7717C2.4958 13.0155 2.43819 13.3676 2.57132 13.6695C2.70444 13.9715 3.00322 14.1664 3.33323 14.1667H16.6666C16.9965 14.1668 17.2955 13.9722 17.429 13.6704C17.5624 13.3687 17.5053 13.0166 17.2832 12.7725C16.1749 11.63 14.9999 10.4159 14.9999 6.66669C14.9999 3.90711 12.7595 1.66669 9.9999 1.66669C7.24032 1.66669 4.9999 3.90711 4.9999 6.66669C4.9999 10.4159 3.82406 11.63 2.71823 12.7717" stroke="#C9E7E6" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-[#D93F3F] border-2 border-[#071018]" />
+              {alerts.length > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-[#D93F3F] border-2 border-[#071018]" />
+              )}
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-[320px] sm:w-[380px] p-0 bg-[#0A1A27] border-white/10 shadow-2xl mr-4" align="end" sideOffset={8}>
@@ -152,78 +210,35 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
 
             <ScrollArea className="h-[350px]">
               <div className="flex flex-col">
-                {/* Notification Item 1 */}
-                <div className="p-4 border-b border-white/5 hover:bg-white/[0.02] cursor-pointer transition-colors relative group">
-                  <div className="flex gap-3">
-                    <div className="flex-shrink-0 w-9 h-9 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                      <Check className="w-5 h-5 text-emerald-500" />
-                    </div>
-                    <div className="flex flex-col gap-1 pr-4">
-                      <p className="text-[#E6F0F2] text-sm leading-snug">
-                        <span className="font-semibold text-white">Ordre de travail</span> terminé avec succès par Jean Dupont.
-                      </p>
-                      <span className="text-[#98A6A8] text-xs flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" />
-                        Il y a 2 minutes
-                      </span>
-                    </div>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#D93F3F]" />
+                {loading ? (
+                  <div className="p-8 text-center text-[#98A6A8] text-sm italic">
+                    Chargement des notifications...
                   </div>
-                </div>
-
-                {/* Notification Item 2 */}
-                <div className="p-4 border-b border-white/5 hover:bg-white/[0.02] cursor-pointer transition-colors group">
-                  <div className="flex gap-3">
-                    <div className="flex-shrink-0 w-9 h-9 rounded-full bg-amber-500/10 flex items-center justify-center">
-                      <AlertCircle className="w-5 h-5 text-amber-500" />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <p className="text-[#E6F0F2] text-sm leading-snug">
-                        Alerte de maintenance détectée sur la <span className="font-semibold text-white">Pompe P-101</span>.
-                      </p>
-                      <span className="text-[#98A6A8] text-xs flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" />
-                        Il y a 15 minutes
-                      </span>
-                    </div>
+                ) : alerts.length === 0 ? (
+                  <div className="p-8 text-center text-[#98A6A8] text-sm italic">
+                    Aucune notification.
                   </div>
-                </div>
-
-                {/* Notification Item 3 */}
-                <div className="p-4 border-b border-white/5 hover:bg-white/[0.02] cursor-pointer transition-colors group">
-                  <div className="flex gap-3">
-                    <div className="flex-shrink-0 w-9 h-9 rounded-full bg-blue-500/10 flex items-center justify-center">
-                      <Info className="w-5 h-5 text-blue-500" />
+                ) : (
+                  alerts.map((alert) => (
+                    <div key={alert.id} className="p-4 border-b border-white/5 hover:bg-white/[0.02] cursor-pointer transition-colors relative group">
+                      <div className="flex gap-3">
+                        {getAlertIcon(alert.level)}
+                        <div className="flex flex-col gap-1 pr-4">
+                          <p className="text-[#E6F0F2] text-sm leading-snug">
+                            {alert.message}
+                          </p>
+                          <span className="text-[#98A6A8] text-xs flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5" />
+                            {alert.time}
+                          </span>
+                        </div>
+                        {alert.priority === "high" && (
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#D93F3F]" />
+                        )}
+                      </div>
                     </div>
-                    <div className="flex flex-col gap-1">
-                      <p className="text-[#E6F0F2] text-sm leading-snug">
-                        Mise à jour du système <span className="font-semibold text-white">v2.4.0</span> déployée.
-                      </p>
-                      <span className="text-[#98A6A8] text-xs flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" />
-                        Il y a 1 heure
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Notification Item 4 */}
-                <div className="p-4 border-b border-white/5 hover:bg-white/[0.02] cursor-pointer transition-colors group">
-                  <div className="flex gap-3">
-                    <div className="flex-shrink-0 w-9 h-9 rounded-full bg-indigo-500/10 flex items-center justify-center">
-                      <Bell className="w-5 h-5 text-indigo-500" />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <p className="text-[#E6F0F2] text-sm leading-snug">
-                        Nouveau rapport hebdomadaire d'activité disponible.
-                      </p>
-                      <span className="text-[#98A6A8] text-xs flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" />
-                        Il y a 3 heures
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                  ))
+                )}
               </div>
             </ScrollArea>
 

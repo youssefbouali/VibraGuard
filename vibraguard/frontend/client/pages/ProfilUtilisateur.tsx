@@ -1,7 +1,10 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Header } from "@/components/dashboard/Header";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { useAuth } from "@/lib/auth-context";
+import { api } from "@/lib/api";
 
 // ─── Toggle ──────────────────────────────────────────────────────────────────
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
@@ -114,14 +117,52 @@ function ActivityItem({ time, title, description, isFirst }: ActivityItemProps) 
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
-import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { useAuth } from "@/lib/auth-context";
+interface Alert {
+  id: string;
+  message: string;
+  level: string;
+  time: string;
+  color: string;
+  priority: string;
+}
+
+interface WorkOrder {
+  id: string;
+  title: string;
+  equipment: string;
+  status: string;
+  assignedTo: string;
+  deadline: string;
+  priority: string;
+}
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function ProfilUtilisateur() {
   const { user } = useAuth();
   const [pushNotif, setPushNotif] = useState(true);
   const [emailReports, setEmailReports] = useState(false);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [alertsData, workOrdersData] = await Promise.all([
+          api.getAlerts(),
+          api.getWorkOrders()
+        ]);
+        setAlerts(alertsData);
+        setWorkOrders(workOrdersData);
+      } catch (error) {
+        console.error("Failed to fetch profile data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <DashboardLayout
@@ -282,47 +323,37 @@ export default function ProfilUtilisateur() {
               </div>
 
               <div className="flex flex-col gap-3 p-6">
-                <InterventionRow
-                  id="OT-1102"
-                  title="OT-1102 : Inspection Palier SKF-6205"
-                  subtitle="MTR-Broyeur-04 • Échéance : Aujourd'hui, 16:00"
-                  status="En cours"
-                  iconBg="bg-[rgba(12,108,242,0.15)]"
-                  icon={
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                      <path d="M3.33333 2.5H7.5C7.96024 2.5 8.33333 2.8731 8.33333 3.33333V9.16667C8.33333 9.6269 7.96024 10 7.5 10H3.33333C2.8731 10 2.5 9.6269 2.5 9.16667V3.33333C2.5 2.8731 2.8731 2.5 3.33333 2.5V2.5" stroke="#0C6CF2" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M12.5 2.5H16.6666C17.1269 2.5 17.5 2.8731 17.5 3.33333V5.83333C17.5 6.29357 17.1269 6.66667 16.6666 6.66667H12.5C12.0397 6.66667 11.6666 6.29357 11.6666 5.83333V3.33333C11.6666 2.8731 12.0397 2.5 12.5 2.5V2.5" stroke="#0C6CF2" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M12.5 10H16.6666C17.1269 10 17.5 10.3731 17.5 10.8333V16.6667C17.5 17.1269 17.1269 17.5 16.6666 17.5H12.5C12.0397 17.5 11.6666 17.1269 11.6666 16.6667V10.8333C11.6666 10.3731 12.0397 10 12.5 10V10" stroke="#0C6CF2" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M3.33333 13.333H7.5C7.96024 13.333 8.33333 13.7061 8.33333 14.1663V16.6663C8.33333 17.1266 7.96024 17.4997 7.5 17.4997H3.33333C2.8731 17.4997 2.5 17.1266 2.5 16.6663V14.1663C2.5 13.7061 2.8731 13.333 3.33333 13.333V13.333" stroke="#0C6CF2" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  }
-                />
-                <InterventionRow
-                  id="OT-1098"
-                  title="OT-1098 : Réalignement Arbre de Transmission"
-                  subtitle="MTR-Convoyeur-12 • Terminé le 22 Oct"
-                  status="Terminé"
-                  iconBg="bg-[rgba(0,122,61,0.15)]"
-                  icon={
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                      <path d="M18.1675 8.33289C18.9517 12.1817 16.942 16.0555 13.3438 17.6307C9.74557 19.2058 5.53598 18.0545 3.24023 14.8674C0.944472 11.6803 1.18591 7.32282 3.81971 4.40887C6.45351 1.49491 10.7645 0.815722 14.1667 2.77873" stroke="#007A3D" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M7.5 9.16634L10 11.6663L18.3333 3.33301" stroke="#007A3D" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  }
-                />
-                <InterventionRow
-                  id="OT-1095"
-                  title="OT-1095 : Graissage Roulements Pompe A"
-                  subtitle="PMP-Eau-01 • Terminé le 18 Oct"
-                  status="Terminé"
-                  iconBg="bg-[rgba(0,122,61,0.15)]"
-                  icon={
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                      <path d="M18.1675 8.33289C18.9517 12.1817 16.942 16.0555 13.3438 17.6307C9.74557 19.2058 5.53598 18.0545 3.24023 14.8674C0.944472 11.6803 1.18591 7.32282 3.81971 4.40887C6.45351 1.49491 10.7645 0.815722 14.1667 2.77873" stroke="#007A3D" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M7.5 9.16634L10 11.6663L18.3333 3.33301" stroke="#007A3D" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  }
-                />
+                {loading ? (
+                  <div className="text-[#98A6A8] text-sm italic py-4">Chargement des interventions...</div>
+                ) : workOrders.length === 0 ? (
+                  <div className="text-[#98A6A8] text-sm italic py-4">Aucune intervention récente.</div>
+                ) : (
+                  workOrders.map((wo) => (
+                    <InterventionRow
+                      key={wo.id}
+                      id={wo.id}
+                      title={`${wo.id} : ${wo.title}`}
+                      subtitle={`${wo.equipment} • Échéance : ${wo.deadline}`}
+                      status={wo.status === "Terminé" ? "Terminé" : "En cours"}
+                      iconBg={wo.status === "Terminé" ? "bg-[rgba(0,122,61,0.15)]" : "bg-[rgba(12,108,242,0.15)]"}
+                      icon={
+                        wo.status === "Terminé" ? (
+                          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M18.1675 8.33289C18.9517 12.1817 16.942 16.0555 13.3438 17.6307C9.74557 19.2058 5.53598 18.0545 3.24023 14.8674C0.944472 11.6803 1.18591 7.32282 3.81971 4.40887C6.45351 1.49491 10.7645 0.815722 14.1667 2.77873" stroke="#007A3D" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M7.5 9.16634L10 11.6663L18.3333 3.33301" stroke="#007A3D" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        ) : (
+                          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M3.33333 2.5H7.5C7.96024 2.5 8.33333 2.8731 8.33333 3.33333V9.16667C8.33333 9.6269 7.96024 10 7.5 10H3.33333C2.8731 10 2.5 9.6269 2.5 9.16667V3.33333C2.5 2.8731 2.8731 2.5 3.33333 2.5V2.5" stroke="#0C6CF2" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M12.5 2.5H16.6666C17.1269 2.5 17.5 2.8731 17.5 3.33333V5.83333C17.5 6.29357 17.1269 6.66667 16.6666 6.66667H12.5C12.0397 6.66667 11.6666 6.29357 11.6666 5.83333V3.33333C11.6666 2.8731 12.0397 2.5 12.5 2.5V2.5" stroke="#0C6CF2" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M12.5 10H16.6666C17.1269 10 17.5 10.3731 17.5 10.8333V16.6667C17.5 17.1269 17.1269 17.5 16.6666 17.5H12.5C12.0397 17.5 11.6666 17.1269 11.6666 16.6667V10.8333C11.6666 10.3731 12.0397 10 12.5 10V10" stroke="#0C6CF2" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M3.33333 13.333H7.5C7.96024 13.333 8.33333 13.7061 8.33333 14.1663V16.6663C8.33333 17.1266 7.96024 17.4997 7.5 17.4997H3.33333C2.8731 17.4997 2.5 17.1266 2.5 16.6663V14.1663C2.5 13.7061 2.8731 13.333 3.33333 13.333V13.333" stroke="#0C6CF2" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )
+                      }
+                    />
+                  ))
+                )}
               </div>
             </section>
           </div>
@@ -343,37 +374,21 @@ export default function ProfilUtilisateur() {
                   {/* Vertical line */}
                   <div className="absolute left-[7px] top-4 bottom-0 w-[2px] bg-black/[0.08]" />
 
-                  <ActivityItem
-                    isFirst
-                    time="Aujourd'hui, 08:30"
-                    title="Connexion réussie"
-                    description="IP: 192.168.1.45 • Session Mobile"
-                  />
-                  <ActivityItem
-                    time="Aujourd'hui, 07:45"
-                    title="Alerte ALT-8402 consultée"
-                    description="MTR-Broyeur-04 (Critique)"
-                  />
-                  <ActivityItem
-                    time="Hier, 16:20"
-                    title="Clôture Intervention OT-1098"
-                    description="Signature électronique validée et certifiée"
-                  />
-                  <ActivityItem
-                    time="Hier, 14:10"
-                    title="Mise à jour du statut OT-1098"
-                    description='Passage de "À faire" à "En cours"'
-                  />
-                  <ActivityItem
-                    time="22 Oct 2026, 09:00"
-                    title="Modification des préférences"
-                    description="Activation des alertes SMS"
-                  />
-                  <ActivityItem
-                    time="20 Oct 2026, 11:30"
-                    title="Rapport de diagnostic exporté"
-                    description="PMP-Eau-01 Analyse Spectrale (PDF)"
-                  />
+                  {loading ? (
+                    <div className="text-[#98A6A8] text-xs italic">Chargement de l'historique...</div>
+                  ) : alerts.length === 0 ? (
+                    <div className="text-[#98A6A8] text-xs italic">Aucune activité récente.</div>
+                  ) : (
+                    alerts.map((alert, idx) => (
+                      <ActivityItem
+                        key={alert.id}
+                        isFirst={idx === 0}
+                        time={alert.time}
+                        title={alert.level}
+                        description={alert.message}
+                      />
+                    ))
+                  )}
                 </div>
               </div>
             </div>
