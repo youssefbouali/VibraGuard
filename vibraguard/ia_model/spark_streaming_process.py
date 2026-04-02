@@ -7,10 +7,16 @@ import numpy as np
 import os
 
 # Configuration
-KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka:9092")
+KAFKA_BROKER = os.getenv("KAFKA_BROKER", "localhost:9092")
 KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "sensor-data")
 MODEL_PATH = "vibraguard_rf_model.joblib"
 SCALER_PATH = "vibraguard_scaler.joblib"
+
+ORACLE_URL = os.getenv("ORACLE_URL", "jdbc:oracle:thin:@localhost:1521:xe")
+ORACLE_USER = os.getenv("ORACLE_USER", "system")
+ORACLE_PASSWORD = os.getenv("ORACLE_PASSWORD", "password")
+ORACLE_DRIVER = "oracle.jdbc.driver.OracleDriver"
+ORACLE_TABLE = os.getenv("ORACLE_TABLE", "AI_SENSOR_PREDICTIONS")
 
 # Load Model and Scaler at the driver level (ideally broadcast them)
 print("Loading model and scaler...")
@@ -41,7 +47,83 @@ def predict_anomaly(*features):
 # Create Spark Session
 spark = SparkSession.builder \
     .appName("VibraGuardStreamingAI") \
+    .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1,com.oracle.database.jdbc:ojdbc8:21.1.0.0") \
     .getOrCreate()
+
+def write_to_oracle(batch_df, epoch_id):
+    if batch_df.isEmpty():
+        return
+        
+    pandas_df = batch_df.toPandas()
+    
+    # Establish Oracle JDBC Connection via Py4J
+    conn = spark._jvm.java.sql.DriverManager.getConnection(ORACLE_URL, ORACLE_USER, ORACLE_PASSWORD)
+    try:
+        stmt = conn.createStatement()
+        
+        import uuid
+        for index, row in pandas_df.iterrows():
+            motor = str(row['motor_id'])
+            v_rms = float(row['vib_rms'])
+            v_peak = float(row['vib_peak'])
+            v_kurt = float(row['vib_kurtosis'])
+            temp = float(row['temperature'])
+            
+            # 1. Insert Vibration Data
+            sql_vib = f"""
+                INSERT INTO VIBRATION_DATA (MOTOR_ID, VIBRATION_TIME, x, y, z) 
+                VALUES ('{motor}', TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'), {v_rms}, {v_peak}, {v_kurt})
+            """
+            try: stmt.executeUpdate(sql_vib)
+            except Exception as e: print("Error VIBRATION:", e)
+            
+            # Check for prediction anomaly
+            is_anomaly = str(row['prediction']) in ['1', '1.0', 'True', 'anomalous']
+            if is_anomaly:
+                # 2. Insert Alert
+                alert_id = "ALR-" + str(uuid.uuid4())[:8]
+                msg = f"Anomalie IA dectectee sur {motor}"
+                sql_alert = f"""
+                    INSERT INTO ALERTS (id, message, ALERT_LEVEL, ALERT_TIME, color, priority, status, velocite_rms, acceleration_peak, temperature, score_confiance_ia, depassement_seuil)
+                    VALUES ('{alert_id}', '{msg}', 'Critique', TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'), '#EF4444', 'high', 'Nouveau', {v_rms}, {v_peak}, {temp}, 94.5, {v_rms * 0.15})
+                """
+                try: stmt.executeUpdate(sql_alert)
+                except Exception as e: print("Error ALERT:", e)
+                
+                # 3. Decrease Inventory (Simulate usage)
+                sql_inv = """
+                    UPDATE INVENTORY_PART 
+                    SET stock = CASE WHEN stock > 0 THEN stock - 1 ELSE 0 END,
+                        status = CASE WHEN stock - 1 <= 0 THEN 'red' ELSE status END
+                    WHERE id = 'PART-02'
+                """
+                try: stmt.executeUpdate(sql_inv)
+                except Exception as e: print("Error INVENTORY:", e)
+                
+        # 4. Calculate and Upsert KPIs
+        total_records = len(pandas_df)
+        anomalies_count = pandas_df['prediction'].astype(str).str.contains('1|anomalous|True', case=False, na=False).sum()
+        uptime_val = max(0.0, 100.0 - (float(anomalies_count) / total_records * 100.0)) if total_records > 0 else 100.0
+        
+        kpis = [
+            ("uptime", uptime_val, "NULL", f"'-{anomalies_count} alertes'", "0"),
+            ("alertsTrend", "NULL", f"'{anomalies_count} IA'", f"'+{anomalies_count} via IA'", "0")
+        ]
+        
+        for k_id, num_val, str_val, trend, t_up in kpis:
+            sql_kpi = f"""
+                MERGE INTO KPI_VALUES k
+                USING (SELECT '{k_id}' as id, {num_val} as numVal, {str_val} as strVal, {trend} as tr, {t_up} as tUp FROM DUAL) src
+                ON (k.id = src.id)
+                WHEN MATCHED THEN UPDATE SET k.numeric_value = src.numVal, k.string_value = src.strVal, k.trend = src.tr, k.trend_up = src.tUp
+                WHEN NOT MATCHED THEN INSERT (id, numeric_value, string_value, trend, trend_up) VALUES (src.id, src.numVal, src.strVal, src.tr, src.tUp)
+            """
+            try: stmt.executeUpdate(sql_kpi)
+            except Exception as e: print("Error MERGE KPI:", e)
+            
+        print(f"Batch {epoch_id} processed completely (Vib, Alerts, KPIs).")
+    finally:
+        conn.close()
 
 # Suppress verbose INFO logs, keep only WARNING and ERROR messages 
 # so the ASCII table predictions are easily visible.
@@ -49,6 +131,7 @@ spark = SparkSession.builder \
 
 # Schema for incoming JSON data
 schema = StructType([
+    StructField("motor_id", StringType(), True),
     StructField("rpm", DoubleType()),
     StructField("vib_rms", DoubleType()),
     StructField("vib_peak", DoubleType()),
@@ -81,10 +164,10 @@ df_with_predictions = df_parsed.withColumn(
     predict_anomaly(*[col(c) for c in FEATURE_COLUMNS])
 )
 
-# Output predictions to console (for debugging)
+# Output predictions to Oracle via foreachBatch
 query = df_with_predictions.writeStream \
+    .foreachBatch(write_to_oracle) \
     .outputMode("append") \
-    .format("console") \
     .start()
 
 query.awaitTermination()

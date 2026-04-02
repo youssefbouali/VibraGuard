@@ -3,14 +3,16 @@ import json
 import time
 import random
 import uuid
+import os
 
 # ==========================================
 # CONFIGURATION
 # ==========================================
-MQTT_BROKER = "vibraguard.mywire.org"  # The target domain
-MQTT_PORT = 30083                      # The Kubernetes NodePort we just opened
-MQTT_TOPIC = "vibraguard/sensors"      # Topic to publish data to
+MQTT_BROKER = os.getenv("MQTT_BROKER", "vibraguard.mywire.org")  # Fallback to mywire
+MQTT_PORT = int(os.getenv("MQTT_PORT", 1883))        # Default MQTT port
+MQTT_TOPIC = os.getenv("MQTT_TOPIC", "vibraguard/sensors")
 CLIENT_ID = f"vibraguard_external_simulator_{uuid.uuid4()}" # Unique client ID
+MOTOR_ID = os.getenv("MOTOR_ID", "MTR-Broyeur-04") # Specify the motor ID here
 
 # Optional: Add Username and Password if your broker requires authentication
 MQTT_USER = None   # e.g., "my_username"
@@ -25,6 +27,7 @@ def generate_sensor_data():
     
     if is_anomaly:
         data = {
+            "motor_id": MOTOR_ID,
             "rpm": random.uniform(1300, 1500),
             "vib_rms": random.uniform(5.0, 10.0),
             "vib_peak": random.uniform(15.0, 25.0),
@@ -39,6 +42,7 @@ def generate_sensor_data():
         }
     else:
         data = {
+            "motor_id": MOTOR_ID,
             "rpm": random.uniform(1450, 1490),
             "vib_rms": random.uniform(2.0, 3.0),
             "vib_peak": random.uniform(7.0, 9.0),

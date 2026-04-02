@@ -47,23 +47,7 @@ public class MainController {
         seedMotor("MTR-Pompe-08", "Pompe Principale", "58% Attention", "#F59E0B", 58, "6.1 mm/s", "#E2E8F0", "flat");
         seedMotor("MTR-Compresseur-01", "Compresseur HP", "85% Optimal", "#10B981", 85, "2.4 mm/s", "#10B981", "down");
         
-        if (vibrationRepository.findByMotorId("MTR-Broyeur-04").isEmpty()) {
-            vibrationRepository.save(new VibrationData(null, "MTR-Broyeur-04", "Lun", 8.2, 0, 0));
-            vibrationRepository.save(new VibrationData(null, "MTR-Broyeur-04", "Mar", 9.1, 0, 0));
-            vibrationRepository.save(new VibrationData(null, "MTR-Broyeur-04", "Mer", 10.5, 0, 0));
-            vibrationRepository.save(new VibrationData(null, "MTR-Broyeur-04", "Jeu", 12.8, 0, 0));
-            vibrationRepository.save(new VibrationData(null, "MTR-Broyeur-04", "Ven", 11.2, 0, 0));
-            vibrationRepository.save(new VibrationData(null, "MTR-Broyeur-04", "Auj", 14.2, 0, 0));
-        }
-        
-        if (alertRepository.count() == 0) {
-            alertRepository.save(new Alert("ALR-098", "Vibration excessive détectée sur Broyeur L-2", "Critique",
-                    "Il y a 2 min", "#EF4444", "high", "Nouveau", 14.8, 9.2, 86.0, 96.0, 42.0));
-            alertRepository.save(new Alert("ALR-097", "Usure anormale des roulements Pompe P1", "Alerte",
-                    "Il y a 15 min", "#F59E0B", "medium", "Nouveau", 12.1, 7.5, 78.0, 85.0, 30.0));
-            alertRepository.save(new Alert("ALR-096", "Température moteur au-dessus du seuil", "Attention", "Il y a 1h",
-                    "#F59E0B", "low", "Nouveau", 8.4, 4.2, 92.0, 75.0, 15.0));
-        }
+
         if (workOrderRepository.count() == 0) {
             workOrderRepository.save(new WorkOrder("W-455", "Remplacement Roulement P1", "Pompe Principale", "En cours",
                     "Expert Maintenance", "2026-06-20", "Haute"));
