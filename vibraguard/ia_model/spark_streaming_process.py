@@ -47,7 +47,7 @@ def predict_anomaly(*features):
 # Create Spark Session
 spark = SparkSession.builder \
     .appName("VibraGuardStreamingAI") \
-    .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1,com.oracle.database.jdbc:ojdbc8:21.1.0.0") \
+    .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0,com.oracle.database.jdbc:ojdbc8:19.3.0.0") \
     .getOrCreate()
 
 def write_to_oracle(batch_df, epoch_id):
@@ -56,6 +56,14 @@ def write_to_oracle(batch_df, epoch_id):
         
     pandas_df = batch_df.toPandas()
     
+    # Verify driver is available and connection URL
+    print(f"Connecting to Oracle at: {ORACLE_URL} (User: {ORACLE_USER})")
+    try:
+        spark._jvm.java.lang.Class.forName("oracle.jdbc.driver.OracleDriver")
+    except Exception as e:
+        print("CRITICAL: Oracle JDBC Driver not found in classloader! Check spark.jars.packages.")
+        return
+
     # Establish Oracle JDBC Connection via Py4J
     conn = spark._jvm.java.sql.DriverManager.getConnection(ORACLE_URL, ORACLE_USER, ORACLE_PASSWORD)
     try:

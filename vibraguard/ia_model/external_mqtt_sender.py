@@ -9,7 +9,7 @@ import os
 # CONFIGURATION
 # ==========================================
 MQTT_BROKER = os.getenv("MQTT_BROKER", "vibraguard.mywire.org")  # Fallback to mywire
-MQTT_PORT = int(os.getenv("MQTT_PORT", 1883))        # Default MQTT port
+MQTT_PORT = int(os.getenv("MQTT_PORT", 30083))        # Default MQTT port for external access
 MQTT_TOPIC = os.getenv("MQTT_TOPIC", "vibraguard/sensors")
 CLIENT_ID = f"vibraguard_external_simulator_{uuid.uuid4()}" # Unique client ID
 MOTOR_ID = os.getenv("MOTOR_ID", "MTR-Broyeur-04") # Specify the motor ID here
@@ -110,7 +110,7 @@ def main():
             result = client.publish(MQTT_TOPIC, payload, qos=0)
             
             # 3. Log to console
-            status_indicator = "🔴" if sensor_data["status"] == "anomalous" else "🟢"
+            status_indicator = "🔴" if sensor_data["temperature"] > 70.0 else "🟢"
             print(f"[{status_indicator}] Sent to {MQTT_BROKER} -> {payload}")
             
             # 4. Wait before sending the next one
