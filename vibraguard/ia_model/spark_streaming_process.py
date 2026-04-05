@@ -1,10 +1,18 @@
+import os
+import sys
+
+# FORCE Spark to load Oracle JDBC and Kafka packages
+# This must happen BEFORE any Spark imports or session creation
+os.environ['PYSPARK_SUBMIT_ARGS'] = '--packages "com.oracle.database.jdbc:ojdbc11:21.1.0.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0" pyspark-shell'
+
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, udf, from_json
+from pyspark.sql.functions import col, udf, from_json, struct
 from pyspark.sql.types import StructType, StructField, DoubleType, StringType
 import joblib
 import pandas as pd
 import numpy as np
-import os
+import json
+import uuid
 
 # Configuration
 KAFKA_BROKER = os.getenv("KAFKA_BROKER", "localhost:9092")
@@ -44,10 +52,11 @@ def predict_anomaly(*features):
     except Exception as e:
         return f"Error: {str(e)}"
 
-# Create Spark Session
+
+# Create Spark Session with explicit jar config as fallback
 spark = SparkSession.builder \
     .appName("VibraGuardStreamingAI") \
-    .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0,com.oracle.database.jdbc:ojdbc11:21.1.0.0") \
+    .config("spark.jars.packages", "com.oracle.database.jdbc:ojdbc11:21.1.0.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0") \
     .getOrCreate()
 
 def write_to_oracle(batch_df, epoch_id):
@@ -69,7 +78,6 @@ def write_to_oracle(batch_df, epoch_id):
     try:
         stmt = conn.createStatement()
         
-        import uuid
         for index, row in pandas_df.iterrows():
             motor = str(row['motor_id'])
             v_rms = float(row['vib_rms'])
