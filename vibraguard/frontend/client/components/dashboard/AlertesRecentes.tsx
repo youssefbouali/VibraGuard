@@ -52,14 +52,20 @@ export function AlertesRecentes() {
   const { data: rawAlerts = [], isLoading } = useAlerts();
 
   // Map backend alerts to the format expected by the frontend
-  const alertes: AlertData[] = rawAlerts.map(a => ({
-    id: a.id,
-    title: a.title || a.message?.split("sur ")[1] || "Alerte",
-    motorId: a.motorId || a.message?.split("sur ")[1] || "M-04",
-    time: a.time,
-    description: a.message || (a as any).description || "",
-    iconType: a.priority === "high" ? "critical" : a.priority === "medium" ? "warning" : "temp"
-  }));
+  const alertes: AlertData[] = rawAlerts.map(a => {
+    const rawMotorId = a.motorId || a.message?.split("sur ")[1] || "";
+    // Clean up motorId if it contains vibration info like "(Vib: 5.89)"
+    const cleanMotorId = rawMotorId.split(" (")[0].trim();
+    
+    return {
+      id: a.id,
+      title: a.title || cleanMotorId || "Alerte",
+      motorId: cleanMotorId,
+      time: a.time,
+      description: a.message || (a as any).description || "",
+      iconType: a.priority === "high" ? "critical" : a.priority === "medium" ? "warning" : "temp"
+    };
+  });
 
   if (isLoading) {
     return (

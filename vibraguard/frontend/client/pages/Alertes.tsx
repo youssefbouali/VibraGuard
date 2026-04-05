@@ -81,9 +81,12 @@ export default function Alertes() {
     else if (level === "alerte" || level === "warning" || priority === "medium") severite = "Majeur";
     else severite = "Mineur";
     
+    const rawMotorId = a.motorId || a.message?.split("sur ")[1] || "";
+    const cleanMotorId = rawMotorId.split(" (")[0].trim();
+    
     return {
       id: a.id,
-      moteur: "MTR-Broyeur-04", // Backend doesn't provide specific motor in createAlert
+      moteur: cleanMotorId,
       typeDefaut: a.message,
       severite: severite,
       confiance: a.scoreConfianceIA ?? (a.priority === "high" ? 96 : 85),

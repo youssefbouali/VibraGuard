@@ -138,6 +138,15 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
     };
   }, [isSearchVisible]);
 
+  const handleMarkAllAsRead = async () => {
+    try {
+      await api.markAllAlertsAsRead();
+      setAlerts([]);
+    } catch (error) {
+      console.error("Failed to mark all notifications as read:", error);
+    }
+  };
+
   return (
     <header className="flex h-auto sm:h-[72px] items-center justify-between px-4 sm:px-6 lg:px-8 py-4 sm:py-0 border-b border-black/[0.08] bg-[#071018] shrink-0 gap-4">
       {/* Menu button for mobile */}
@@ -294,7 +303,10 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
           <PopoverContent className="w-[320px] sm:w-[380px] p-0 bg-[#0A1A27] border-white/10 shadow-2xl mr-4" align="end" sideOffset={8}>
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
               <h3 className="text-[#E6F0F2] font-semibold text-sm">Notifications</h3>
-              <button className="text-[#4FB3AF] hover:text-[#7EDBD7] text-xs font-medium transition-colors">
+              <button 
+                onClick={handleMarkAllAsRead}
+                className="text-[#4FB3AF] hover:text-[#7EDBD7] text-xs font-medium transition-colors"
+              >
                 Tout marquer comme lu
               </button>
             </div>

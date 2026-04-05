@@ -348,10 +348,52 @@ public class MainController {
                     t.put("email", u.getEmail());
                     t.put("role", u.getRole() != null ? u.getRole() : "Technicien");
                     t.put("department", u.getDepartment() != null ? u.getDepartment() : "Maintenance");
-                    t.put("status", "Actif");
+                    t.put("status", u.getStatus() != null ? u.getStatus() : "Actif");
                     t.put("lastConnection", "En ligne");
                     return t;
                 });
+    }
+
+    @PutMapping("/iot/alerts/read-all")
+    public Mono<ResponseEntity<Void>> markAllAlertsAsRead() {
+        return Mono.fromCallable(() -> {
+            List<Alert> alerts = alertRepository.findAll();
+            boolean changed = false;
+            for (Alert alert : alerts) {
+                if ("Nouveau".equals(alert.getStatus())) {
+                    alert.setStatus("Acquittée");
+                    changed = true;
+                }
+            }
+            if (changed) {
+                alertRepository.saveAll(alerts);
+            }
+            return ResponseEntity.ok().<Void>build();
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
+
+    @GetMapping("/iot/technicians/{id}")
+    public Mono<ResponseEntity<User>> getTechnicianById(@PathVariable("id") String id) {
+        return Mono.fromCallable(() -> userRepository.findById(id))
+                .subscribeOn(Schedulers.boundedElastic())
+                .map(opt -> opt.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build()));
+    }
+
+    @PutMapping("/iot/technicians/{id}")
+    public Mono<ResponseEntity<User>> updateTechnician(@PathVariable("id") String id, @RequestBody User technician) {
+        return Mono.fromCallable(() -> {
+            Optional<User> existing = userRepository.findById(id);
+            if (existing.isPresent()) {
+                User u = existing.get();
+                if (technician.getFullName() != null) u.setFullName(technician.getFullName());
+                if (technician.getEmail() != null) u.setEmail(technician.getEmail());
+                if (technician.getRole() != null) u.setRole(technician.getRole());
+                if (technician.getDepartment() != null) u.setDepartment(technician.getDepartment());
+                if (technician.getStatus() != null) u.setStatus(technician.getStatus());
+                return ResponseEntity.ok(userRepository.save(u));
+            }
+            return ResponseEntity.notFound().<User>build();
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     @DeleteMapping("/iot/work-orders/{id}")

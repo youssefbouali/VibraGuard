@@ -1,86 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 
 // ─── User Interface ──────────────────────────────────────────────────────────────────
 interface User {
-  id: number;
-  name: string;
+  id: string | number;
+  name?: string;
+  fullName?: string;
   email: string;
   avatar?: string;
-  role: "Admin" | "Ingénieur Data" | "Technicien" | "Responsable";
+  role: string;
   department: string;
-  status: "Actif" | "Inactif";
-  lastConnection: string | "En ligne";
+  status: string;
+  lastConnection?: string;
 }
-
-const USERS: User[] = [
-  {
-    id: 1,
-    name: "Sarah Dubois",
-    email: "sarah.dubois@vibraguard.com",
-    role: "Admin",
-    department: "Direction",
-    status: "Actif",
-    lastConnection: "En ligne",
-  },
-  {
-    id: 2,
-    name: "Karim Benali",
-    email: "karim.benali@vibraguard.com",
-    avatar:
-      "https://api.builder.io/api/v1/image/assets/TEMP/33eff0290226457aa3b405842cde586de6f5f7ac?width=80",
-    role: "Ingénieur Data",
-    department: "Analyse & ML",
-    status: "Actif",
-    lastConnection: "En ligne",
-  },
-  {
-    id: 3,
-    name: "Marc Leroy",
-    email: "marc.leroy@vibraguard.com",
-    avatar:
-      "https://api.builder.io/api/v1/image/assets/TEMP/bea15a3f5aecbda98746220b1fe56ef741cf9ab2?width=80",
-    role: "Technicien",
-    department: "Maintenance Ligne A",
-    status: "Actif",
-    lastConnection: "Aujourd'hui, 08:15",
-  },
-  {
-    id: 4,
-    name: "Julie Martin",
-    email: "julie.martin@vibraguard.com",
-    avatar:
-      "https://api.builder.io/api/v1/image/assets/TEMP/95924e154d79d9ab33cf5bb91967b29f65c955a5?width=80",
-    role: "Responsable",
-    department: "Opérations",
-    status: "Inactif",
-    lastConnection: "12 Oct 2026",
-  },
-  {
-    id: 5,
-    name: "Ahmed Sy",
-    email: "ahmed.sy@vibraguard.com",
-    avatar:
-      "https://api.builder.io/api/v1/image/assets/TEMP/f41c3b05830ce4629f33d33aca439021fdc66728?width=80",
-    role: "Technicien",
-    department: "Maintenance Ligne B",
-    status: "Actif",
-    lastConnection: "Hier, 14:20",
-  },
-  {
-    id: 6,
-    name: "Elodie Roux",
-    email: "elodie.roux@vibraguard.com",
-    avatar:
-      "https://api.builder.io/api/v1/image/assets/TEMP/c6d8f1b8da1c5f2e533ecd312364679717603796?width=80",
-    role: "Ingénieur Data",
-    department: "Analyse & ML",
-    status: "Actif",
-    lastConnection: "Aujourd'hui, 09:30",
-  },
-];
 
 const ROLES = ["Admin", "Ingénieur Data", "Technicien", "Responsable"];
 const DEPARTMENTS = [
@@ -89,6 +26,7 @@ const DEPARTMENTS = [
   "Maintenance Ligne A",
   "Maintenance Ligne B",
   "Opérations",
+  "Maintenance"
 ];
 
 // ─── Toggle ──────────────────────────────────────────────────────────────────
@@ -194,9 +132,76 @@ export default function UtilisateurDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const user = USERS.find((u) => u.id === parseInt(id || "0"));
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [userData, setUserData] = useState<User | null>(null);
 
-  if (!user) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("Technicien");
+  const [department, setDepartment] = useState("Maintenance");
+  const [status, setStatus] = useState("Actif");
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!id) return;
+      try {
+        const data = await api.getTechnicianById(id);
+        setUserData(data);
+        setName(data.fullName || data.name || "");
+        setEmail(data.email || "");
+        setRole(data.role || "Technicien");
+        setDepartment(data.department || "Maintenance");
+        setStatus(data.status || "Actif");
+      } catch (error) {
+        console.error("Failed to fetch user:", error);
+        toast.error("Échec de chargement de l'utilisateur");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [id]);
+
+  const handleSave = async () => {
+    if (!id) return;
+    setSaving(true);
+    try {
+      await api.updateTechnician(id, {
+        fullName: name,
+        email,
+        role,
+        department,
+        status
+      });
+      toast.success("Utilisateur mis à jour avec succès");
+      navigate("/parametres");
+    } catch (error) {
+      console.error("Failed to update user:", error);
+      toast.error("Erreur lors de la mise à jour");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <DashboardLayout
+        breadcrumbItems={[
+          { label: "Paramètres", href: "/parametres" },
+          { label: "Utilisateurs", href: "/parametres" },
+          { label: "Chargement..." },
+        ]}
+      >
+        <div className="flex items-center justify-center flex-1 min-h-[400px]">
+          <Loader2 className="w-8 h-8 text-[#007A3D] animate-spin" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!userData) {
     return (
       <DashboardLayout
         breadcrumbItems={[
@@ -212,24 +217,12 @@ export default function UtilisateurDetail() {
     );
   }
 
-
-  const [name, setName] = useState(user.name);
-  const [email, setEmail] = useState(user.email);
-  const [role, setRole] = useState(user.role);
-  const [department, setDepartment] = useState(user.department);
-  const [status, setStatus] = useState(user.status);
-
-  const handleSave = () => {
-    // For now, just navigate back. In a real app, you'd make an API call here
-    navigate("/parametres");
-  };
-
   return (
     <DashboardLayout
       breadcrumbItems={[
         { label: "Paramètres", href: "/parametres" },
         { label: "Utilisateurs", href: "/parametres" },
-        { label: `Modifier - ${user.name}` },
+        { label: `Modifier - ${name}` },
       ]}
     >
       <div className="flex flex-col flex-1 min-h-0">
@@ -245,25 +238,30 @@ export default function UtilisateurDetail() {
             </button>
             <button
               onClick={handleSave}
-              className="flex items-center gap-2 h-10 px-4 rounded-md bg-[#007A3D] text-white text-sm font-semibold hover:bg-[#006633] transition-colors"
+              disabled={saving}
+              className="flex items-center gap-2 h-10 px-4 rounded-md bg-[#007A3D] text-white text-sm font-semibold hover:bg-[#006633] transition-colors disabled:opacity-50"
             >
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path
-                  d="M11.4 2.25C11.7957 2.25564 12.1731 2.41738 12.45 2.7L15.3 5.55C15.5826 5.82695 15.7444 6.20435 15.75 6.6V14.25C15.75 15.0779 15.0779 15.75 14.25 15.75H3.75C2.92213 15.75 2.25 15.0779 2.25 14.25V3.75C2.25 2.92213 2.92213 2.25 3.75 2.25H11.4"
-                  stroke="white"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M12.75 15.75V10.5C12.75 10.0861 12.4139 9.75 12 9.75H6C5.58606 9.75 5.25 10.0861 5.25 10.5V15.75M5.25 2.25V5.25C5.25 5.66394 5.58606 6 6 6H11.25"
-                  stroke="white"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              Enregistrer les modifications
+              {saving ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path
+                    d="M11.4 2.25C11.7957 2.25564 12.1731 2.41738 12.45 2.7L15.3 5.55C15.5826 5.82695 15.7444 6.20435 15.75 6.6V14.25C15.75 15.0779 15.0779 15.75 14.25 15.75H3.75C2.92213 15.75 2.25 15.0779 2.25 14.25V3.75C2.25 2.92213 2.92213 2.25 3.75 2.25H11.4"
+                    stroke="white"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M12.75 15.75V10.5C12.75 10.0861 12.4139 9.75 12 9.75H6C5.58606 9.75 5.25 10.0861 5.25 10.5V15.75M5.25 2.25V5.25C5.25 5.66394 5.58606 6 6 6H11.25"
+                    stroke="white"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
+              {saving ? "Enregistrement..." : "Enregistrer les modifications"}
             </button>
           </div>
         </div>
@@ -316,10 +314,10 @@ export default function UtilisateurDetail() {
                 <div className="flex items-center gap-6">
                   <img
                     src={
-                      user.avatar ||
+                      userData.avatar ||
                       "https://api.builder.io/api/v1/image/assets/TEMP/debebd2e98692a4004e72072b04e25237419d788?width=192"
                     }
-                    alt={user.name}
+                    alt={name}
                     className="w-24 h-24 rounded-full border-[3px] border-[#0B1518] ring-2 ring-[#007A3D] object-cover shrink-0"
                   />
                 </div>
