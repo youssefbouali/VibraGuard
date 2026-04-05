@@ -71,32 +71,16 @@ def write_to_oracle(batch_df, epoch_id):
         
     pandas_df = batch_df.toPandas()
     
-    # Load Oracle driver and connect DIRECTLY (bypassing DriverManager classloader issues)
+    # Establish Oracle JDBC Connection
     print(f"Connecting to Oracle at: {ORACLE_URL} (User: {ORACLE_USER})")
     try:
-        jvm = spark._jvm
-        # Get the Spark ClassLoader which contains our downloaded JAR
-        cl = jvm.org.apache.spark.util.Utils.getContextOrSparkClassLoader()
-        
-        try:
-            # Load class using the correct classloader
-            driver_class = jvm.java.lang.Class.forName("oracle.jdbc.OracleDriver", True, cl)
-        except:
-            driver_class = jvm.java.lang.Class.forName("oracle.jdbc.driver.OracleDriver", True, cl)
-            
-        driver_instance = driver_class.getDeclaredConstructor().newInstance()
-        
-        # Create connection properties
-        props = jvm.java.util.Properties()
-        props.setProperty("user", ORACLE_USER)
-        props.setProperty("password", ORACLE_PASSWORD)
-        
-        # Connect directly using the driver instance
-        conn = driver_instance.connect(ORACLE_URL, props)
-        print("✅ Successfully connected to Oracle via direct driver instance.")
+        # Standard way to get a connection when the JAR is on the classpath
+        conn = spark._jvm.java.sql.DriverManager.getConnection(ORACLE_URL, ORACLE_USER, ORACLE_PASSWORD)
+        print("✅ Successfully connected to Oracle.")
     except Exception as e:
         print(f"❌ CRITICAL: Could not connect to Oracle! {str(e)}")
         return
+
     try:
         stmt = conn.createStatement()
         
