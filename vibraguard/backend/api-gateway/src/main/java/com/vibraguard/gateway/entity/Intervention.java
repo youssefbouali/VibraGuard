@@ -9,9 +9,6 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "INTERVENTIONS")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Intervention {
     @Id
     @jakarta.persistence.Column(name = "INTER_TYPE")

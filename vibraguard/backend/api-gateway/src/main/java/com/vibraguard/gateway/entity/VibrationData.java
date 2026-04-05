@@ -11,9 +11,6 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "VIBRATION_DATA")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class VibrationData {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

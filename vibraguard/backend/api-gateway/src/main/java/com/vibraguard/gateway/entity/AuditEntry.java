@@ -9,9 +9,6 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "AUDIT_LOGS")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class AuditEntry {
     @Id
     private String hash;

@@ -11,9 +11,6 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "TRACEABILITY_STEPS")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class TraceabilityStep {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

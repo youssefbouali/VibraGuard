@@ -9,9 +9,6 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "INVENTORY_PARTS")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class InventoryPart {
     @Id
     private String id;

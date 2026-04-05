@@ -11,9 +11,6 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "MAINTENANCE_COSTS")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class MaintenanceCost {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

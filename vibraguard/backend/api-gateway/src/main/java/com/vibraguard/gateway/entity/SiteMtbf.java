@@ -9,9 +9,6 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "SITE_MTBF")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class SiteMtbf {
     @Id
     private String name;

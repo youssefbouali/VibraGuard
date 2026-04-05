@@ -9,9 +9,6 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "WORK_ORDERS")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class WorkOrder {
     @Id
     private String id;

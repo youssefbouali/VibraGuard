@@ -9,9 +9,6 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "KPI_VALUES")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class KpiValue {
     @Id
     private String id;
