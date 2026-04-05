@@ -209,6 +209,16 @@ public class MainController {
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
+    @PostMapping("/iot/vibrations")
+    public Mono<VibrationData> saveVibration(@RequestBody VibrationData data) {
+        return Mono.fromCallable(() -> {
+            if (data.getTime() == null) {
+                data.setTime(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+            }
+            return vibrationRepository.save(data);
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
+
     // ML Endpoints
     @GetMapping("/ml/alerts")
     public Flux<Alert> getAlerts() {
@@ -241,6 +251,19 @@ public class MainController {
                 alert.setId(id);
                 return alertRepository.save(alert);
             });
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
+
+    @PostMapping("/ml/alerts")
+    public Mono<Alert> createAlert(@RequestBody Alert alert) {
+        return Mono.fromCallable(() -> {
+            if (alert.getId() == null) {
+                alert.setId("ALR-" + UUID.randomUUID().toString().substring(0, 8));
+            }
+            if (alert.getTime() == null) {
+                alert.setTime(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+            }
+            return alertRepository.save(alert);
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
@@ -305,6 +328,24 @@ public class MainController {
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
+    @PostMapping("/iot/inventory/decrement/{id}")
+    public Mono<InventoryPart> decrementInventory(@PathVariable("id") String id) {
+        return Mono.fromCallable(() -> {
+            return inventoryPartRepository.findById(id).map(part -> {
+                if (part.getStock() > 0) {
+                    part.setStock(part.getStock() - 1);
+                    if (part.getStock() == 0) {
+                        part.setStockColor("red");
+                    } else if (part.getStock() < 3) {
+                        part.setStockColor("amber");
+                    }
+                    return inventoryPartRepository.save(part);
+                }
+                return part;
+            }).orElse(null);
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
+
     // Rapports BI Endpoints
     @GetMapping("/bi/kpis")
     public Mono<Map<String, Object>> getBIKPIs() {
@@ -349,6 +390,19 @@ public class MainController {
     public Flux<Intervention> getInterventions() {
         return Flux.defer(() -> Flux.fromIterable(interventionRepository.findAll()))
                 .subscribeOn(Schedulers.boundedElastic());
+    }
+
+    @PostMapping("/bi/kpis/upsert")
+    public Mono<KpiValue> upsertKPI(@RequestBody KpiValue kpi) {
+        return Mono.fromCallable(() -> {
+            return kpiValueRepository.findById(kpi.getId()).map(existing -> {
+                if (kpi.getNumericValue() != null) existing.setNumericValue(kpi.getNumericValue());
+                if (kpi.getStringValue() != null) existing.setStringValue(kpi.getStringValue());
+                if (kpi.getTrend() != null) existing.setTrend(kpi.getTrend());
+                if (kpi.getTrendUp() != null) existing.setTrendUp(kpi.getTrendUp());
+                return kpiValueRepository.save(existing);
+            }).orElseGet(() -> kpiValueRepository.save(kpi));
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     @GetMapping("/bi/reports")

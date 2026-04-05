@@ -321,7 +321,7 @@ spec:
           imagePullPolicy: Never
           command: ["spark-submit"]
           args: [
-            "--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0,com.oracle.database.jdbc:ojdbc11:21.1.0.0",
+            "--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0",
             "spark_streaming_process.py"
           ]
           env:
