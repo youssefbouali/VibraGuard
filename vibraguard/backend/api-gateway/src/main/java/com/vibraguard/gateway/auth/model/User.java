@@ -29,4 +29,5 @@ public class User {
     private String employeeId;
     private String phoneNumber;
     private String department;
+    private String status;
 }

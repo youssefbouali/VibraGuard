@@ -374,7 +374,7 @@ public class MainController {
 
     @GetMapping("/iot/technicians/{id}")
     public Mono<ResponseEntity<User>> getTechnicianById(@PathVariable("id") String id) {
-        return Mono.fromCallable(() -> userRepository.findById(id))
+        return Mono.fromCallable(() -> userRepository.findById(Long.parseLong(id)))
                 .subscribeOn(Schedulers.boundedElastic())
                 .map(opt -> opt.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build()));
     }
@@ -382,7 +382,7 @@ public class MainController {
     @PutMapping("/iot/technicians/{id}")
     public Mono<ResponseEntity<User>> updateTechnician(@PathVariable("id") String id, @RequestBody User technician) {
         return Mono.fromCallable(() -> {
-            Optional<User> existing = userRepository.findById(id);
+            Optional<User> existing = userRepository.findById(Long.parseLong(id));
             if (existing.isPresent()) {
                 User u = existing.get();
                 if (technician.getFullName() != null) u.setFullName(technician.getFullName());
