@@ -26,4 +26,23 @@ public class TraceabilityStep {
     private String bgColor;
     private String sublabelColor;
     private String iconType; // alert, order, intervention, contract, block
+
+    public TraceabilityStep() {}
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getLabel() { return label; }
+    public void setLabel(String l) { this.label = l; }
+    public String getSublabel() { return sublabel; }
+    public void setSublabel(String s) { this.sublabel = s; }
+    public String getStatus() { return status; }
+    public void setStatus(String s) { this.status = s; }
+    public String getBorderColor() { return borderColor; }
+    public void setBorderColor(String b) { this.borderColor = b; }
+    public String getBgColor() { return bgColor; }
+    public void setBgColor(String b) { this.bgColor = b; }
+    public String getSublabelColor() { return sublabelColor; }
+    public void setSublabelColor(String s) { this.sublabelColor = s; }
+    public String getIconType() { return iconType; }
+    public void setIconType(String i) { this.iconType = i; }
 }

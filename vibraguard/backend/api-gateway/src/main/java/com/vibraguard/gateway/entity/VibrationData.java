@@ -27,4 +27,23 @@ public class VibrationData {
     private double z;
     private double dominantFreq;
     private double maxAmplitude;
+
+    public VibrationData() {}
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getMotorId() { return motorId; }
+    public void setMotorId(String m) { this.motorId = m; }
+    public String getTime() { return time; }
+    public void setTime(String t) { this.time = t; }
+    public double getX() { return x; }
+    public void setX(double x) { this.x = x; }
+    public double getY() { return y; }
+    public void setY(double y) { this.y = y; }
+    public double getZ() { return z; }
+    public void setZ(double z) { this.z = z; }
+    public double getDominantFreq() { return dominantFreq; }
+    public void setDominantFreq(double d) { this.dominantFreq = d; }
+    public double getMaxAmplitude() { return maxAmplitude; }
+    public void setMaxAmplitude(double m) { this.maxAmplitude = m; }
 }

@@ -265,6 +265,13 @@ public class MainController {
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
+    @DeleteMapping("/iot/work-orders/{id}")
+    public Mono<Void> deleteWorkOrder(@PathVariable("id") String id) {
+        return Mono.fromRunnable(() -> workOrderRepository.deleteById(id))
+                .subscribeOn(Schedulers.boundedElastic())
+                .then();
+    }
+
     @GetMapping("/iot/technicians")
     public Flux<Object> getTechnicians() {
         return Flux.defer(() -> Flux.fromIterable(userRepository.findAll()))
@@ -276,19 +283,6 @@ public class MainController {
                     t.put("specialization", u.getRole() != null ? u.getRole() : "Technicien");
                     return t;
                 });
-    }
-
-    @DeleteMapping("/iot/work-orders/{id}")
-    public Mono<Void> deleteWorkOrder(@PathVariable("id") String id) {
-        return Mono.fromRunnable(() -> workOrderRepository.deleteById(id))
-                .subscribeOn(Schedulers.boundedElastic())
-                .then();
-    }
-
-    @GetMapping("/iot/technicians")
-    public Flux<Technician> getTechnicians() {
-        return Flux.defer(() -> Flux.fromIterable(technicianRepository.findAll()))
-                .subscribeOn(Schedulers.boundedElastic());
     }
 
     @GetMapping("/iot/inventory-parts")
@@ -323,7 +317,7 @@ public class MainController {
             
             long totalAlerts = alertRepository.count();
             long totalWorkOrders = workOrderRepository.count();
-            double totalCost = maintenanceCostRepository.findAll().stream().mapToDouble(MaintenanceCost::getReel).sum();
+            double totalCost = maintenanceCostRepository.findAll().stream().mapToDouble(m -> m.getReel()).sum();
             
             // Strictly data-driven calculations (0 if no data)
             double mtbf = totalAlerts > 0 ? 1000.0 / totalAlerts : 0.0;
