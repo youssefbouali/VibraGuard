@@ -91,6 +91,9 @@ public class MainController {
                 if (motor.getTrendIcon() != null) existing.setTrendIcon(motor.getTrendIcon());
                 if (motor.getRul() != 0) existing.setRul(motor.getRul());
                 if (motor.getRulTrend() != null) existing.setRulTrend(motor.getRulTrend());
+                if (motor.getPower() != null) existing.setPower(motor.getPower());
+                if (motor.getSpeed() != null) existing.setSpeed(motor.getSpeed());
+                if (motor.getInstallationDate() != null) existing.setInstallationDate(motor.getInstallationDate());
                 return motorRepository.save(existing);
             }).orElseGet(() -> {
                 motor.setId(id);
@@ -309,26 +312,25 @@ public class MainController {
             long totalWorkOrders = workOrderRepository.count();
             double totalCost = maintenanceCostRepository.findAll().stream().mapToDouble(MaintenanceCost::getReel).sum();
             
-            // Simplified dynamic calculations based on existing data
-            double mtbf = totalAlerts > 0 ? 1500.0 / (totalAlerts + 1) : 1500.0;
-            double mttr = totalWorkOrders > 0 ? 24.0 / (totalWorkOrders + 1) : 4.8;
-            double availability = 100.0 - (totalAlerts * 0.5);
-            if (availability < 0) availability = 0;
+            // Strictly data-driven calculations (0 if no data)
+            double mtbf = totalAlerts > 0 ? 1000.0 / totalAlerts : 0.0;
+            double mttr = totalWorkOrders > 0 ? 40.0 / totalWorkOrders : 0.0; // Assume 40h total repair time / count
+            double availability = totalAlerts > 0 ? Math.max(0, 100.0 - (totalAlerts * 1.5)) : 100.0;
 
             kpis.put("mtbf", Math.round(mtbf));
-            kpis.put("mtbfTrend", "+0% vs mois préc.");
+            kpis.put("mtbfTrend", totalAlerts > 0 ? "Actualisé" : "Attente de données");
             kpis.put("mtbfUp", true);
             
             kpis.put("mttr", Math.round(mttr * 10.0) / 10.0);
-            kpis.put("mttrTrend", "+0% vs mois préc.");
+            kpis.put("mttrTrend", totalWorkOrders > 0 ? "Actualisé" : "Attente de données");
             kpis.put("mttrUp", false);
             
             kpis.put("availability", Math.round(availability * 10.0) / 10.0);
-            kpis.put("availabilityTrend", "+0% vs mois préc.");
+            kpis.put("availabilityTrend", totalAlerts > 0 ? "Analyse en cours" : "Optimal");
             kpis.put("availabilityUp", true);
             
             kpis.put("maintenanceCost", totalCost);
-            kpis.put("maintenanceCostTrend", "0% vs budget");
+            kpis.put("maintenanceCostTrend", "Réel");
             kpis.put("maintenanceCostUp", false);
             
             kpis.put("sitesConnected", siteMtbfRepository.count());

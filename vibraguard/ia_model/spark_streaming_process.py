@@ -114,7 +114,10 @@ def write_to_backend(batch_df, epoch_id):
                 "etatLabel": f"{int(health_score)}% {label}",
                 "etatColor": f"#{color}",
                 "rul": rul,
-                "rulTrend": f"-{int(v_rms/2) + 1} jours depuis hier"
+                "rulTrend": f"-{int(v_rms/2) + 1} jours depuis hier",
+                "power": "450 kW",
+                "speed": "1480 RPM",
+                "installationDate": "12 Sept 2022"
             }
             call_api(f"iot/motors/{motor}", method="PUT", data=motor_update)
 

@@ -25,4 +25,7 @@ public class Motor {
     private String trendIcon;
     private int rul;
     private String rulTrend;
+    private String power;
+    private String speed;
+    private String installationDate;
 }
