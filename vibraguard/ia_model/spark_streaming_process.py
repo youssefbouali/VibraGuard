@@ -86,7 +86,8 @@ def write_to_backend(batch_df, epoch_id):
         call_api("iot/vibrations", data=vib_payload)
         
         # Check for prediction anomaly
-        is_anomaly = prediction_val in ['1', '1.0', 'True', 'anomalous']
+        is_anomaly = prediction_val.strip().upper() in ['1', '1.0', 'TRUE', 'ANOMALOUS', 'ANOMALY']
+        
         if is_anomaly:
             print(f"🚨 ANOMALY DETECTED for {motor}! Prediction: {prediction_val}")
             # 2. Create Alert
