@@ -144,13 +144,15 @@ public class MainController {
     public Mono<Motor> updateMotor(@PathVariable("id") String id, @RequestBody Motor motor) {
         return Mono.fromCallable(() -> {
             return motorRepository.findById(id).map(existing -> {
-                existing.setType(motor.getType());
-                existing.setEtatLabel(motor.getEtatLabel());
-                existing.setEtatColor(motor.getEtatColor());
-                existing.setEtatPct(motor.getEtatPct());
-                existing.setVibration(motor.getVibration());
-                existing.setVibrationColor(motor.getVibrationColor());
-                existing.setTrendIcon(motor.getTrendIcon());
+                if (motor.getType() != null) existing.setType(motor.getType());
+                if (motor.getEtatLabel() != null) existing.setEtatLabel(motor.getEtatLabel());
+                if (motor.getEtatColor() != null) existing.setEtatColor(motor.getEtatColor());
+                if (motor.getEtatPct() != 0) existing.setEtatPct(motor.getEtatPct());
+                if (motor.getVibration() != null) existing.setVibration(motor.getVibration());
+                if (motor.getVibrationColor() != null) existing.setVibrationColor(motor.getVibrationColor());
+                if (motor.getTrendIcon() != null) existing.setTrendIcon(motor.getTrendIcon());
+                if (motor.getRul() != 0) existing.setRul(motor.getRul());
+                if (motor.getRulTrend() != null) existing.setRulTrend(motor.getRulTrend());
                 return motorRepository.save(existing);
             }).orElseGet(() -> {
                 motor.setId(id);
@@ -439,7 +441,7 @@ public class MainController {
 
     private void seedMotor(String id, String type, String label, String color, int pct, String vib, String vibCol, String trend) {
         if (motorRepository.findById(id).isEmpty()) {
-            motorRepository.save(new Motor(id, type, label, color, pct, vib, vibCol, trend));
+            motorRepository.save(new Motor(id, type, label, color, pct, vib, vibCol, trend, 0, null));
         }
     }
 }

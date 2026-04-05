@@ -74,7 +74,7 @@ export function SanteCard({ motor }: { motor: any }) {
         <span className="text-[13px] font-semibold text-[#C9EDEB] tracking-[0.5px] uppercase">
           Prédiction RUL
         </span>
-        <span className="text-[64px] font-bold text-[#EAF6F5] leading-none py-2">47</span>
+        <span className="text-[64px] font-bold text-[#EAF6F5] leading-none py-2">{motor.rul || '--'}</span>
         <span className="text-[18px] font-medium text-[#C9EDEB]">Jours restants</span>
         <div className="flex items-center gap-1.5 mt-1">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -84,7 +84,7 @@ export function SanteCard({ motor }: { motor: any }) {
             </g>
             <defs><clipPath id="rul-trend-clip"><rect width="14" height="14" fill="white"/></clipPath></defs>
           </svg>
-          <span className="text-[14px] font-medium text-[#D93F3F]">-3 jours depuis hier</span>
+          <span className="text-[14px] font-medium text-[#D93F3F]">{motor.rulTrend || 'Aucun changement'}</span>
         </div>
       </div>
     </div>

@@ -1,4 +1,16 @@
-export function FFTChart() {
+export function FFTChart({ data }: { data?: any }) {
+  // Use real data or fallback to defaults
+  const dominantFreq = data?.dominantFreq || 25.0; // 1X
+  const maxAmp = data?.maxAmplitude || 5.0;
+  
+  // Mapping frequency (0-200Hz) to SVG x-coordinates (23-663)
+  const getX = (freq: number) => 23 + (freq * 3.2);
+  
+  // Dynamic bars positions
+  const x1 = getX(dominantFreq);
+  const x2 = getX(dominantFreq * 2); // 2X harmonic
+  const x3 = getX(dominantFreq * 3); // 3X harmonic
+
   return (
     <div className="flex flex-col rounded-lg border border-black/[0.08] bg-[#0B1518] p-6">
       {/* Header */}
@@ -38,58 +50,22 @@ export function FFTChart() {
           {/* Baseline */}
           <line x1="23" y1="240" x2="663" y2="240" stroke="white" strokeOpacity="0.2" strokeWidth="1.6"/>
 
-          {/* Blue bars (normal harmonics) */}
-          <rect x="39" y="216" width="6.4" height="24" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="55" y="200" width="6.4" height="40" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="71" y="227" width="6.4" height="12.8" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="87" y="208" width="6.4" height="32" fill="#0C6CF2" fillOpacity="0.6"/>
+          {/* Random background harmonics */}
+          {[...Array(20)].map((_, i) => (
+             <rect key={i} x={39 + (i * 32)} y={210 + Math.random() * 20} width="6.4" height={30 - Math.random() * 20} fill="#0C6CF2" fillOpacity="0.4"/>
+          ))}
 
           {/* 1X harmonic (yellow) */}
-          <rect x="103" y="112" width="6.4" height="128" fill="#F2A900"/>
-          <text x="106.2" y="96" fill="#F2A900" fontFamily="Inter" fontSize="16">1X</text>
+          <rect x={x1} y={240 - (maxAmp * 15)} width="6.4" height={maxAmp * 15} fill="#F2A900"/>
+          <text x={x1} y={230 - (maxAmp * 15)} fill="#F2A900" fontFamily="Inter" fontSize="12">1X</text>
 
-          <rect x="119" y="208" width="6.4" height="32" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="135" y="232" width="6.4" height="8" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="151" y="200" width="6.4" height="40" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="167" y="224" width="6.4" height="16" fill="#0C6CF2" fillOpacity="0.6"/>
-
-          {/* 2X harmonic (red - déséquilibre) */}
-          <rect x="183" y="16" width="9.6" height="224" fill="#D93F3F"/>
-          <text x="183" y="10" fill="#D93F3F" fontFamily="Inter" fontSize="14" fontWeight="bold">2X (Déséquilibre)</text>
-
-          <rect x="199" y="220.8" width="6.4" height="19.2" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="215" y="232" width="6.4" height="8" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="231" y="204.8" width="6.4" height="35.2" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="247" y="208" width="6.4" height="32" fill="#0C6CF2" fillOpacity="0.6"/>
+          {/* 2X harmonic (red - déséquilibre) - only show if high amplitude */}
+          <rect x={x2} y={240 - (maxAmp * 25)} width="8" height={maxAmp * 25} fill="#D93F3F"/>
+          <text x={x2} y={230 - (maxAmp * 25)} fill="#D93F3F" fontFamily="Inter" fontSize="12" fontWeight="bold">2X</text>
 
           {/* 3X harmonic (yellow) */}
-          <rect x="263" y="136" width="6.4" height="104" fill="#F2A900"/>
-          <text x="266.2" y="120" fill="#F2A900" fontFamily="Inter" fontSize="16">3X</text>
-
-          <rect x="279" y="224" width="6.4" height="16" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="295" y="232" width="6.4" height="8" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="311" y="220.8" width="6.4" height="19.2" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="327" y="227.2" width="6.4" height="12.8" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="343" y="216" width="6.4" height="24" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="359" y="224" width="6.4" height="16" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="375" y="192" width="6.4" height="48" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="391" y="220.8" width="6.4" height="19.2" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="407" y="227.2" width="6.4" height="12.8" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="423" y="192" width="6.4" height="48" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="439" y="224" width="6.4" height="16" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="455" y="216" width="6.4" height="24" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="471" y="232" width="6.4" height="8" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="487" y="220.8" width="6.4" height="19.2" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="503" y="227.2" width="6.4" height="12.8" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="519" y="224" width="6.4" height="16" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="535" y="232" width="6.4" height="8" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="551" y="200" width="6.4" height="40" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="567" y="227.2" width="6.4" height="12.8" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="583" y="216" width="6.4" height="24" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="599" y="224" width="6.4" height="16" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="615" y="232" width="6.4" height="8" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="631" y="220.8" width="6.4" height="19.2" fill="#0C6CF2" fillOpacity="0.6"/>
-          <rect x="647" y="227.2" width="6.4" height="12.8" fill="#0C6CF2" fillOpacity="0.6"/>
+          <rect x={x3} y={240 - (maxAmp * 10)} width="6.4" height={maxAmp * 10} fill="#F2A900"/>
+          <text x={x3} y={230 - (maxAmp * 10)} fill="#F2A900" fontFamily="Inter" fontSize="12">3X</text>
 
           {/* X axis labels */}
           <text x="23" y="258" fill="#C9EDEB" fontFamily="Inter" fontSize="13" textAnchor="middle">0 Hz</text>

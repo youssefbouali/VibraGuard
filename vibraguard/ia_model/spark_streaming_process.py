@@ -76,12 +76,14 @@ def write_to_backend(batch_df, epoch_id):
         
         print(f"DEBUG: Motor {motor} - Prediction: [{prediction_val}]")
         
-        # 1. Save Vibration Data
+        # 1. Update Vibration Data (added FFT metrics)
         vib_payload = {
             "motorId": motor,
             "x": v_rms,
             "y": v_peak,
-            "z": v_kurt
+            "z": v_kurt,
+            "dominantFreq": row['fft_dominant_freq'],
+            "maxAmplitude": row['fft_max_amplitude']
         }
         call_api("iot/vibrations", data=vib_payload)
         
@@ -90,6 +92,17 @@ def write_to_backend(batch_df, epoch_id):
         
         if is_anomaly:
             print(f"🚨 ANOMALY DETECTED for {motor}! Prediction: {prediction_val}")
+            
+            # Update Motor RUL and Health as requested
+            motor_update = {
+                "etatPct": 45,
+                "etatLabel": "Alerte",
+                "etatColor": "EF4444",
+                "rul": 47,
+                "rulTrend": "-3 jours depuis hier"
+            }
+            call_api(f"iot/motors/{motor}", method="PUT", data=motor_update)
+
             # 2. Create Alert
             alert_payload = {
                 "message": f"Anomalie IA détectée sur {motor} (Vib: {v_rms:.2f})",

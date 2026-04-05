@@ -25,4 +25,6 @@ public class VibrationData {
     private double x;
     private double y;
     private double z;
+    private double dominantFreq;
+    private double maxAmplitude;
 }

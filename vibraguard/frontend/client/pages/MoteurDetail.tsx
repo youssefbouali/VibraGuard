@@ -104,7 +104,7 @@ export default function MoteurDetail() {
 
         {/* Bottom Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-4 sm:gap-6">
-          <FFTChart />
+          <FFTChart data={vibrations[0]} />
           <DernieresAlertes alerts={alerts} />
         </div>
       </div>
