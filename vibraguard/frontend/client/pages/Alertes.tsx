@@ -206,10 +206,10 @@ export default function Alertes() {
           </div>
         </div>
 
-        {/* Split content */}
-        <div className="flex flex-1 min-h-0 overflow-hidden">
+        {/* Split content - Fixed height container */}
+        <div className="flex flex-1 min-h-0 overflow-hidden h-[calc(100vh-220px)] lg:h-[calc(100vh-180px)]">
           {/* Table area */}
-          <div className="flex-1 min-w-0 overflow-y-auto overflow-x-auto py-6">
+          <div className="flex-1 min-w-0 overflow-y-auto overflow-x-auto py-6 pr-2">
             <AlertesTable
               alertes={filteredAlertes}
               selectedId={selectedId}
@@ -221,7 +221,7 @@ export default function Alertes() {
 
           {/* Side panel */}
           {selectedAlerte && (
-            <div className="hidden lg:block w-[400px] xl:w-[420px] shrink-0 overflow-y-auto border-l border-white/[0.08]">
+            <div className="hidden lg:block w-[400px] xl:w-[420px] shrink-0 overflow-y-auto border-l border-white/[0.08] bg-[#0D1316]/50 rounded-tr-2xl">
               <AlertDetail
                 alerte={selectedAlerte}
                 onClose={() => setSelectedId(null)}

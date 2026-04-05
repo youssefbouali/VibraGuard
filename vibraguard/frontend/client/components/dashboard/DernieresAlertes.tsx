@@ -37,11 +37,11 @@ export function DernieresAlertes({ alerts = [] }: { alerts?: any[] }) {
         </button>
       </div>
 
-      {/* Alert list */}
-      <div className="flex flex-col gap-5 pt-2">
+      {/* Alert list - Limited height with internal scroll */}
+      <div className="flex flex-col gap-5 pt-2 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/10">
         {displayAlerts.map((alert, idx) => (
           <div
-            key={alert.id}
+            key={alert.id || idx}
             className={`flex items-start gap-4 ${idx < displayAlerts.length - 1 ? "pb-5 border-b border-black/[0.08]" : ""}`}
           >
             {/* Icon */}

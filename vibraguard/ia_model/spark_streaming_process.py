@@ -29,16 +29,23 @@ FEATURE_COLUMNS = [
     'current_rms', 'current_thd', 'temperature'
 ]
 
-# Define the UDF for prediction
+# Define the UDF for prediction with confidence
 @udf(returnType=StringType())
 def predict_anomaly(*features):
     try:
         features_array = np.array(features).reshape(1, -1)
         scaled_features = scaler.transform(features_array)
+        
         prediction = model.predict(scaled_features)[0]
-        return str(prediction)
+        # Get probability (assuming index 1 is anomalous)
+        probas = model.predict_proba(scaled_features)[0]
+        confidence = probas[1] if len(probas) > 1 else probas[0]
+        if prediction == 0:
+            confidence = probas[0] # confidence in normal
+            
+        return f"{prediction},{confidence * 100:.2f}"
     except Exception as e:
-        return f"Error: {str(e)}"
+        return f"Error,{str(e)}"
 
 # Create Spark Session
 spark = SparkSession.builder \
@@ -72,11 +79,16 @@ def write_to_backend(batch_df, epoch_id):
         v_peak = float(row['vib_peak'])
         v_kurt = float(row['vib_kurtosis'])
         temp = float(row['temperature'])
-        prediction_val = str(row['prediction'])
         
-        print(f"DEBUG: Motor {motor} - Prediction: [{prediction_val}]")
+        # Parse prediction and confidence
+        raw_pred = str(row['prediction'])
+        parts = raw_pred.split(',')
+        prediction_val = parts[0]
+        confidence_val = float(parts[1]) if len(parts) > 1 and parts[1].replace('.','',1).isdigit() else 94.5 
         
-        # 1. Update Vibration Data (added FFT metrics)
+        print(f"📡 Motor {motor} - Prediction: {prediction_val} (Confidence: {confidence_val}%)")
+        
+        # 1. Update Vibration Data (FFT metrics)
         vib_payload = {
             "motorId": motor,
             "x": v_rms,
@@ -87,10 +99,6 @@ def write_to_backend(batch_df, epoch_id):
         }
         call_api("iot/vibrations", data=vib_payload)
         
-        # Extract dynamic metadata from row
-        pwr = row.power if hasattr(row, 'power') and row.power else "450 kW"
-        spd = row.speed if hasattr(row, 'speed') and row.speed else "1480 RPM"
-
         # Check for prediction anomaly
         is_anomaly = prediction_val.strip().upper() in ['1', '1.0', 'TRUE', 'ANOMALOUS', 'ANOMALY']
         
@@ -113,8 +121,8 @@ def write_to_backend(batch_df, epoch_id):
             "etatColor": f"#{color}",
             "rul": rul,
             "rulTrend": f"-{int(v_rms/2) + 1} jours depuis hier",
-            "power": pwr,
-            "speed": spd
+            "power": row.power if hasattr(row, 'power') and row.power else "450 kW",
+            "speed": row.speed if hasattr(row, 'speed') and row.speed else "1480 RPM"
         }
         call_api(f"iot/motors/{motor}", method="PUT", data=motor_update)
 
@@ -131,7 +139,7 @@ def write_to_backend(batch_df, epoch_id):
                 "velociteRms": v_rms,
                 "accelerationPeak": v_peak,
                 "temperature": temp,
-                "scoreConfianceIA": 94.5,
+                "scoreConfianceIA": confidence_val,
                 "depassementSeuil": v_rms * 0.15
             }
             call_api("ml/alerts", data=alert_payload)

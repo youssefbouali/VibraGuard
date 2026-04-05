@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useAlerts } from "@/hooks/use-alerts";
 
-interface Alerte {
+interface AlertData {
   id: string;
   title: string;
   motorId: string;
@@ -9,8 +9,6 @@ interface Alerte {
   description: string;
   iconType: "critical" | "warning" | "temp";
 }
-
-// Data is now fetched via useQuery
 
 function CriticalIcon() {
   return (
@@ -42,7 +40,7 @@ function TempIcon() {
   );
 }
 
-function AlerteIcon({ type }: { type: Alerte["iconType"] }) {
+function AlerteIcon({ type }: { type: AlertData["iconType"] }) {
   if (type === "critical") return <CriticalIcon />;
   if (type === "warning") return <WarningIcon />;
   return <TempIcon />;
@@ -54,12 +52,12 @@ export function AlertesRecentes() {
   const { data: rawAlerts = [], isLoading } = useAlerts();
 
   // Map backend alerts to the format expected by the frontend
-  const alertes: Alerte[] = rawAlerts.map(a => ({
+  const alertes: AlertData[] = rawAlerts.map(a => ({
     id: a.id,
-    title: a.title || a.message.split("sur ")[1] || "Alerte",
-    motorId: a.motorId || a.message.split("sur ")[1] || "M-04",
+    title: a.title || a.message?.split("sur ")[1] || "Alerte",
+    motorId: a.motorId || a.message?.split("sur ")[1] || "M-04",
     time: a.time,
-    description: a.message || a.description,
+    description: a.message || (a as any).description || "",
     iconType: a.priority === "high" ? "critical" : a.priority === "medium" ? "warning" : "temp"
   }));
 
@@ -83,12 +81,17 @@ export function AlertesRecentes() {
           </svg>
           <span className="text-white text-base font-semibold">Alertes Récentes</span>
         </div>
-        <button className="text-[#0EA5E9] text-[13px] font-medium hover:underline">Historique</button>
+        <button 
+          onClick={() => navigate("/alertes")}
+          className="text-[#0EA5E9] text-[13px] font-medium hover:underline"
+        >
+          Historique
+        </button>
       </div>
-
-      {/* Alerts list */}
-      <div className="flex flex-col gap-3 flex-1">
-        {alertes.map((alerte) => (
+ 
+      {/* Alerts list - Limited to 5 and scrollable */}
+      <div className="flex flex-col gap-3 flex-1 max-h-[500px] overflow-y-auto pr-1">
+        {alertes.slice(0, 5).map((alerte) => (
           <button
             key={alerte.id}
             onClick={() => navigate(`/moteurs/${alerte.motorId}`)}

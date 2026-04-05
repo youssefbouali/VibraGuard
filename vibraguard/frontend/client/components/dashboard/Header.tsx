@@ -13,6 +13,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import { useAuth } from "@/lib/auth-context";
+import { api } from "@/lib/api";
+import { useDebounce } from "@/hooks/use-debounce";
+
 interface BreadcrumbItem {
   label: string;
   href?: string;
@@ -23,9 +27,6 @@ interface HeaderProps {
   breadcrumbItems?: BreadcrumbItem[];
   onMenuClick?: () => void;
 }
-
-import { useAuth } from "@/lib/auth-context";
-import { api } from "@/lib/api";
 
 interface Alert {
   id: string;
@@ -39,10 +40,27 @@ interface Alert {
 export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenuClick }: HeaderProps) {
   const { user, logout } = useAuth();
   const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+
+  const debouncedSearch = useDebounce(searchQuery, 400);
+
+  useEffect(() => {
+    if (debouncedSearch.length >= 2) {
+      setIsSearching(true);
+      api.search(debouncedSearch)
+        .then(setSearchResults)
+        .catch(console.error)
+        .finally(() => setIsSearching(false));
+    } else {
+      setSearchResults([]);
+    }
+  }, [debouncedSearch]);
 
   const handleLogout = () => {
     logout();
@@ -157,22 +175,67 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
       {/* Right side */}
       <div className="flex items-center gap-2 sm:gap-6 ml-auto">
         {/* Search - hidden on mobile */}
-        <div id="search-container" className="flex items-center">
+        <div id="search-container" className="flex items-center relative">
           {isSearchVisible ? (
-            <div className="relative flex items-center animate-in fade-in slide-in-from-right-4 duration-300">
-              <Input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Rechercher..."
-                className="w-[200px] sm:w-[300px] h-10 bg-white/5 border-white/10 text-white placeholder:text-[#98A6A8] pr-10 focus:ring-emerald-500/20"
-              />
-              <button
-                onClick={() => setIsSearchVisible(false)}
-                className="absolute right-2 text-[#98A6A8] hover:text-white transition-colors"
-                aria-label="Close search"
-              >
-                <X size={18} />
-              </button>
+            <div className="relative flex flex-col items-center animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="relative flex items-center">
+                <Input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Rechercher..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-[200px] sm:w-[350px] h-10 bg-white/5 border-white/10 text-white placeholder:text-[#98A6A8] pr-10 focus:ring-emerald-500/20"
+                />
+                {isSearching ? (
+                  <Loader2 className="absolute right-10 w-4 h-4 text-[#98A6A8] animate-spin" />
+                ) : null}
+                <button
+                  onClick={() => {
+                    setIsSearchVisible(false);
+                    setSearchQuery("");
+                    setSearchResults([]);
+                  }}
+                  className="absolute right-2 text-[#98A6A8] hover:text-white transition-colors"
+                  aria-label="Close search"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Search Results Dropdown */}
+              {searchResults.length > 0 && (
+                <div className="absolute top-12 left-0 w-full bg-[#0A1A27] border border-white/10 rounded-lg shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                  <div className="max-h-[300px] overflow-y-auto">
+                    {searchResults.map((res: any) => (
+                      <button
+                        key={`${res.type}-${res.id}`}
+                        onClick={() => {
+                          navigate(res.url);
+                          setIsSearchVisible(false);
+                          setSearchQuery("");
+                          setSearchResults([]);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 border-b border-white/5 last:border-0 text-left transition-colors"
+                      >
+                        <div className={`flex w-8 h-8 items-center justify-center rounded shrink-0 ${
+                          res.type === "Moteur" ? "bg-blue-500/10 text-blue-400" :
+                          res.type === "Alerte" ? "bg-red-500/10 text-red-400" :
+                          "bg-emerald-500/10 text-emerald-400"
+                        }`}>
+                          {res.type === "Moteur" ? <Settings size={16} /> : 
+                           res.type === "Alerte" ? <AlertCircle size={16} /> : 
+                           <Check size={16} />}
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-[#E6F0F2] text-sm font-semibold truncate">{res.title}</span>
+                          <span className="text-[#98A6A8] text-xs uppercase tracking-wider">{res.type}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <button

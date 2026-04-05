@@ -321,7 +321,7 @@ export default function ProfilUtilisateur() {
                 </button>
               </div>
 
-              <div className="flex flex-col gap-3 p-6">
+              <div className="flex flex-col gap-3 p-6 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/10">
                 {loading ? (
                   <div className="text-[#98A6A8] text-sm italic py-4">Chargement des interventions...</div>
                 ) : workOrders.length === 0 ? (
@@ -367,10 +367,10 @@ export default function ProfilUtilisateur() {
                 <span className="text-[#E6F0F2] text-base font-semibold">Historique d'activités</span>
               </div>
 
-              <div className="p-6">
+              <div className="p-6 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/10">
                 {/* Timeline */}
                 <div className="relative flex flex-col gap-6">
-                  {/* Vertical line */}
+                  {/* Vertical line - Moved inside scroll area */}
                   <div className="absolute left-[7px] top-4 bottom-0 w-[2px] bg-black/[0.08]" />
 
                   {loading ? (

@@ -2,6 +2,8 @@ package com.vibraguard.gateway;
 
 import com.vibraguard.gateway.entity.*;
 import com.vibraguard.gateway.repository.*;
+import com.vibraguard.gateway.auth.model.User;
+import com.vibraguard.gateway.auth.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Flux;
@@ -39,12 +41,11 @@ public class MainController {
     private TechnicianRepository technicianRepository;
     @Autowired
     private InventoryPartRepository inventoryPartRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     @PostConstruct
     public void seedData() {
-        // Seed data removed as requested
-        
-
         if (kpiValueRepository.count() == 0) {
             // IoT KPIs
             kpiValueRepository.save(new KpiValue("totalMotorsTrend", null, "+12% ce mois", null, null));
@@ -264,6 +265,19 @@ public class MainController {
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
+    @GetMapping("/iot/technicians")
+    public Flux<Object> getTechnicians() {
+        return Flux.defer(() -> Flux.fromIterable(userRepository.findAll()))
+                .subscribeOn(Schedulers.boundedElastic())
+                .map(u -> {
+                    Map<String, Object> t = new HashMap<>();
+                    t.put("id", u.getId().toString());
+                    t.put("name", u.getFullName());
+                    t.put("specialization", u.getRole() != null ? u.getRole() : "Technicien");
+                    return t;
+                });
+    }
+
     @DeleteMapping("/iot/work-orders/{id}")
     public Mono<Void> deleteWorkOrder(@PathVariable("id") String id) {
         return Mono.fromRunnable(() -> workOrderRepository.deleteById(id))
@@ -399,6 +413,60 @@ public class MainController {
     public Flux<TraceabilityStep> getTraceability() {
         return Flux.defer(() -> Flux.fromIterable(traceabilityRepository.findAll()))
                 .subscribeOn(Schedulers.boundedElastic());
+    }
+
+    @GetMapping("/search")
+    public Mono<List<Map<String, Object>>> globalSearch(@RequestParam("q") String query) {
+        return Mono.fromCallable(() -> {
+            String q = query.toLowerCase();
+            List<Map<String, Object>> results = new ArrayList<>();
+
+            // Search Motors
+            motorRepository.findAll().stream()
+                .filter(m -> m.getId().toLowerCase().contains(q) || 
+                             (m.getType() != null && m.getType().toLowerCase().contains(q)) ||
+                             (m.getEtatLabel() != null && m.getEtatLabel().toLowerCase().contains(q)))
+                .limit(5)
+                .forEach(m -> {
+                    Map<String, Object> r = new HashMap<>();
+                    r.put("id", m.getId());
+                    r.put("type", "Moteur");
+                    r.put("title", m.getId() + " - " + m.getType());
+                    r.put("url", "/moteurs/" + m.getId());
+                    results.add(r);
+                });
+
+            // Search Alerts
+            alertRepository.findAll().stream()
+                .filter(a -> a.getId().toLowerCase().contains(q) || 
+                             (a.getMessage() != null && a.getMessage().toLowerCase().contains(q)))
+                .limit(5)
+                .forEach(a -> {
+                    Map<String, Object> r = new HashMap<>();
+                    r.put("id", a.getId());
+                    r.put("type", "Alerte");
+                    r.put("title", a.getTitle() != null ? a.getTitle() : a.getId());
+                    r.put("url", "/alertes");
+                    results.add(r);
+                });
+
+            // Search Work Orders
+            workOrderRepository.findAll().stream()
+                .filter(wo -> wo.getId().toLowerCase().contains(q) || 
+                              (wo.getTitle() != null && wo.getTitle().toLowerCase().contains(q)) ||
+                              (wo.getAsset() != null && wo.getAsset().toLowerCase().contains(q)))
+                .limit(5)
+                .forEach(wo -> {
+                    Map<String, Object> r = new HashMap<>();
+                    r.put("id", wo.getId());
+                    r.put("type", "OT");
+                    r.put("title", wo.getId() + " : " + wo.getTitle());
+                    r.put("url", "/ordres-de-travail");
+                    results.add(r);
+                });
+
+            return results;
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
 }

@@ -7,7 +7,10 @@ export interface Alerte {
   level: string;
   time: string;
   color: string;
+  status: string;
   priority: string;
+  motorId: string;
+  title: string;
   velociteRms?: number;
   accelerationPeak?: number;
   temperature?: number;

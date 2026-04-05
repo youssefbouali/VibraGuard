@@ -139,23 +139,38 @@ export function TendanceVibratoire({ vibrations = [] }: { vibrations?: any[] }) 
               strokeWidth="1.6"
             />
 
-            {/* X axis labels */}
-            {days.map((day, i) => {
-              const x = i === days.length - 1 ? chartW - 10 : (i / (days.length - 1)) * chartW;
-              return (
-                <text
-                  key={day}
-                  x={x}
-                  y={chartH + 28}
-                  fill="#C9EDEB"
-                  fontSize="14"
-                  fontFamily="Inter"
-                  textAnchor="middle"
-                >
-                  {day}
-                </text>
-              );
-            })}
+            {/* X axis labels - Sparsed and formatted */}
+            {(() => {
+              // Only show a limited number of labels to avoid overlap
+              const maxLabels = 5;
+              const step = Math.max(1, Math.floor(days.length / maxLabels));
+              
+              return days.map((day, i) => {
+                // Show first, last, and every N-th unique label
+                const isRelevant = i % step === 0 || i === days.length - 1;
+                if (!isRelevant) return null;
+
+                const x = i === days.length - 1 ? chartW - 10 : (i / (days.length - 1)) * chartW;
+                
+                // Format: remove date part, keep only HH:mm:ss
+                // Input expected: "2026-04-05 20:25:12"
+                const timeLabel = day && day.includes(" ") ? day.split(" ")[1] : day;
+
+                return (
+                  <text
+                    key={`${day}-${i}`}
+                    x={x}
+                    y={chartH + 28}
+                    fill="#C9EDEB"
+                    fontSize="12"
+                    fontFamily="Inter"
+                    textAnchor="middle"
+                  >
+                    {timeLabel}
+                  </text>
+                );
+              });
+            })()}
           </svg>
         </div>
       </div>
