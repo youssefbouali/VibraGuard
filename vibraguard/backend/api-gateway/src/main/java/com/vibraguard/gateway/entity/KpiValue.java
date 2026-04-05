@@ -9,6 +9,9 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "KPI_VALUES")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class KpiValue {
     @Id
     private String id;
@@ -16,25 +19,4 @@ public class KpiValue {
     private String stringValue;
     private String trend;
     private Boolean trendUp;
-
-    public KpiValue() {}
-
-    public KpiValue(String id, Double numericValue, String stringValue, String trend, Boolean trendUp) {
-        this.id = id;
-        this.numericValue = numericValue;
-        this.stringValue = stringValue;
-        this.trend = trend;
-        this.trendUp = trendUp;
-    }
-
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-    public Double getNumericValue() { return numericValue; }
-    public void setNumericValue(Double v) { this.numericValue = v; }
-    public String getStringValue() { return stringValue; }
-    public void setStringValue(String s) { this.stringValue = s; }
-    public String getTrend() { return trend; }
-    public void setTrend(String t) { this.trend = t; }
-    public Boolean getTrendUp() { return trendUp; }
-    public void setTrendUp(Boolean b) { this.trendUp = b; }
 }

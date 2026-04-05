@@ -23,14 +23,15 @@ public class AuthService {
             throw new RuntimeException("User already exists");
         }
 
-        User user = new User();
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setFullName(request.getFullName());
-        user.setRole("USER");
-        user.setEmployeeId("TECH-" + (int)(Math.random() * 9000 + 1000));
-        user.setPhoneNumber(request.getPhoneNumber() != null ? request.getPhoneNumber() : "");
-        user.setDepartment(request.getDepartment() != null ? request.getDepartment() : "Maintenance");
+        User user = User.builder()
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .fullName(request.getFullName())
+                .role("USER")
+                .employeeId("TECH-" + (int)(Math.random() * 9000 + 1000))
+                .phoneNumber(request.getPhoneNumber() != null ? request.getPhoneNumber() : "")
+                .department(request.getDepartment() != null ? request.getDepartment() : "Maintenance")
+                .build();
 
         userRepository.save(user);
 
@@ -79,14 +80,15 @@ public class AuthService {
     @jakarta.annotation.PostConstruct
     public void seedUser() {
         if (userRepository.findByEmail("mr.boualiyoussef@gmail.com").isEmpty()) {
-            User user = new User();
-            user.setEmail("mr.boualiyoussef@gmail.com");
-            user.setFullName("Youssef Bouali");
-            user.setPassword(passwordEncoder.encode("password"));
-            user.setRole("ADMIN");
-            user.setEmployeeId("TECH-4892");
-            user.setPhoneNumber("+212 6 00 11 22 33");
-            user.setDepartment("Maintenance Prédictive");
+            User user = User.builder()
+                    .email("mr.boualiyoussef@gmail.com")
+                    .fullName("Youssef Bouali")
+                    .password(passwordEncoder.encode("password"))
+                    .role("ADMIN")
+                    .employeeId("TECH-4892")
+                    .phoneNumber("+212 6 00 11 22 33")
+                    .department("Maintenance Prédictive")
+                    .build();
             userRepository.save(user);
         }
     }

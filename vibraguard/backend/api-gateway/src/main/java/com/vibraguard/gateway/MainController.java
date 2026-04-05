@@ -265,13 +265,6 @@ public class MainController {
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
-    @DeleteMapping("/iot/work-orders/{id}")
-    public Mono<Void> deleteWorkOrder(@PathVariable("id") String id) {
-        return Mono.fromRunnable(() -> workOrderRepository.deleteById(id))
-                .subscribeOn(Schedulers.boundedElastic())
-                .then();
-    }
-
     @GetMapping("/iot/technicians")
     public Flux<Object> getTechnicians() {
         return Flux.defer(() -> Flux.fromIterable(userRepository.findAll()))
@@ -283,6 +276,19 @@ public class MainController {
                     t.put("specialization", u.getRole() != null ? u.getRole() : "Technicien");
                     return t;
                 });
+    }
+
+    @DeleteMapping("/iot/work-orders/{id}")
+    public Mono<Void> deleteWorkOrder(@PathVariable("id") String id) {
+        return Mono.fromRunnable(() -> workOrderRepository.deleteById(id))
+                .subscribeOn(Schedulers.boundedElastic())
+                .then();
+    }
+
+    @GetMapping("/iot/technicians")
+    public Flux<Technician> getTechnicians() {
+        return Flux.defer(() -> Flux.fromIterable(technicianRepository.findAll()))
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     @GetMapping("/iot/inventory-parts")
@@ -317,7 +323,7 @@ public class MainController {
             
             long totalAlerts = alertRepository.count();
             long totalWorkOrders = workOrderRepository.count();
-            double totalCost = maintenanceCostRepository.findAll().stream().mapToDouble(m -> m.getReel()).sum();
+            double totalCost = maintenanceCostRepository.findAll().stream().mapToDouble(MaintenanceCost::getReel).sum();
             
             // Strictly data-driven calculations (0 if no data)
             double mtbf = totalAlerts > 0 ? 1000.0 / totalAlerts : 0.0;
@@ -407,60 +413,6 @@ public class MainController {
     public Flux<TraceabilityStep> getTraceability() {
         return Flux.defer(() -> Flux.fromIterable(traceabilityRepository.findAll()))
                 .subscribeOn(Schedulers.boundedElastic());
-    }
-
-    @GetMapping("/search")
-    public Mono<List<Map<String, Object>>> globalSearch(@RequestParam("q") String query) {
-        return Mono.fromCallable(() -> {
-            String q = query.toLowerCase();
-            List<Map<String, Object>> results = new ArrayList<>();
-
-            // Search Motors
-            motorRepository.findAll().stream()
-                .filter(m -> m.getId().toLowerCase().contains(q) || 
-                             (m.getType() != null && m.getType().toLowerCase().contains(q)) ||
-                             (m.getEtatLabel() != null && m.getEtatLabel().toLowerCase().contains(q)))
-                .limit(5)
-                .forEach(m -> {
-                    Map<String, Object> r = new HashMap<>();
-                    r.put("id", m.getId());
-                    r.put("type", "Moteur");
-                    r.put("title", m.getId() + " - " + m.getType());
-                    r.put("url", "/moteurs/" + m.getId());
-                    results.add(r);
-                });
-
-            // Search Alerts
-            alertRepository.findAll().stream()
-                .filter(a -> a.getId().toLowerCase().contains(q) || 
-                             (a.getMessage() != null && a.getMessage().toLowerCase().contains(q)))
-                .limit(5)
-                .forEach(a -> {
-                    Map<String, Object> r = new HashMap<>();
-                    r.put("id", a.getId());
-                    r.put("type", "Alerte");
-                    r.put("title", a.getTitle() != null ? a.getTitle() : a.getId());
-                    r.put("url", "/alertes");
-                    results.add(r);
-                });
-
-            // Search Work Orders
-            workOrderRepository.findAll().stream()
-                .filter(wo -> wo.getId().toLowerCase().contains(q) || 
-                              (wo.getTitle() != null && wo.getTitle().toLowerCase().contains(q)) ||
-                              (wo.getAsset() != null && wo.getAsset().toLowerCase().contains(q)))
-                .limit(5)
-                .forEach(wo -> {
-                    Map<String, Object> r = new HashMap<>();
-                    r.put("id", wo.getId());
-                    r.put("type", "OT");
-                    r.put("title", wo.getId() + " : " + wo.getTitle());
-                    r.put("url", "/ordres-de-travail");
-                    results.add(r);
-                });
-
-            return results;
-        }).subscribeOn(Schedulers.boundedElastic());
     }
 
 }
