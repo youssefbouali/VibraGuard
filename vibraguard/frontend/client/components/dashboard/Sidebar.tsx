@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useAlerts } from "@/hooks/use-alerts";
 
 const navItems = [
   {
@@ -86,6 +87,14 @@ interface SidebarProps {
 
 export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps) {
   const location = useLocation();
+  const { data: alerts = [] } = useAlerts();
+
+  const dynamicNavItems = navItems.map(item => {
+    if (item.label === "Alertes") {
+      return { ...item, badge: alerts.length };
+    }
+    return item;
+  });
 
   return (
     <aside
@@ -117,7 +126,7 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
 
       {/* Nav */}
       <nav className="flex-1 flex flex-col gap-2 p-4 overflow-y-auto">
-        {navItems.map((item) => {
+        {dynamicNavItems.map((item) => {
           const isActive =
             item.href === "/dashboard"
               ? location.pathname === item.href

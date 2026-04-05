@@ -1,7 +1,7 @@
 export function FFTChart({ data }: { data?: any }) {
-  // Use real data or fallback to defaults
-  const dominantFreq = data?.dominantFreq || 25.0; // 1X
-  const maxAmp = data?.maxAmplitude || 5.0;
+  // Use real data or 0 if missing
+  const dominantFreq = data?.dominantFreq || 0; // 1X
+  const maxAmp = data?.maxAmplitude || 0;
   
   // Mapping frequency (0-200Hz) to SVG x-coordinates (23-663)
   const getX = (freq: number) => 23 + (freq * 3.2);
@@ -50,22 +50,22 @@ export function FFTChart({ data }: { data?: any }) {
           {/* Baseline */}
           <line x1="23" y1="240" x2="663" y2="240" stroke="white" strokeOpacity="0.2" strokeWidth="1.6"/>
 
-          {/* Random background harmonics */}
-          {[...Array(20)].map((_, i) => (
-             <rect key={i} x={39 + (i * 32)} y={210 + Math.random() * 20} width="6.4" height={30 - Math.random() * 20} fill="#0C6CF2" fillOpacity="0.4"/>
-          ))}
-
-          {/* 1X harmonic (yellow) */}
-          <rect x={x1} y={240 - (maxAmp * 15)} width="6.4" height={maxAmp * 15} fill="#F2A900"/>
-          <text x={x1} y={230 - (maxAmp * 15)} fill="#F2A900" fontFamily="Inter" fontSize="12">1X</text>
-
-          {/* 2X harmonic (red - déséquilibre) - only show if high amplitude */}
-          <rect x={x2} y={240 - (maxAmp * 25)} width="8" height={maxAmp * 25} fill="#D93F3F"/>
-          <text x={x2} y={230 - (maxAmp * 25)} fill="#D93F3F" fontFamily="Inter" fontSize="12" fontWeight="bold">2X</text>
-
-          {/* 3X harmonic (yellow) */}
-          <rect x={x3} y={240 - (maxAmp * 10)} width="6.4" height={maxAmp * 10} fill="#F2A900"/>
-          <text x={x3} y={230 - (maxAmp * 10)} fill="#F2A900" fontFamily="Inter" fontSize="12">3X</text>
+          {/* Bars only displayed if we have frequency data */}
+          {dominantFreq > 0 && (
+            <>
+              {/* 1X harmonic (yellow) */}
+              <rect x={x1} y={240 - (maxAmp * 15)} width="6.4" height={maxAmp * 15} fill="#F2A900"/>
+              <text x={x1} y={230 - (maxAmp * 15)} fill="#F2A900" fontFamily="Inter" fontSize="12">1X</text>
+    
+              {/* 2X harmonic (red - déséquilibre) */}
+              <rect x={x2} y={240 - (maxAmp * 12)} width="8" height={maxAmp * 12} fill="#D93F3F"/>
+              <text x={x2} y={230 - (maxAmp * 12)} fill="#D93F3F" fontFamily="Inter" fontSize="12" fontWeight="bold">2X</text>
+    
+              {/* 3X harmonic (yellow) */}
+              <rect x={x3} y={240 - (maxAmp * 8)} width="6.4" height={maxAmp * 8} fill="#F2A900"/>
+              <text x={x3} y={230 - (maxAmp * 8)} fill="#F2A900" fontFamily="Inter" fontSize="12">3X</text>
+            </>
+          )}
 
           {/* X axis labels */}
           <text x="23" y="258" fill="#C9EDEB" fontFamily="Inter" fontSize="13" textAnchor="middle">0 Hz</text>

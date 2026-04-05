@@ -129,16 +129,29 @@ public class MainController {
     public Mono<Map<String, Object>> getKPIs() {
         return Mono.fromCallable(() -> {
             Map<String, Object> kpis = new HashMap<>();
-            kpis.put("totalMotors", motorRepository.count());
-            kpis.put("totalMotorsTrend", kpiValueRepository.findById("totalMotorsTrend").map(KpiValue::getTrend).orElse("+12% ce mois"));
-            kpis.put("criticalMotors",
-                    motorRepository.findAll().stream().filter(m -> m.getEtatLabel().contains("Critique")).count());
-            kpis.put("criticalMotorsTrend", kpiValueRepository.findById("criticalMotorsTrend").map(KpiValue::getTrend).orElse("+2 aujourd'hui"));
-            kpis.put("alerts", alertRepository.count());
-            kpis.put("alertsTrend", kpiValueRepository.findById("alertsTrend").map(KpiValue::getTrend).orElse("+2 aujourd'hui"));
-            kpis.put("uptime", kpiValueRepository.findById("uptime").map(kv -> kv.getNumericValue() + "%").orElse("98.5%"));
-            kpis.put("uptimeTrend", kpiValueRepository.findById("uptime").map(KpiValue::getTrend).orElse("+0.4% ce mois"));
-            kpis.put("uptimeTrendUp", kpiValueRepository.findById("uptime").map(KpiValue::getTrendUp).orElse(true));
+            long totalMotors = motorRepository.count();
+            List<Motor> allMotors = motorRepository.findAll();
+            long criticalMotors = allMotors.stream().filter(m -> m.getEtatLabel().contains("Critique") || m.getEtatLabel().contains("Alerte")).count();
+            
+            String today = new java.text.SimpleDateFormat("yyyy-MM-dd").format(new Date());
+            long totalAlerts = alertRepository.count();
+            long alertsToday = alertRepository.findAll().stream().filter(a -> a.getTime() != null && a.getTime().startsWith(today)).count();
+            
+            double uptime = 100.0 - (criticalMotors * 2.0);
+            if (uptime < 0) uptime = 0;
+
+            kpis.put("totalMotors", totalMotors);
+            kpis.put("totalMotorsTrend", "Actualisé");
+            
+            kpis.put("criticalMotors", criticalMotors);
+            kpis.put("criticalMotorsTrend", "+" + alertsToday + " alertes");
+            
+            kpis.put("alerts", totalAlerts);
+            kpis.put("alertsTrend", "+" + alertsToday + " aujourd'hui");
+            
+            kpis.put("uptime", Math.round(uptime * 10.0) / 10.0 + "%");
+            kpis.put("uptimeTrend", "Stable");
+            kpis.put("uptimeTrendUp", true);
             return kpis;
         }).subscribeOn(Schedulers.boundedElastic());
     }
@@ -291,25 +304,35 @@ public class MainController {
     public Mono<Map<String, Object>> getBIKPIs() {
         return Mono.fromCallable(() -> {
             Map<String, Object> kpis = new HashMap<>();
-            kpis.put("mtbf", kpiValueRepository.findById("mtbf").map(KpiValue::getNumericValue).orElse(1240.0));
-            kpis.put("mtbfTrend", kpiValueRepository.findById("mtbf").map(KpiValue::getTrend).orElse("+12.5% vs mois préc."));
-            kpis.put("mtbfUp", kpiValueRepository.findById("mtbf").map(KpiValue::getTrendUp).orElse(true));
             
-            kpis.put("mttr", kpiValueRepository.findById("mttr").map(KpiValue::getNumericValue).orElse(3.2));
-            kpis.put("mttrTrend", kpiValueRepository.findById("mttr").map(KpiValue::getTrend).orElse("-5.4% vs mois préc."));
-            kpis.put("mttrUp", kpiValueRepository.findById("mttr").map(KpiValue::getTrendUp).orElse(false));
+            long totalAlerts = alertRepository.count();
+            long totalWorkOrders = workOrderRepository.count();
+            double totalCost = maintenanceCostRepository.findAll().stream().mapToDouble(MaintenanceCost::getReel).sum();
             
-            kpis.put("availability", kpiValueRepository.findById("availability").map(KpiValue::getNumericValue).orElse(98.4));
-            kpis.put("availabilityTrend", kpiValueRepository.findById("availability").map(KpiValue::getTrend).orElse("+0.2% vs mois préc."));
-            kpis.put("availabilityUp", kpiValueRepository.findById("availability").map(KpiValue::getTrendUp).orElse(true));
+            // Simplified dynamic calculations based on existing data
+            double mtbf = totalAlerts > 0 ? 1500.0 / (totalAlerts + 1) : 1500.0;
+            double mttr = totalWorkOrders > 0 ? 24.0 / (totalWorkOrders + 1) : 4.8;
+            double availability = 100.0 - (totalAlerts * 0.5);
+            if (availability < 0) availability = 0;
+
+            kpis.put("mtbf", Math.round(mtbf));
+            kpis.put("mtbfTrend", "+0% vs mois préc.");
+            kpis.put("mtbfUp", true);
             
-            kpis.put("maintenanceCost",
-                    maintenanceCostRepository.findAll().stream().mapToDouble(MaintenanceCost::getReel).sum());
-            kpis.put("maintenanceCostTrend", kpiValueRepository.findById("maintenanceCostTrend").map(KpiValue::getTrend).orElse("-15.0% vs budget"));
-            kpis.put("maintenanceCostUp", kpiValueRepository.findById("maintenanceCostTrend").map(KpiValue::getTrendUp).orElse(false));
+            kpis.put("mttr", Math.round(mttr * 10.0) / 10.0);
+            kpis.put("mttrTrend", "+0% vs mois préc.");
+            kpis.put("mttrUp", false);
+            
+            kpis.put("availability", Math.round(availability * 10.0) / 10.0);
+            kpis.put("availabilityTrend", "+0% vs mois préc.");
+            kpis.put("availabilityUp", true);
+            
+            kpis.put("maintenanceCost", totalCost);
+            kpis.put("maintenanceCostTrend", "0% vs budget");
+            kpis.put("maintenanceCostUp", false);
             
             kpis.put("sitesConnected", siteMtbfRepository.count());
-            kpis.put("activeAlerts", alertRepository.count());
+            kpis.put("activeAlerts", totalAlerts);
             return kpis;
         }).subscribeOn(Schedulers.boundedElastic());
     }
