@@ -69,9 +69,14 @@ def write_to_oracle(batch_df, epoch_id):
     # Verify driver is available and connection URL
     print(f"Connecting to Oracle at: {ORACLE_URL} (User: {ORACLE_USER})")
     try:
-        spark._jvm.java.lang.Class.forName("oracle.jdbc.driver.OracleDriver")
+        # Modern Oracle driver class name
+        try:
+            spark._jvm.java.lang.Class.forName("oracle.jdbc.OracleDriver")
+        except:
+            # Fallback to legacy name
+            spark._jvm.java.lang.Class.forName("oracle.jdbc.driver.OracleDriver")
     except Exception as e:
-        print("CRITICAL: Oracle JDBC Driver not found in classloader! Check spark.jars.packages.")
+        print(f"CRITICAL: Oracle JDBC Driver not found! {str(e)}")
         return
 
     # Establish Oracle JDBC Connection via Py4J
