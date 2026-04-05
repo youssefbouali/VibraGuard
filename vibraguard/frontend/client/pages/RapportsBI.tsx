@@ -46,7 +46,7 @@ export default function RapportsBI() {
           ["Coût Maintenance Total", `${kpis.maintenanceCost.toLocaleString()} $`, kpis.maintenanceCostTrend]
         ],
         theme: 'grid',
-        headStyles: { fillStyle: 'fill', fillColor: [15, 39, 48] }
+        headStyles: { fillColor: [15, 39, 48] }
       });
 
       autoTable(doc, {
@@ -122,8 +122,8 @@ export default function RapportsBI() {
                   <path d="M3.75 3H14.25C15.0779 3 15.75 3.67213 15.75 4.5V15C15.75 15.8279 15.0779 16.5 14.25 16.5H3.75C2.92213 16.5 2.25 15.8279 2.25 15V4.5C2.25 3.67213 2.92213 3 3.75 3V3" stroke="#98A6A8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M2.25 7.5H15.75" stroke="#98A6A8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <span className="text-[#E6F0F2] text-[14px] font-medium flex-1 whitespace-nowrap">
-                  01 Oct 2026 – 31 Oct 2026
+                <span className="text-[#E6F0F2] text-[14px] font-medium flex-1 whitespace-nowrap uppercase">
+                  {new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
                 </span>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
                   <path d="M4 6L8 10L12 6" stroke="#98A6A8" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
@@ -186,8 +186,8 @@ export default function RapportsBI() {
               ))}
             </div>
 
-            <span className="text-[#98A6A8] text-[13px] font-normal">
-              Dernière mise à jour : il y a 2 min
+            <span className="text-[#98A6A8] text-[13px] font-normal italic">
+              Dernière mise à jour : à l'instant
             </span>
           </div>
         </div>

@@ -42,59 +42,9 @@ public class MainController {
 
     @PostConstruct
     public void seedData() {
-        seedMotor("MTR-Broyeur-04", "Broyeur Phosphate", "22% Critique", "#EF4444", 22, "14.2 mm/s", "#EF4444", "up");
-        seedMotor("MTR-Ventil-12", "Convoyeur L-2", "45% Alerte", "#F59E0B", 45, "8.4 mm/s", "#F59E0B", "up");
-        seedMotor("MTR-Pompe-08", "Pompe Principale", "58% Attention", "#F59E0B", 58, "6.1 mm/s", "#E2E8F0", "flat");
-        seedMotor("MTR-Compresseur-01", "Compresseur HP", "85% Optimal", "#10B981", 85, "2.4 mm/s", "#10B981", "down");
+        // Seed data removed as requested
         
 
-        if (workOrderRepository.count() == 0) {
-            workOrderRepository.save(new WorkOrder("W-455", "Remplacement Roulement P1", "Pompe Principale", "En cours",
-                    "Expert Maintenance", "2026-06-20", "Haute"));
-            workOrderRepository.save(new WorkOrder("W-456", "Inspection Broyeur 04", "Broyeur Phosphate", "Nouveau",
-                    "Agent Maintenance", "2026-06-21", "Critique"));
-            workOrderRepository.save(new WorkOrder("W-457", "Nettoyage Filtres Ventil-12", "Convoyeur L-2", "Terminé",
-                    "Equipe B", "2026-06-18", "Basse"));
-        }
-        if (auditRepository.count() == 0) {
-            auditRepository.save(new AuditEntry("0x7a8b...2c", "Ajout de capteur SN-203", "Expert Maintenance",
-                    "20/05/2026 14:30", "Validé"));
-            auditRepository.save(new AuditEntry("0x1d2e...4f", "Modification seuil alerte MTR-04", "Administrateur",
-                    "19/05/2026 09:15", "Validé"));
-            auditRepository.save(new AuditEntry("0x3f4g...1h", "Clôture ordre de travail W-455", "Agent Maintenance",
-                    "18/05/2026 16:45", "Validé"));
-        }
-        if (siteMtbfRepository.count() == 0) {
-            siteMtbfRepository.save(new SiteMtbf("Site Jorf Lasfar", 1450, "#007A3D"));
-            siteMtbfRepository.save(new SiteMtbf("Site Safi", 1220, "#057485"));
-            siteMtbfRepository.save(new SiteMtbf("Site Laâyoune", 1180, "#0C6CF2"));
-            siteMtbfRepository.save(new SiteMtbf("Site Khouribga", 950, "#F2A900"));
-            siteMtbfRepository.save(new SiteMtbf("Site Benguérir", 840, "#D93F3F"));
-        }
-        if (maintenanceCostRepository.count() == 0) {
-            maintenanceCostRepository.save(new MaintenanceCost(null, "Jan", 26000, 40000));
-            maintenanceCostRepository.save(new MaintenanceCost(null, "Fév", 30000, 40500));
-            maintenanceCostRepository.save(new MaintenanceCost(null, "Mar", 21000, 40000));
-            maintenanceCostRepository.save(new MaintenanceCost(null, "Avr", 35000, 41000));
-            maintenanceCostRepository.save(new MaintenanceCost(null, "Mai", 47000, 40000));
-        }
-        if (interventionRepository.count() == 0) {
-            interventionRepository.save(new Intervention("Correctif", 45, "#0EA5E9"));
-            interventionRepository.save(new Intervention("Préventif", 30, "#10B981"));
-            interventionRepository.save(new Intervention("Prédictif", 25, "#F59E0B"));
-        }
-        if (traceabilityRepository.count() == 0) {
-            traceabilityRepository.save(new TraceabilityStep(null, "Alerte #8402", "24 Oct, 08:15", "done", "#007A3D",
-                    "#061B1C", "#98A6A8", "alert"));
-            traceabilityRepository.save(new TraceabilityStep(null, "OT #4092", "24 Oct, 08:30", "done", "#007A3D",
-                    "#061B1C", "#98A6A8", "order"));
-            traceabilityRepository.save(new TraceabilityStep(null, "Intervention", "24 Oct, 14:30", "done", "#007A3D",
-                    "#061B1C", "#98A6A8", "intervention"));
-            traceabilityRepository.save(new TraceabilityStep(null, "Smart Contract", "Validation en cours", "active",
-                    "#0C6CF2", "#08192E", "#0C6CF2", "contract"));
-            traceabilityRepository.save(new TraceabilityStep(null, "Bloc #104830", "Attente réseau", "pending",
-                    "rgba(0,0,0,0.08)", "#071018", "#98A6A8", "block"));
-        }
         if (kpiValueRepository.count() == 0) {
             // IoT KPIs
             kpiValueRepository.save(new KpiValue("totalMotorsTrend", null, "+12% ce mois", null, null));
@@ -115,18 +65,6 @@ public class MainController {
             kpiValueRepository.save(new KpiValue("validationTime", 2.4, null, null, null));
         }
 
-        if (technicianRepository.count() == 0) {
-            technicianRepository.save(new Technician("TECH-01", "Karim B. (Spéc. Vibrations)", "Spécialiste Vibrations", "https://api.builder.io/api/v1/image/assets/TEMP/7b02cb388b87f56a63a235a8d02a1683e015ed41?width=56"));
-            technicianRepository.save(new Technician("TECH-02", "Ahmed S. (Mécanicien Sr)", "Mécanicien Senior", null));
-            technicianRepository.save(new Technician("TECH-03", "Youssef M. (Électricien)", "Électricien", null));
-        }
-
-        if (inventoryPartRepository.count() == 0) {
-            inventoryPartRepository.save(new InventoryPart("PART-01", "Palier SKF-6205", 4, "green"));
-            inventoryPartRepository.save(new InventoryPart("PART-02", "Capteur VibraSense", 1, "amber"));
-            inventoryPartRepository.save(new InventoryPart("PART-03", "Courroie Trapézoïdale", 12, "green"));
-            inventoryPartRepository.save(new InventoryPart("PART-04", "Joint à Lèvre", 0, "amber"));
-        }
     }
 
     // IoT Endpoints

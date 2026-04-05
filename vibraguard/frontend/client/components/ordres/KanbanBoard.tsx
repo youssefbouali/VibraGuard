@@ -12,54 +12,6 @@ import {
 } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
 
-const ALL_TASKS: OT[] = [
-  {
-    id: "#OT-1024",
-    title: "Rééquilibrage Rotorique",
-    machine: "MTR-Broyeur-04",
-    priority: "haute",
-    date: "24 Oct, 14:00",
-    dateColor: "red",
-    assignee: "karim",
-    status: "todo",
-  },
-  {
-    id: "#OT-1031",
-    title: "Graissage Paliers (Maintenance Préventive)",
-    machine: "MTR-Conv-12",
-    priority: "basse",
-    date: "28 Oct, 09:00",
-    unassigned: true,
-    status: "todo",
-  },
-  {
-    id: "#OT-1022",
-    title: "Remplacement Roulement Bague Externe",
-    machine: "MTR-Vent-A",
-    priority: "moyenne",
-    date: "Aujourd'hui, 16:30",
-    assignee: "sofia",
-    status: "inprogress",
-  },
-  {
-    id: "#OT-1018",
-    title: "Alignement de l'Arbre Moteur",
-    machine: "MTR-Pompe-02",
-    priority: "moyenne",
-    date: "Demain, 10:00",
-    assignee: "karim",
-    status: "inprogress",
-  },
-  {
-    id: "#OT-1002",
-    title: "Inspection Thermographique",
-    machine: "MTR-Broyeur-01",
-    priority: "basse",
-    date: "20 Oct, 11:30",
-    assignee: "sofia",
-    status: "done",
-  },
-];
 
 import { useWorkOrders } from "@/hooks/use-work-orders";
 
