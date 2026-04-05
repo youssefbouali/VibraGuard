@@ -519,11 +519,6 @@ public class MainController {
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
-    @GetMapping("/bi/interventions")
-    public Flux<Intervention> getInterventions() {
-        return Flux.defer(() -> Flux.fromIterable(interventionRepository.findAll()))
-                .subscribeOn(Schedulers.boundedElastic());
-    }
 
     @PostMapping("/bi/kpis/upsert")
     public Mono<KpiValue> upsertKPI(@RequestBody KpiValue kpi) {
