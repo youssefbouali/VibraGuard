@@ -17,27 +17,27 @@ import pandas as pd
 import numpy as np
 import json
 import uuid
-import requests
+import urllib.request
+import urllib.parse
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, udf, from_json
+from pyspark.sql.types import StructType, StructField, DoubleType, StringType
+import joblib
+import numpy as np
+import os
 
 # Configuration
 KAFKA_BROKER = os.getenv("KAFKA_BROKER", "localhost:9092")
 KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "sensor-data")
 MODEL_PATH = "vibraguard_rf_model.joblib"
 SCALER_PATH = "vibraguard_scaler.joblib"
+BACKEND_URL = os.getenv("BACKEND_URL", "http://backend.vibraguard.svc.cluster.local/api/v1")
 
-# Oracle Database Configuration
-ORACLE_URL = os.getenv("ORACLE_URL", "jdbc:oracle:thin:@oracle-db:1521:xe")
-ORACLE_USER = os.getenv("ORACLE_USER", "SYSTEM")
-ORACLE_PASSWORD = os.getenv("ORACLE_PASSWORD", "MyStrongPassword123")
-ORACLE_DRIVER = "oracle.jdbc.driver.OracleDriver"
-ORACLE_TABLE = os.getenv("ORACLE_TABLE", "AI_SENSOR_PREDICTIONS")
-
-# Load Model and Scaler at the driver level (ideally broadcast them)
+# Load Model and Scaler
 print("Loading model and scaler...")
 model = joblib.load(MODEL_PATH)
 scaler = joblib.load(SCALER_PATH)
 
-# Define columns as in the training script
 FEATURE_COLUMNS = [
     'rpm', 'vib_rms', 'vib_peak', 'vib_kurtosis', 
     'fft_dominant_freq', 'fft_max_amplitude', 'fft_total_power', 
@@ -48,26 +48,18 @@ FEATURE_COLUMNS = [
 @udf(returnType=StringType())
 def predict_anomaly(*features):
     try:
-        # Convert features to numpy array and reshape for single prediction
         features_array = np.array(features).reshape(1, -1)
-        # Scale features
         scaled_features = scaler.transform(features_array)
-        # Predict
         prediction = model.predict(scaled_features)[0]
         return str(prediction)
     except Exception as e:
         return f"Error: {str(e)}"
 
-
-# Create Spark Session with explicit jar config and direct Oracle JAR fallback
+# Create Spark Session
 spark = SparkSession.builder \
     .appName("VibraGuardStreamingAI") \
     .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0") \
-    .config("spark.jars", "https://repo1.maven.org/maven2/com/oracle/database/jdbc/ojdbc11/21.1.0.0/ojdbc11-21.1.0.0.jar") \
     .getOrCreate()
-
-# Backend API Configuration
-BACKEND_URL = os.getenv("BACKEND_URL", "http://backend.vibraguard.svc.cluster.local/api/v1")
 
 def write_to_backend(batch_df, epoch_id):
     if batch_df.isEmpty():
@@ -75,6 +67,19 @@ def write_to_backend(batch_df, epoch_id):
         
     pandas_df = batch_df.toPandas()
     print(f"📡 Batch {epoch_id}: Sending {len(pandas_df)} records to Backend API at {BACKEND_URL}")
+
+    def call_api(endpoint, method="POST", data=None):
+        url = f"{BACKEND_URL}/{endpoint}"
+        try:
+            req = urllib.request.Request(url, method=method)
+            req.add_header('Content-Type', 'application/json')
+            
+            payload = json.dumps(data).encode('utf-8') if data else None
+            with urllib.request.urlopen(req, data=payload, timeout=5) as response:
+                return response.read()
+        except Exception as e:
+            print(f"❌ API Error on {url}: {e}")
+            return None
 
     for index, row in pandas_df.iterrows():
         motor = str(row['motor_id'])
@@ -91,10 +96,7 @@ def write_to_backend(batch_df, epoch_id):
             "y": v_peak,
             "z": v_kurt
         }
-        try:
-            requests.post(f"{BACKEND_URL}/iot/vibrations", json=vib_payload, timeout=5)
-        except Exception as e:
-            print(f"❌ Error sending vibration for {motor}: {e}")
+        call_api("iot/vibrations", data=vib_payload)
         
         # Check for prediction anomaly
         is_anomaly = prediction_val in ['1', '1.0', 'True', 'anomalous']
@@ -112,16 +114,10 @@ def write_to_backend(batch_df, epoch_id):
                 "scoreConfianceIA": 94.5,
                 "depassementSeuil": v_rms * 0.15
             }
-            try:
-                requests.post(f"{BACKEND_URL}/ml/alerts", json=alert_payload, timeout=5)
-            except Exception as e:
-                print(f"❌ Error sending alert for {motor}: {e}")
+            call_api("ml/alerts", data=alert_payload)
             
             # 3. Decrease Inventory (Simulate usage of sensor part)
-            try:
-                requests.post(f"{BACKEND_URL}/iot/inventory/decrement/PART-02", timeout=5)
-            except Exception as e:
-                print(f"❌ Error updating inventory: {e}")
+            call_api("iot/inventory/decrement/PART-02")
                 
     # 4. Upsert KPIs (aggregates for the batch)
     total_records = len(pandas_df)
@@ -134,10 +130,7 @@ def write_to_backend(batch_df, epoch_id):
     ]
     
     for kpi in kpis:
-        try:
-            requests.post(f"{BACKEND_URL}/bi/kpis/upsert", json=kpi, timeout=5)
-        except Exception as e:
-            print(f"❌ Error upserting KPI {kpi['id']}: {e}")
+        call_api("bi/kpis/upsert", data=kpi)
             
     print(f"✅ Batch {epoch_id} processed completely via API.")
 
