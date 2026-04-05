@@ -8,3 +8,4 @@ joblib
 paho-mqtt
 kafka-python
 pyspark==3.5.0
+requests

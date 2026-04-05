@@ -17,6 +17,7 @@ import pandas as pd
 import numpy as np
 import json
 import uuid
+import requests
 
 # Configuration
 KAFKA_BROKER = os.getenv("KAFKA_BROKER", "localhost:9092")
@@ -64,8 +65,6 @@ spark = SparkSession.builder \
     .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0") \
     .config("spark.jars", "https://repo1.maven.org/maven2/com/oracle/database/jdbc/ojdbc11/21.1.0.0/ojdbc11-21.1.0.0.jar") \
     .getOrCreate()
-
-import requests
 
 # Backend API Configuration
 BACKEND_URL = os.getenv("BACKEND_URL", "http://backend.vibraguard.svc.cluster.local/api/v1")
