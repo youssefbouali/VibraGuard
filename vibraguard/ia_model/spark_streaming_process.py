@@ -1,9 +1,9 @@
 import os
 import sys
 
-# FORCE Spark to load Oracle JDBC and Kafka packages
-# This must happen BEFORE any Spark imports or session creation
-os.environ['PYSPARK_SUBMIT_ARGS'] = '--packages "com.oracle.database.jdbc:ojdbc11:21.1.0.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0" pyspark-shell'
+# FORCE Spark to load Oracle JDBC via direct URL and Kafka via packages
+# This is more reliable than coordinate-based loading in some containers
+os.environ['PYSPARK_SUBMIT_ARGS'] = '--jars https://repo1.maven.org/maven2/com/oracle/database/jdbc/ojdbc11/21.1.0.0/ojdbc11-21.1.0.0.jar --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0 pyspark-shell'
 
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, udf, from_json, struct
@@ -53,10 +53,11 @@ def predict_anomaly(*features):
         return f"Error: {str(e)}"
 
 
-# Create Spark Session with explicit jar config as fallback
+# Create Spark Session with explicit jar config and direct Oracle JAR fallback
 spark = SparkSession.builder \
     .appName("VibraGuardStreamingAI") \
-    .config("spark.jars.packages", "com.oracle.database.jdbc:ojdbc11:21.1.0.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0") \
+    .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0") \
+    .config("spark.jars", "https://repo1.maven.org/maven2/com/oracle/database/jdbc/ojdbc11/21.1.0.0/ojdbc11-21.1.0.0.jar") \
     .getOrCreate()
 
 def write_to_oracle(batch_df, epoch_id):
