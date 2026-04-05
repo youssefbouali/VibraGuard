@@ -89,24 +89,66 @@ export default function MoteurDetail() {
           ))}
         </div>
 
-        {/* Dashboard Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-4 sm:gap-6">
-          {/* Left column */}
-          <div className="flex flex-col gap-4 sm:gap-6">
-            <SanteCard motor={motor} />
-          </div>
+        {/* Tab Content */}
+        {activeTab === "Vue d'ensemble" && (
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-4 sm:gap-6">
+              <div className="flex flex-col gap-4 sm:gap-6">
+                <SanteCard motor={motor} />
+              </div>
+              <div className="flex flex-col gap-4 sm:gap-6">
+                <TendanceVibratoire vibrations={vibrations} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-4 sm:gap-6">
+              <FFTChart data={vibrations[0]} />
+              <DernieresAlertes alerts={alerts} />
+            </div>
+          </>
+        )}
 
-          {/* Right column */}
-          <div className="flex flex-col gap-4 sm:gap-6">
+        {activeTab === "Vibrations Temps Réel" && (
+          <div className="w-full h-[400px]">
             <TendanceVibratoire vibrations={vibrations} />
           </div>
-        </div>
+        )}
 
-        {/* Bottom Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-4 sm:gap-6">
-          <FFTChart data={vibrations[0]} />
-          <DernieresAlertes alerts={alerts} />
-        </div>
+        {activeTab === "Analyse FFT" && (
+          <div className="w-full">
+            <FFTChart data={vibrations[0]} />
+          </div>
+        )}
+
+        {activeTab === "Historique Alertes" && (
+          <div className="w-full">
+            <DernieresAlertes alerts={alerts} />
+          </div>
+        )}
+
+        {activeTab === "Prédiction RUL" && (
+          <div className="p-8 rounded-lg border border-black/[0.08] bg-[#0B1518] text-center">
+            <h3 className="text-[#E6F0F2] text-lg font-semibold mb-2">Prédiction de Durée de Vie Résiduelle (RUL)</h3>
+            <p className="text-[#98A6A8]">Calcul basé sur les algorithmes de Maintenance Prédictive...</p>
+            <div className="mt-6 flex flex-col items-center">
+               <div className="text-4xl font-bold text-[#007A3D] mb-2">{motor.rul || 85}%</div>
+               <div className="text-sm text-[#98A6A8]">Santé Structurelle</div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "Interventions" && (
+          <div className="p-8 rounded-lg border border-black/[0.08] bg-[#0B1518] text-center">
+             <h3 className="text-[#E6F0F2] text-lg font-semibold mb-4">Interventions de Maintenance</h3>
+             <p className="text-[#98A6A8] mb-6">Aucune intervention planifiée pour ce moteur.</p>
+             <Link 
+               to="/ordres-travail"
+               className="inline-flex items-center px-4 py-2 rounded-md bg-[#007A3D] text-white text-sm hover:bg-[#006633]"
+             >
+               Créer un Ordre de Travail
+             </Link>
+          </div>
+        )}
+
       </div>
     </DashboardLayout>
   );

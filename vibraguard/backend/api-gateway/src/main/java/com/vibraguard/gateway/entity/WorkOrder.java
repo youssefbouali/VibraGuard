@@ -22,4 +22,7 @@ public class WorkOrder {
     private String assignedTo;
     private String dueDate;
     private String priority;
+    @jakarta.persistence.Column(name = "WO_TYPE")
+    private String type; // Préventif, Correctif
+    private double cost;
 }
