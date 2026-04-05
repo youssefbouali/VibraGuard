@@ -4,12 +4,16 @@ import { apiRequest } from "@/lib/api";
 export interface Moteur {
   id: string;
   type: string;
-  etatLabel: string;
-  etatColor: string;
-  etatPct: number;
-  vibration: string;
-  vibrationColor: string;
-  trendIcon: string;
+  zone: string;
+  localisation: string;
+  puissance: string;
+  etatSante: string;
+  vibrationRMS: number;
+  derniereAlerte: string;
+  alerteRef?: string;
+  // Legacy fields if still used
+  etatLabel?: string;
+  vibration?: string;
 }
 
 export function useMoteurs() {

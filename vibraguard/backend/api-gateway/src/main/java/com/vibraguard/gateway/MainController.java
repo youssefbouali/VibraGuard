@@ -110,9 +110,55 @@ public class MainController {
     }
 
     @GetMapping("/iot/motors")
-    public Flux<Motor> getMotors() {
-        return Flux.defer(() -> Flux.fromIterable(motorRepository.findAll()))
-                .subscribeOn(Schedulers.boundedElastic());
+    public Flux<Map<String, Object>> getMotors() {
+        return Flux.defer(() -> {
+            List<Motor> motors = motorRepository.findAll();
+            List<Alert> allAlerts = alertRepository.findAll();
+            
+            List<Map<String, Object>> result = motors.stream().map(m -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", m.getId());
+                map.put("zone", "Zone 1"); // Placeholder or use m.getZone() if added
+                map.put("localisation", "Usine Principale"); // Placeholder or use m.getLocalisation()
+                map.put("type", m.getType());
+                map.put("puissance", m.getPower() != null ? m.getPower() : "N/A");
+                
+                // Map status
+                String status = "Normal";
+                if (m.getEtatLabel() != null) {
+                    if (m.getEtatLabel().contains("Critique")) status = "Critique";
+                    else if (m.getEtatLabel().contains("Alerte") || m.getEtatLabel().contains("Attention")) status = "Attention";
+                }
+                map.put("etatSante", status);
+                
+                // Map vibration
+                double vib = 0.0;
+                try {
+                    if (m.getVibration() != null) {
+                        vib = Double.parseDouble(m.getVibration().split(" ")[0]);
+                    }
+                } catch (Exception e) {}
+                map.put("vibrationRMS", vib);
+                
+                // Find latest alert for this motor
+                Optional<Alert> lastAlert = allAlerts.stream()
+                    .filter(a -> m.getId().equals(a.getMotorId()))
+                    .sorted((a1, a2) -> a2.getTime().compareTo(a1.getTime()))
+                    .findFirst();
+                
+                if (lastAlert.isPresent()) {
+                    map.put("derniereAlerte", lastAlert.get().getTime());
+                    map.put("alerteRef", "#" + lastAlert.get().getId());
+                } else {
+                    map.put("derniereAlerte", "Aucune");
+                    map.put("alerteRef", null);
+                }
+                
+                return map;
+            }).collect(Collectors.toList());
+            
+            return Flux.fromIterable(result);
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     @GetMapping("/iot/motors/{id}")
