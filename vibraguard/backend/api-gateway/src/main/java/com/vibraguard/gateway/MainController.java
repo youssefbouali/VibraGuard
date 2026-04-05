@@ -285,12 +285,6 @@ public class MainController {
                 .then();
     }
 
-    @GetMapping("/iot/technicians")
-    public Flux<Technician> getTechnicians() {
-        return Flux.defer(() -> Flux.fromIterable(technicianRepository.findAll()))
-                .subscribeOn(Schedulers.boundedElastic());
-    }
-
     @GetMapping("/iot/inventory-parts")
     public Flux<InventoryPart> getInventoryParts() {
         return Flux.defer(() -> Flux.fromIterable(inventoryPartRepository.findAll()))
