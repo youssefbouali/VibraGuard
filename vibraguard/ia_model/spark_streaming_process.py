@@ -74,7 +74,10 @@ def write_to_oracle(batch_df, epoch_id):
     # Establish Oracle JDBC Connection
     print(f"Connecting to Oracle at: {ORACLE_URL} (User: {ORACLE_USER})")
     try:
-        # Standard way to get a connection when the JAR is on the classpath
+        # Step 1: Force load the driver class so it registers with DriverManager
+        spark._jvm.java.lang.Class.forName("oracle.jdbc.OracleDriver")
+        
+        # Step 2: Get connection
         conn = spark._jvm.java.sql.DriverManager.getConnection(ORACLE_URL, ORACLE_USER, ORACLE_PASSWORD)
         print("✅ Successfully connected to Oracle.")
     except Exception as e:
