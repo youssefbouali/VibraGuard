@@ -1,30 +1,15 @@
 import os
 import sys
-
-# CRITICAL: Force include Oracle JDBC and Kafka packages in the Spark JVM startup
-ORACLE_JAR_URL = "https://repo1.maven.org/maven2/com/oracle/database/jdbc/ojdbc11/21.1.0.0/ojdbc11-21.1.0.0.jar"
-os.environ['PYSPARK_SUBMIT_ARGS'] = (
-    f'--packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0 '
-    f'--jars {ORACLE_JAR_URL} '
-    f'pyspark-shell'
-)
-
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, udf, from_json, struct
-from pyspark.sql.types import StructType, StructField, DoubleType, StringType
-import joblib
-import pandas as pd
-import numpy as np
 import json
 import uuid
 import urllib.request
 import urllib.parse
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, udf, from_json
-from pyspark.sql.types import StructType, StructField, DoubleType, StringType
 import joblib
+import pandas as pd
 import numpy as np
-import os
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, udf, from_json, struct
+from pyspark.sql.types import StructType, StructField, DoubleType, StringType
 
 # Configuration
 KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka:9092")
@@ -101,6 +86,7 @@ def write_to_backend(batch_df, epoch_id):
         # Check for prediction anomaly
         is_anomaly = prediction_val in ['1', '1.0', 'True', 'anomalous']
         if is_anomaly:
+            print(f"🚨 ANOMALY DETECTED for {motor}! Prediction: {prediction_val}")
             # 2. Create Alert
             alert_payload = {
                 "message": f"Anomalie IA détectée sur {motor} (Vib: {v_rms:.2f})",
