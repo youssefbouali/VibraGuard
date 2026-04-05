@@ -66,17 +66,22 @@ def write_to_oracle(batch_df, epoch_id):
         
     pandas_df = batch_df.toPandas()
     
-    # Verify driver is available and connection URL
+    # Load Oracle driver using Thread context classloader (Spark's MutableURLClassLoader)
+    # Class.forName() via Py4J uses the system AppClassLoader which doesn't see Spark-added JARs.
+    # We must use the thread classloader where Spark actually placed ojdbc11.jar.
     print(f"Connecting to Oracle at: {ORACLE_URL} (User: {ORACLE_USER})")
     try:
-        # Modern Oracle driver class name
+        jvm = spark._jvm
+        thread_cl = jvm.java.lang.Thread.currentThread().getContextClassLoader()
         try:
-            spark._jvm.java.lang.Class.forName("oracle.jdbc.OracleDriver")
+            driver_class = thread_cl.loadClass("oracle.jdbc.OracleDriver")
         except:
-            # Fallback to legacy name
-            spark._jvm.java.lang.Class.forName("oracle.jdbc.driver.OracleDriver")
+            driver_class = thread_cl.loadClass("oracle.jdbc.driver.OracleDriver")
+        driver_instance = driver_class.getDeclaredConstructor().newInstance()
+        jvm.java.sql.DriverManager.registerDriver(driver_instance)
+        print("Oracle JDBC Driver registered successfully via thread classloader.")
     except Exception as e:
-        print(f"CRITICAL: Oracle JDBC Driver not found! {str(e)}")
+        print(f"CRITICAL: Oracle JDBC Driver not found in thread classloader! {str(e)}")
         return
 
     # Establish Oracle JDBC Connection via Py4J
