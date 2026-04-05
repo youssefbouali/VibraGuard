@@ -352,7 +352,7 @@ export default function Moteurs() {
 
                 {/* État Santé - Mobile Position */}
                 <div className="flex items-center px-3 sm:px-6 py-[20px]">
-                  <HealthBadge status={moteur.etatSante} />
+                  <HealthBadge status={moteur.etatSante || "Normal"} />
                 </div>
 
                 {/* Hidden on Mobile, Visible on MD+ */}
@@ -367,8 +367,8 @@ export default function Moteurs() {
                 </div>
 
                 <div className="hidden md:flex items-center gap-1 px-6 py-[25px]">
-                  <span className={cn("text-[15px] font-semibold", vibrationColor[moteur.etatSante])}>
-                    {moteur.vibrationRMS}
+                  <span className={cn("text-[15px] font-semibold", vibrationColor[moteur.etatSante || "Normal"])}>
+                    {moteur.vibrationRMS ?? 0}
                   </span>
                   <span className="text-[13px] text-[#C9E7E6]">mm/s</span>
                 </div>

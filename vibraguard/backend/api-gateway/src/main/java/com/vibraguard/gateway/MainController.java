@@ -119,32 +119,47 @@ public class MainController {
             List<Map<String, Object>> result = motors.stream().map(m -> {
                 Map<String, Object> map = new HashMap<>();
                 map.put("id", m.getId());
-                map.put("zone", "Zone 1"); // Placeholder or use m.getZone() if added
-                map.put("localisation", "Usine Principale"); // Placeholder or use m.getLocalisation()
-                map.put("type", m.getType());
+                map.put("zone", "Zone 1"); 
+                map.put("localisation", "Usine Principale");
+                map.put("type", m.getType() != null ? m.getType() : "Inconnu");
                 map.put("puissance", m.getPower() != null ? m.getPower() : "N/A");
                 
-                // Map status
+                // Robust mapping for etatSante
                 String status = "Normal";
-                if (m.getEtatLabel() != null) {
-                    if (m.getEtatLabel().contains("Critique")) status = "Critique";
-                    else if (m.getEtatLabel().contains("Alerte") || m.getEtatLabel().contains("Attention")) status = "Attention";
+                String el = m.getEtatLabel();
+                if (el != null) {
+                    String lowerEl = el.toLowerCase();
+                    if (lowerEl.contains("critique") || lowerEl.contains("danger")) status = "Critique";
+                    else if (lowerEl.contains("alerte") || lowerEl.contains("attention") || lowerEl.contains("warning")) status = "Attention";
                 }
                 map.put("etatSante", status);
                 
                 // Map vibration
                 double vib = 0.0;
                 try {
-                    if (m.getVibration() != null) {
-                        vib = Double.parseDouble(m.getVibration().split(" ")[0]);
+                    String vStr = m.getVibration();
+                    if (vStr != null && !vStr.isEmpty()) {
+                        // Extract number from "5.8 mm/s" or just "5.8"
+                        String numeric = vStr.split(" ")[0].replaceAll("[^0-9.]", "");
+                        if (!numeric.isEmpty()) {
+                            vib = Double.parseDouble(numeric);
+                        }
                     }
                 } catch (Exception e) {}
                 map.put("vibrationRMS", vib);
                 
                 // Find latest alert for this motor
                 Optional<Alert> lastAlert = allAlerts.stream()
-                    .filter(a -> m.getId().equals(a.getMotorId()))
-                    .sorted((a1, a2) -> a2.getTime().compareTo(a1.getTime()))
+                    .filter(a -> {
+                        if (a.getMotorId() == null) return false;
+                        String alertMotor = a.getMotorId().split(" \\(")[0].trim();
+                        String motorId = m.getId().split(" \\(")[0].trim();
+                        return motorId.equals(alertMotor);
+                    })
+                    .sorted((a1, a2) -> {
+                        if (a1.getTime() == null || a2.getTime() == null) return 0;
+                        return a2.getTime().compareTo(a1.getTime());
+                    })
                     .findFirst();
                 
                 if (lastAlert.isPresent()) {
