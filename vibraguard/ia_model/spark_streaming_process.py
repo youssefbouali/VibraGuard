@@ -24,9 +24,10 @@ KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "sensor-data")
 MODEL_PATH = "vibraguard_rf_model.joblib"
 SCALER_PATH = "vibraguard_scaler.joblib"
 
+# Oracle Database Configuration
 ORACLE_URL = os.getenv("ORACLE_URL", "jdbc:oracle:thin:@oracle-db:1521:xe")
-ORACLE_USER = os.getenv("ORACLE_USER", "system")
-ORACLE_PASSWORD = os.getenv("ORACLE_PASSWORD", "password")
+ORACLE_USER = os.getenv("ORACLE_USER", "SYSTEM")
+ORACLE_PASSWORD = os.getenv("ORACLE_PASSWORD", "MyStrongPassword123")
 ORACLE_DRIVER = "oracle.jdbc.driver.OracleDriver"
 ORACLE_TABLE = os.getenv("ORACLE_TABLE", "AI_SENSOR_PREDICTIONS")
 
@@ -70,31 +71,32 @@ def write_to_oracle(batch_df, epoch_id):
         
     pandas_df = batch_df.toPandas()
     
-    # Load Oracle driver
+    # Load Oracle driver and connect DIRECTLY (bypassing DriverManager classloader issues)
     print(f"Connecting to Oracle at: {ORACLE_URL} (User: {ORACLE_USER})")
     try:
         jvm = spark._jvm
-        # Try to use standard DriverManager to get the driver. 
-        # If it fails, we explicitly register it.
+        # Get the Spark ClassLoader which contains our downloaded JAR
+        cl = jvm.org.apache.spark.util.Utils.getContextOrSparkClassLoader()
+        
         try:
-            jvm.java.sql.DriverManager.getDriver(ORACLE_URL)
-            print("Oracle JDBC Driver already registered.")
+            # Load class using the correct classloader
+            driver_class = jvm.java.lang.Class.forName("oracle.jdbc.OracleDriver", True, cl)
         except:
-            print("Registering Oracle JDBC Driver...")
-            try:
-                driver_class = jvm.java.lang.Class.forName("oracle.jdbc.OracleDriver")
-            except:
-                driver_class = jvm.java.lang.Class.forName("oracle.jdbc.driver.OracleDriver")
-            driver_instance = driver_class.getDeclaredConstructor().newInstance()
-            jvm.java.sql.DriverManager.registerDriver(driver_instance)
-            print("Oracle JDBC Driver registered successfully.")
+            driver_class = jvm.java.lang.Class.forName("oracle.jdbc.driver.OracleDriver", True, cl)
+            
+        driver_instance = driver_class.getDeclaredConstructor().newInstance()
+        
+        # Create connection properties
+        props = jvm.java.util.Properties()
+        props.setProperty("user", ORACLE_USER)
+        props.setProperty("password", ORACLE_PASSWORD)
+        
+        # Connect directly using the driver instance
+        conn = driver_instance.connect(ORACLE_URL, props)
+        print("✅ Successfully connected to Oracle via direct driver instance.")
     except Exception as e:
-        print(f"CRITICAL: Could not initialize Oracle JDBC Driver! {str(e)}")
-        # We continue anyway to see if DriverManager can find it automagically
-        pass
-
-    # Establish Oracle JDBC Connection via Py4J
-    conn = spark._jvm.java.sql.DriverManager.getConnection(ORACLE_URL, ORACLE_USER, ORACLE_PASSWORD)
+        print(f"❌ CRITICAL: Could not connect to Oracle! {str(e)}")
+        return
     try:
         stmt = conn.createStatement()
         
