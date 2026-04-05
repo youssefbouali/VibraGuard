@@ -46,4 +46,5 @@ export const api = {
   getMtbfBySite: () => apiRequest<any[]>("GET", "/api/v1/bi/mtbf-by-site"),
   getMaintenanceCosts: () => apiRequest<any[]>("GET", "/api/v1/bi/maintenance-costs"),
   getInterventions: () => apiRequest<any[]>("GET", "/api/v1/bi/interventions"),
+  search: (q: string) => apiRequest<any>("GET", `/api/v1/search?q=${encodeURIComponent(q)}`),
 };

@@ -159,6 +159,31 @@ public class MainController {
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
+    @GetMapping("/search")
+    public Mono<Map<String, Object>> search(@RequestParam("q") String query) {
+        return Mono.fromCallable(() -> {
+            String q = query.toLowerCase();
+            Map<String, Object> results = new HashMap<>();
+            
+            List<Motor> foundMotors = motorRepository.findAll().stream()
+                .filter(m -> m.getId().toLowerCase().contains(q) || 
+                            (m.getType() != null && m.getType().toLowerCase().contains(q)))
+                .limit(5)
+                .toList();
+                
+            List<Alert> foundAlerts = alertRepository.findAll().stream()
+                .filter(a -> a.getMessage().toLowerCase().contains(q) || 
+                            a.getId().toLowerCase().contains(q))
+                .limit(5)
+                .toList();
+
+            results.put("motors", foundMotors);
+            results.put("alerts", foundAlerts);
+            results.put("query", query);
+            return results;
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
+
     @GetMapping("/iot/vibrations")
     public Flux<VibrationData> getVibrations() {
         return Flux.defer(() -> Flux.fromIterable(vibrationRepository.findAll()))

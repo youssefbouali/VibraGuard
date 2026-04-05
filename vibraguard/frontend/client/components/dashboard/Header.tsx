@@ -39,6 +39,9 @@ interface Alert {
 export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenuClick }: HeaderProps) {
   const { user, logout } = useAuth();
   const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any>(null);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -48,6 +51,25 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
     logout();
     navigate("/login");
   };
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+    setSearchLoading(true);
+    try {
+      const results = await api.search(searchQuery);
+      setSearchResults(results);
+    } catch (error) {
+      console.error("Search failed:", error);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!searchQuery) {
+      setSearchResults(null);
+    }
+  }, [searchQuery]);
 
   useEffect(() => {
     const fetchAlerts = async () => {
@@ -157,22 +179,91 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
       {/* Right side */}
       <div className="flex items-center gap-2 sm:gap-6 ml-auto">
         {/* Search - hidden on mobile */}
-        <div id="search-container" className="flex items-center">
+        <div id="search-container" className="flex items-center relative">
           {isSearchVisible ? (
             <div className="relative flex items-center animate-in fade-in slide-in-from-right-4 duration-300">
               <Input
                 ref={searchInputRef}
                 type="text"
-                placeholder="Rechercher..."
-                className="w-[200px] sm:w-[300px] h-10 bg-white/5 border-white/10 text-white placeholder:text-[#98A6A8] pr-10 focus:ring-emerald-500/20"
+                placeholder="Rechercher (Moteur, Alerte...)"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSearch();
+                }}
+                className="w-[250px] sm:w-[350px] h-10 bg-white/5 border-white/10 text-white placeholder:text-[#98A6A8] pr-10 focus:ring-emerald-500/20"
               />
               <button
-                onClick={() => setIsSearchVisible(false)}
+                onClick={() => {
+                  setIsSearchVisible(false);
+                  setSearchResults(null);
+                  setSearchQuery("");
+                }}
                 className="absolute right-2 text-[#98A6A8] hover:text-white transition-colors"
                 aria-label="Close search"
               >
                 <X size={18} />
               </button>
+
+              {/* Search Results Dropdown */}
+              {(searchResults || searchLoading) && (
+                <div className="absolute top-12 left-0 w-full bg-[#0A1A27] border border-white/10 rounded-lg shadow-2xl z-[100] overflow-hidden animate-in fade-in slide-in-from-top-2">
+                  <div className="max-h-[400px] overflow-y-auto">
+                    {searchLoading ? (
+                      <div className="p-4 text-center text-[#98A6A8] text-sm italic">Recherche en cours...</div>
+                    ) : (searchResults?.motors?.length === 0 && searchResults?.alerts?.length === 0) ? (
+                      <div className="p-4 text-center text-[#98A6A8] text-sm italic">Aucun résultat trouvé.</div>
+                    ) : (
+                      <>
+                        {searchResults?.motors?.length > 0 && (
+                          <div className="p-2">
+                            <h4 className="px-3 py-1 text-[11px] font-bold text-[#4FB3AF] uppercase tracking-wider">Moteurs</h4>
+                            {searchResults.motors.map((m: any) => (
+                              <button
+                                key={m.id}
+                                onClick={() => {
+                                  navigate(`/moteurs/${m.id}`);
+                                  setIsSearchVisible(false);
+                                  setSearchResults(null);
+                                }}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-white/5 transition-colors text-left"
+                              >
+                                <Settings className="w-4 h-4 text-[#98A6A8]" />
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-semibold text-[#E6F0F2]">{m.id}</span>
+                                  <span className="text-xs text-[#98A6A8]">{m.type}</span>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {searchResults?.alerts?.length > 0 && (
+                          <div className="p-2 border-t border-white/5">
+                            <h4 className="px-3 py-1 text-[11px] font-bold text-red-400 uppercase tracking-wider">Alertes</h4>
+                            {searchResults.alerts.map((a: any) => (
+                              <button
+                                key={a.id}
+                                onClick={() => {
+                                  navigate(`/alertes`);
+                                  setIsSearchVisible(false);
+                                  setSearchResults(null);
+                                }}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-white/5 transition-colors text-left"
+                              >
+                                <AlertCircle className="w-4 h-4 text-red-400" />
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-medium text-[#E6F0F2] truncate max-w-[280px]">{a.message}</span>
+                                  <span className="text-xs text-[#98A6A8]">{a.time} • {a.level}</span>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <button
