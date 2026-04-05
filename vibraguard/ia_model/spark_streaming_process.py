@@ -74,6 +74,8 @@ def write_to_backend(batch_df, epoch_id):
         temp = float(row['temperature'])
         prediction_val = str(row['prediction'])
         
+        print(f"DEBUG: Motor {motor} - Prediction: [{prediction_val}]")
+        
         # 1. Save Vibration Data
         vib_payload = {
             "motorId": motor,
