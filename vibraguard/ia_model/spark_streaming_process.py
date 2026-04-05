@@ -12,7 +12,7 @@ KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "sensor-data")
 MODEL_PATH = "vibraguard_rf_model.joblib"
 SCALER_PATH = "vibraguard_scaler.joblib"
 
-ORACLE_URL = os.getenv("ORACLE_URL", "jdbc:oracle:thin:@localhost:1521:xe")
+ORACLE_URL = os.getenv("ORACLE_URL", "jdbc:oracle:thin:@oracle-db:1521:xe")
 ORACLE_USER = os.getenv("ORACLE_USER", "system")
 ORACLE_PASSWORD = os.getenv("ORACLE_PASSWORD", "password")
 ORACLE_DRIVER = "oracle.jdbc.driver.OracleDriver"
@@ -47,7 +47,7 @@ def predict_anomaly(*features):
 # Create Spark Session
 spark = SparkSession.builder \
     .appName("VibraGuardStreamingAI") \
-    .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0,com.oracle.database.jdbc:ojdbc8:19.3.0.0") \
+    .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0,com.oracle.database.jdbc:ojdbc11:21.1.0.0") \
     .getOrCreate()
 
 def write_to_oracle(batch_df, epoch_id):
