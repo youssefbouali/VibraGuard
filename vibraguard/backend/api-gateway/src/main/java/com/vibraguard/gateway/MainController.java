@@ -401,9 +401,4 @@ public class MainController {
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
-    private void seedMotor(String id, String type, String label, String color, int pct, String vib, String vibCol, String trend) {
-        if (motorRepository.findById(id).isEmpty()) {
-            motorRepository.save(new Motor(id, type, label, color, pct, vib, vibCol, trend, 0, null));
-        }
-    }
 }
