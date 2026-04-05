@@ -298,7 +298,11 @@ public class MainController {
                     Map<String, Object> t = new HashMap<>();
                     t.put("id", u.getId().toString());
                     t.put("name", u.getFullName());
-                    t.put("specialization", u.getRole() != null ? u.getRole() : "Technicien");
+                    t.put("email", u.getEmail());
+                    t.put("role", u.getRole() != null ? u.getRole() : "Technicien");
+                    t.put("department", u.getDepartment() != null ? u.getDepartment() : "Maintenance");
+                    t.put("status", "Actif");
+                    t.put("lastConnection", "En ligne");
                     return t;
                 });
     }

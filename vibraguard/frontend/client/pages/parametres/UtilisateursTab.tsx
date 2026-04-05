@@ -1,83 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { api } from "@/lib/api";
 
 interface User {
-  id: number;
+  id: string | number;
   name: string;
   email: string;
   avatar?: string;
-  role: "Admin" | "Ingénieur Data" | "Technicien" | "Responsable";
+  role: string;
   department: string;
   status: "Actif" | "Inactif";
   lastConnection: string | "En ligne";
 }
-
-const USERS: User[] = [
-  {
-    id: 1,
-    name: "Sarah Dubois",
-    email: "sarah.dubois@vibraguard.com",
-    role: "Admin",
-    department: "Direction",
-    status: "Actif",
-    lastConnection: "En ligne",
-  },
-  {
-    id: 2,
-    name: "Karim Benali",
-    email: "karim.benali@vibraguard.com",
-    avatar:
-      "https://api.builder.io/api/v1/image/assets/TEMP/33eff0290226457aa3b405842cde586de6f5f7ac?width=80",
-    role: "Ingénieur Data",
-    department: "Analyse & ML",
-    status: "Actif",
-    lastConnection: "En ligne",
-  },
-  {
-    id: 3,
-    name: "Marc Leroy",
-    email: "marc.leroy@vibraguard.com",
-    avatar:
-      "https://api.builder.io/api/v1/image/assets/TEMP/bea15a3f5aecbda98746220b1fe56ef741cf9ab2?width=80",
-    role: "Technicien",
-    department: "Maintenance Ligne A",
-    status: "Actif",
-    lastConnection: "Aujourd'hui, 08:15",
-  },
-  {
-    id: 4,
-    name: "Julie Martin",
-    email: "julie.martin@vibraguard.com",
-    avatar:
-      "https://api.builder.io/api/v1/image/assets/TEMP/95924e154d79d9ab33cf5bb91967b29f65c955a5?width=80",
-    role: "Responsable",
-    department: "Opérations",
-    status: "Inactif",
-    lastConnection: "12 Oct 2026",
-  },
-  {
-    id: 5,
-    name: "Ahmed Sy",
-    email: "ahmed.sy@vibraguard.com",
-    avatar:
-      "https://api.builder.io/api/v1/image/assets/TEMP/f41c3b05830ce4629f33d33aca439021fdc66728?width=80",
-    role: "Technicien",
-    department: "Maintenance Ligne B",
-    status: "Actif",
-    lastConnection: "Hier, 14:20",
-  },
-  {
-    id: 6,
-    name: "Elodie Roux",
-    email: "elodie.roux@vibraguard.com",
-    avatar:
-      "https://api.builder.io/api/v1/image/assets/TEMP/c6d8f1b8da1c5f2e533ecd312364679717603796?width=80",
-    role: "Ingénieur Data",
-    department: "Analyse & ML",
-    status: "Actif",
-    lastConnection: "Aujourd'hui, 09:30",
-  },
-];
 
 const ROLES = ["Tous les rôles", "Admin", "Ingénieur Data", "Technicien", "Responsable"];
 const DEPARTMENTS = [
@@ -87,6 +21,7 @@ const DEPARTMENTS = [
   "Maintenance Ligne A",
   "Maintenance Ligne B",
   "Opérations",
+  "Maintenance",
 ];
 
 const ROLE_STYLES: Record<string, { border: string; bg: string; text: string }> = {
@@ -138,8 +73,8 @@ function UserAvatar({ user }: { user: User }) {
   );
 }
 
-function RoleBadge({ role }: { role: User["role"] }) {
-  const styles = ROLE_STYLES[role];
+function RoleBadge({ role }: { role: string }) {
+  const styles = ROLE_STYLES[role] || ROLE_STYLES["Technicien"];
   return (
     <span
       className={`inline-flex items-center px-3 py-[6px] rounded border text-xs font-semibold ${styles.border} ${styles.bg} ${styles.text}`}
@@ -231,10 +166,11 @@ const DeleteIcon = () => (
 );
 
 const ITEMS_PER_PAGE = 6;
-const TOTAL_USERS = 24;
 
 export function UtilisateursTab() {
   const navigate = useNavigate();
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedRole, setSelectedRole] = useState("Tous les rôles");
   const [selectedDepartment, setSelectedDepartment] = useState("Tous les départements");
@@ -242,7 +178,17 @@ export function UtilisateursTab() {
   const [deptDropdownOpen, setDeptDropdownOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const filteredUsers = USERS.filter((u) => {
+  useEffect(() => {
+    setLoading(true);
+    api.getTechnicians()
+      .then(data => {
+        setUsers(data as User[]);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filteredUsers = users.filter((u) => {
     const matchesSearch =
       search === "" ||
       u.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -253,7 +199,13 @@ export function UtilisateursTab() {
     return matchesSearch && matchesRole && matchesDept;
   });
 
-  const totalPages = 4;
+  const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE) || 1;
+  const totalUsers = filteredUsers.length;
+
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <div className="flex flex-col gap-5">
@@ -444,12 +396,19 @@ export function UtilisateursTab() {
 
         {/* Table body */}
         <div>
-          {filteredUsers.map((user, idx) => (
-            <div
-              key={user.id}
-              className={`flex flex-col md:grid md:grid-cols-[2fr_1.2fr_1.4fr_1fr_1.3fr_auto] items-start md:items-center gap-3 md:gap-0 px-6 py-4 ${idx < filteredUsers.length - 1 ? "border-b border-black/[0.08]" : ""
-                } hover:bg-white/[0.02] transition-colors`}
-            >
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+              <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+              <p className="text-[#CFEFF1] animate-pulse">Chargement des utilisateurs...</p>
+            </div>
+          ) : (
+            <>
+              {paginatedUsers.map((user, idx) => (
+                <div
+                  key={user.id}
+                  className={`flex flex-col md:grid md:grid-cols-[2fr_1.2fr_1.4fr_1fr_1.3fr_auto] items-start md:items-center gap-3 md:gap-0 px-6 py-4 ${idx < paginatedUsers.length - 1 ? "border-b border-black/[0.08]" : ""
+                    } hover:bg-white/[0.02] transition-colors`}
+                >
               {/* User info */}
               <div className="flex items-center gap-4 w-full md:w-auto">
                 <UserAvatar user={user} />
@@ -495,20 +454,22 @@ export function UtilisateursTab() {
                   <DeleteIcon />
                 </button>
               </div>
-            </div>
-          ))}
+              </div>
+              ))}
 
-          {filteredUsers.length === 0 && (
-            <div className="flex items-center justify-center py-16 text-[#CFEFF1] text-sm opacity-50">
-              Aucun utilisateur trouvé
-            </div>
+              {filteredUsers.length === 0 && (
+                <div className="flex items-center justify-center py-16 text-[#CFEFF1] text-sm opacity-50">
+                  Aucun utilisateur trouvé
+                </div>
+              )}
+            </>
           )}
         </div>
 
         {/* Pagination */}
         <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4 border-t border-black/[0.08] bg-[#08151A]">
           <span className="text-[13px] text-[#CFEFF1]">
-            Affichage de 1 à {ITEMS_PER_PAGE} sur {TOTAL_USERS} utilisateurs
+            Affichage de {totalUsers === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1} à {Math.min(currentPage * ITEMS_PER_PAGE, totalUsers)} sur {totalUsers} utilisateurs
           </span>
           <div className="flex items-center gap-4">
             <button
