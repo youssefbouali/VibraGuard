@@ -93,13 +93,28 @@ def write_to_backend(batch_df, epoch_id):
         if is_anomaly:
             print(f"🚨 ANOMALY DETECTED for {motor}! Prediction: {prediction_val}")
             
-            # Update Motor RUL and Health as requested
+            # Dynamic Calculation for Motor Health and RUL
+            # health: 100 is perfect, 0 is failed. Higher v_rms = lower health.
+            health_score = max(5.0, min(95.0, 100.0 - (v_rms * 7.5)))
+            
+            if health_score < 30.0:
+                label, color = "Critique", "EF4444"
+            elif health_score < 70.0:
+                label, color = "Alerte", "F59E0B"
+            else:
+                label, color = "Attention", "F59E0B"
+                
+            # RUL (Days): Heuristic based on stress
+            base_rul = 60.0
+            stress = (v_rms * 3.0) + (max(0.0, temp - 70.0) * 0.5)
+            rul = int(max(2.0, base_rul - stress))
+            
             motor_update = {
-                "etatPct": 45,
-                "etatLabel": "Alerte",
-                "etatColor": "EF4444",
-                "rul": 47,
-                "rulTrend": "-3 jours depuis hier"
+                "etatPct": int(health_score),
+                "etatLabel": f"{int(health_score)}% {label}",
+                "etatColor": f"#{color}",
+                "rul": rul,
+                "rulTrend": f"-{int(v_rms/2) + 1} jours depuis hier"
             }
             call_api(f"iot/motors/{motor}", method="PUT", data=motor_update)
 

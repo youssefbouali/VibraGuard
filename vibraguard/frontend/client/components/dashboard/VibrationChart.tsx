@@ -39,43 +39,55 @@ export function VibrationChart() {
             <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="12" x="0" y="302">0 mm/s</text>
 
             {/* X-axis labels */}
-            <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="12" x="72" y="334">{vibrations[0]?.time ?? ""}</text>
-            <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="12" x="274" y="334">{vibrations[1]?.time ?? ""}</text>
-            <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="12" x="476" y="334">{vibrations[2]?.time ?? ""}</text>
+            <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="12" x="72" y="334">{vibrations.length > 0 ? vibrations[0].time.split(' ').pop() : ""}</text>
+            <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="12" x="274" y="334">{vibrations.length > 2 ? vibrations[Math.floor(vibrations.length/2)].time.split(' ').pop() : ""}</text>
+            <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="12" x="476" y="334">{vibrations.length > 1 ? vibrations[vibrations.length-1].time.split(' ').pop() : ""}</text>
 
-            {/* Axe X – filled area */}
-            <path
-              d="M40.35 222.38C73.97 192.73 107.59 187.79 141.21 207.56C174.83 227.32 208.45 207.56 242.08 148.25C275.7 88.95 309.32 103.78 342.94 192.73C376.56 281.68 410.18 256.97 443.81 118.6C477.43 -19.77 511.05 -4.94 544.67 163.08L605.19 177.9V296.51H40.35Z"
-              fill="url(#grad-x)"
-            />
-            <path
-              d="M40.35 222.38C73.97 192.73 107.59 187.79 141.21 207.56C174.83 227.32 208.45 207.56 242.08 148.25C275.7 88.95 309.32 103.78 342.94 192.73C376.56 281.68 410.18 256.97 443.81 118.6C477.43 -19.77 511.05 -4.94 544.67 163.08L605.19 177.9"
-              stroke="#0EA5E9"
-              strokeWidth="2.5"
-            />
+            {/* Axe X – dynamic path */}
+            {vibrations.length > 1 ? (
+              <>
+                <path
+                  d={`M ${40.35} ${296.5 - (vibrations[0].x * 11.8)} ${vibrations.slice(1).map((v, i) => `L ${40.35 + (i+1)*(565/(vibrations.length-1))} ${296.5 - (v.x * 11.8)}`).join(' ')} L 606 296.5 L 40.35 296.5 Z`}
+                  fill="url(#grad-x)"
+                />
+                <path
+                  d={`M ${40.35} ${296.5 - (vibrations[0].x * 11.8)} ${vibrations.slice(1).map((v, i) => `L ${40.35 + (i+1)*(565/(vibrations.length-1))} ${296.5 - (v.x * 11.8)}`).join(' ')}`}
+                  stroke="#0EA5E9"
+                  strokeWidth="2.5"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+              </>
+            ) : null}
 
-            {/* Axe Y – filled area */}
-            <path
-              d="M40.35 266.86C80.69 247.09 121.04 242.15 161.38 252.03C201.73 261.92 242.08 247.09 282.42 207.56C322.77 168.02 363.11 172.96 403.46 222.38C443.81 271.8 474.07 256.97 494.24 177.9C514.41 98.84 531.22 108.72 544.67 207.56L605.19 192.73V296.51H40.35Z"
-              fill="url(#grad-y)"
-            />
-            <path
-              d="M40.35 266.86C80.69 247.09 121.04 242.15 161.38 252.03C201.73 261.92 242.08 247.09 282.42 207.56C322.77 168.02 363.11 172.96 403.46 222.38C443.81 271.8 474.07 256.97 494.24 177.9C514.41 98.84 531.22 108.72 544.67 207.56L605.19 192.73"
-              stroke="#10B981"
-              strokeWidth="2.5"
-            />
+            {/* Axe Y – dynamic path */}
+            {vibrations.length > 1 ? (
+              <>
+                <path
+                  d={`M ${40.35} ${296.5 - (vibrations[0].y * 11.8)} ${vibrations.slice(1).map((v, i) => `L ${40.35 + (i+1)*(565/(vibrations.length-1))} ${296.5 - (v.y * 11.8)}`).join(' ')} L 606 296.5 L 40.35 296.5 Z`}
+                  fill="url(#grad-y)"
+                />
+                <path
+                  d={`M ${40.35} ${296.5 - (vibrations[0].y * 11.8)} ${vibrations.slice(1).map((v, i) => `L ${40.35 + (i+1)*(565/(vibrations.length-1))} ${296.5 - (v.y * 11.8)}`).join(' ')}`}
+                  stroke="#10B981"
+                  strokeWidth="2.5"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+              </>
+            ) : null}
 
-            {/* Axe Z (dashed anomalie) */}
-            <path
-              d="M40.35 281.68L141.21 274.27L242.08 266.86L302.6 74.13L342.94 252.03L463.98 259.45L605.19 266.86"
-              stroke="#A855F7"
-              strokeWidth="2.5"
-              strokeDasharray="5"
-            />
-
-            {/* Anomaly point */}
-            <circle cx="302.6" cy="74.13" r="4" fill="#A855F7"/>
-            <circle cx="302.6" cy="74.13" r="11" stroke="#A855F7" strokeWidth="1.2" opacity="0.5"/>
+            {/* Axe Z (dashed anomalie) – dynamic path */}
+            {vibrations.length > 1 ? (
+              <path
+                d={`M ${40.35} ${296.5 - (vibrations[0].z * 11.8)} ${vibrations.slice(1).map((v, i) => `L ${40.35 + (i+1)*(565/(vibrations.length-1))} ${296.5 - (v.z * 11.8)}`).join(' ')}`}
+                stroke="#A855F7"
+                strokeWidth="2.5"
+                strokeDasharray="5"
+                strokeLinejoin="round"
+                fill="none"
+              />
+            ) : null}
           </g>
 
           <defs>
