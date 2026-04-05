@@ -27,7 +27,7 @@ import numpy as np
 import os
 
 # Configuration
-KAFKA_BROKER = os.getenv("KAFKA_BROKER", "localhost:9092")
+KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka:9092")
 KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "sensor-data")
 MODEL_PATH = "vibraguard_rf_model.joblib"
 SCALER_PATH = "vibraguard_scaler.joblib"
