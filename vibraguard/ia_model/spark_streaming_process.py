@@ -1,9 +1,13 @@
 import os
 import sys
 
-# FORCE Spark to load Oracle JDBC via direct URL and Kafka via packages
-# This is more reliable than coordinate-based loading in some containers
-os.environ['PYSPARK_SUBMIT_ARGS'] = '--jars https://repo1.maven.org/maven2/com/oracle/database/jdbc/ojdbc11/21.1.0.0/ojdbc11-21.1.0.0.jar --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0 pyspark-shell'
+# CRITICAL: Force include Oracle JDBC and Kafka packages in the Spark JVM startup
+ORACLE_JAR_URL = "https://repo1.maven.org/maven2/com/oracle/database/jdbc/ojdbc11/21.1.0.0/ojdbc11-21.1.0.0.jar"
+os.environ['PYSPARK_SUBMIT_ARGS'] = (
+    f'--packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0 '
+    f'--jars {ORACLE_JAR_URL} '
+    f'pyspark-shell'
+)
 
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, udf, from_json, struct
@@ -66,23 +70,28 @@ def write_to_oracle(batch_df, epoch_id):
         
     pandas_df = batch_df.toPandas()
     
-    # Load Oracle driver using Thread context classloader (Spark's MutableURLClassLoader)
-    # Class.forName() via Py4J uses the system AppClassLoader which doesn't see Spark-added JARs.
-    # We must use the thread classloader where Spark actually placed ojdbc11.jar.
+    # Load Oracle driver
     print(f"Connecting to Oracle at: {ORACLE_URL} (User: {ORACLE_USER})")
     try:
         jvm = spark._jvm
-        thread_cl = jvm.java.lang.Thread.currentThread().getContextClassLoader()
+        # Try to use standard DriverManager to get the driver. 
+        # If it fails, we explicitly register it.
         try:
-            driver_class = thread_cl.loadClass("oracle.jdbc.OracleDriver")
+            jvm.java.sql.DriverManager.getDriver(ORACLE_URL)
+            print("Oracle JDBC Driver already registered.")
         except:
-            driver_class = thread_cl.loadClass("oracle.jdbc.driver.OracleDriver")
-        driver_instance = driver_class.getDeclaredConstructor().newInstance()
-        jvm.java.sql.DriverManager.registerDriver(driver_instance)
-        print("Oracle JDBC Driver registered successfully via thread classloader.")
+            print("Registering Oracle JDBC Driver...")
+            try:
+                driver_class = jvm.java.lang.Class.forName("oracle.jdbc.OracleDriver")
+            except:
+                driver_class = jvm.java.lang.Class.forName("oracle.jdbc.driver.OracleDriver")
+            driver_instance = driver_class.getDeclaredConstructor().newInstance()
+            jvm.java.sql.DriverManager.registerDriver(driver_instance)
+            print("Oracle JDBC Driver registered successfully.")
     except Exception as e:
-        print(f"CRITICAL: Oracle JDBC Driver not found in thread classloader! {str(e)}")
-        return
+        print(f"CRITICAL: Could not initialize Oracle JDBC Driver! {str(e)}")
+        # We continue anyway to see if DriverManager can find it automagically
+        pass
 
     # Establish Oracle JDBC Connection via Py4J
     conn = spark._jvm.java.sql.DriverManager.getConnection(ORACLE_URL, ORACLE_USER, ORACLE_PASSWORD)
