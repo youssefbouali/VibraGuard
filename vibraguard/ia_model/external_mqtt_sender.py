@@ -38,7 +38,9 @@ def generate_sensor_data():
             "current_rms": random.uniform(12.0, 17.0),
             "current_thd": random.uniform(15.0, 25.0),
             "temperature": random.uniform(75.0, 95.0),
-            "status": "anomalous" # just for debugging
+            "status": "anomalous",
+            "power": f"{random.choice([250, 450, 600, 800])} kW",
+            "speed": f"{random.choice([1480, 1490, 2950, 3000])} RPM"
         }
     else:
         data = {
@@ -53,7 +55,9 @@ def generate_sensor_data():
             "current_rms": random.uniform(8.0, 9.0),
             "current_thd": random.uniform(4.0, 6.0),
             "temperature": random.uniform(50.0, 60.0),
-            "status": "normal" # just for debugging
+            "status": "normal",
+            "power": f"{random.choice([250, 450, 600, 800])} kW",
+            "speed": f"{random.choice([1480, 1490, 2950, 3000])} RPM"
         }
     return data
 

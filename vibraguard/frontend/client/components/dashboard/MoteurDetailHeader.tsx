@@ -52,15 +52,11 @@ export function MoteurDetailHeader({ motor }: { motor: any }) {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[14px] font-medium text-[#C9EDEB]">Puissance:</span>
-              <span className="text-[14px] font-medium text-[#EAF6F5]">{motor.power || "450 kW"}</span>
+              <span className="text-[14px] font-medium text-[#EAF6F5]">{motor.power}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[14px] font-medium text-[#C9EDEB]">Vitesse:</span>
-              <span className="text-[14px] font-medium text-[#EAF6F5]">{motor.speed || "1480 RPM"}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[14px] font-medium text-[#C9EDEB]">Installé le:</span>
-              <span className="text-[14px] font-medium text-[#EAF6F5]">{motor.installationDate || "12 Sept 2022"}</span>
+              <span className="text-[14px] font-medium text-[#EAF6F5]">{motor.speed}</span>
             </div>
           </div>
         </div>

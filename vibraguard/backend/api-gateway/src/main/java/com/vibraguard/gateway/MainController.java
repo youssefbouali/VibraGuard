@@ -93,7 +93,6 @@ public class MainController {
                 if (motor.getRulTrend() != null) existing.setRulTrend(motor.getRulTrend());
                 if (motor.getPower() != null) existing.setPower(motor.getPower());
                 if (motor.getSpeed() != null) existing.setSpeed(motor.getSpeed());
-                if (motor.getInstallationDate() != null) existing.setInstallationDate(motor.getInstallationDate());
                 return motorRepository.save(existing);
             }).orElseGet(() -> {
                 motor.setId(id);

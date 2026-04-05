@@ -87,39 +87,39 @@ def write_to_backend(batch_df, epoch_id):
         }
         call_api("iot/vibrations", data=vib_payload)
         
+        # Extract dynamic metadata from row
+        pwr = row.power if hasattr(row, 'power') and row.power else "450 kW"
+        spd = row.speed if hasattr(row, 'speed') and row.speed else "1480 RPM"
+
         # Check for prediction anomaly
         is_anomaly = prediction_val.strip().upper() in ['1', '1.0', 'TRUE', 'ANOMALOUS', 'ANOMALY']
         
+        # Calculate Health and RUL (Dynamic)
+        health_score = max(5.0, min(95.0, 100.0 - (v_rms * 7.5)))
+        if health_score < 30.0:
+            label, color = "Critique", "EF4444"
+        elif health_score < 70.0:
+            label, color = "Alerte", "F59E0B"
+        else:
+            label, color = "Attention", "F59E0B"
+        
+        base_rul = 60.0
+        stress = (v_rms * 3.0) + (max(0.0, temp - 70.0) * 0.5)
+        rul = int(max(2.0, base_rul - stress))
+
+        motor_update = {
+            "etatPct": int(health_score),
+            "etatLabel": f"{int(health_score)}% {label}",
+            "etatColor": f"#{color}",
+            "rul": rul,
+            "rulTrend": f"-{int(v_rms/2) + 1} jours depuis hier",
+            "power": pwr,
+            "speed": spd
+        }
+        call_api(f"iot/motors/{motor}", method="PUT", data=motor_update)
+
         if is_anomaly:
             print(f"🚨 ANOMALY DETECTED for {motor}! Prediction: {prediction_val}")
-            
-            # Dynamic Calculation for Motor Health and RUL
-            # health: 100 is perfect, 0 is failed. Higher v_rms = lower health.
-            health_score = max(5.0, min(95.0, 100.0 - (v_rms * 7.5)))
-            
-            if health_score < 30.0:
-                label, color = "Critique", "EF4444"
-            elif health_score < 70.0:
-                label, color = "Alerte", "F59E0B"
-            else:
-                label, color = "Attention", "F59E0B"
-                
-            # RUL (Days): Heuristic based on stress
-            base_rul = 60.0
-            stress = (v_rms * 3.0) + (max(0.0, temp - 70.0) * 0.5)
-            rul = int(max(2.0, base_rul - stress))
-            
-            motor_update = {
-                "etatPct": int(health_score),
-                "etatLabel": f"{int(health_score)}% {label}",
-                "etatColor": f"#{color}",
-                "rul": rul,
-                "rulTrend": f"-{int(v_rms/2) + 1} jours depuis hier",
-                "power": "450 kW",
-                "speed": "1480 RPM",
-                "installationDate": "12 Sept 2022"
-            }
-            call_api(f"iot/motors/{motor}", method="PUT", data=motor_update)
 
             # 2. Create Alert
             alert_payload = {
@@ -170,7 +170,9 @@ schema = StructType([
     StructField("fft_total_power", DoubleType()),
     StructField("current_rms", DoubleType()),
     StructField("current_thd", DoubleType()),
-    StructField("temperature", DoubleType())
+    StructField("temperature", DoubleType()),
+    StructField("power", StringType(), True),
+    StructField("speed", StringType(), True)
 ])
 
 # Read from Kafka
