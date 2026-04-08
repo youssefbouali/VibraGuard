@@ -488,18 +488,34 @@ public class MainController {
     public Flux<Intervention> getInterventions() {
         return Mono.fromCallable(() -> {
             List<WorkOrder> wos = workOrderRepository.findAll();
+            List<Motor> motors = motorRepository.findAll();
+            
             if (wos.isEmpty()) {
                 return List.of(
-                   new Intervention("Préventif", 65, "#007A3D"),
-                   new Intervention("Correctif", 35, "#D93F3F")
+                   new Intervention("Préventif", 0, "#007A3D"),
+                   new Intervention("Correctif", 0, "#D93F3F")
                 );
             }
-            long p = wos.stream().filter(w -> "Préventif".equalsIgnoreCase(w.getType())).count();
-            long c = wos.stream().filter(w -> "Correctif".equalsIgnoreCase(w.getType())).count();
-            if (p == 0 && c == 0) {
-                p = (long)(wos.size() * 0.7);
-                c = wos.size() - p;
+            
+            long p = 0;
+            long c = 0;
+            
+            for (WorkOrder w : wos) {
+                if ("Préventif".equalsIgnoreCase(w.getType())) {
+                    p++;
+                } else if ("Correctif".equalsIgnoreCase(w.getType())) {
+                    c++;
+                } else {
+                    // Dynamic heuristic: If asset name (id) matches a motor in critical state, it's corrective
+                    boolean isCritical = motors.stream()
+                        .filter(m -> m.getId().contains(w.getAsset()) || w.getAsset().contains(m.getId()))
+                        .anyMatch(m -> m.getEtatLabel() != null && (m.getEtatLabel().contains("Critique") || m.getEtatLabel().contains("Danger")));
+                    
+                    if (isCritical) c++;
+                    else p++;
+                }
             }
+            
             return List.of(
                new Intervention("Préventif", (int)p, "#007A3D"),
                new Intervention("Correctif", (int)c, "#D93F3F")

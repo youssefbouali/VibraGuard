@@ -141,7 +141,7 @@ export default function MoteurDetail() {
              <h3 className="text-[#E6F0F2] text-lg font-semibold mb-4">Interventions de Maintenance</h3>
              <p className="text-[#98A6A8] mb-6">Aucune intervention planifiée pour ce moteur.</p>
              <Link 
-               to="/ordres-travail"
+               to="/ordres-de-travail/creer"
                className="inline-flex items-center px-4 py-2 rounded-md bg-[#007A3D] text-white text-sm hover:bg-[#006633]"
              >
                Créer un Ordre de Travail
