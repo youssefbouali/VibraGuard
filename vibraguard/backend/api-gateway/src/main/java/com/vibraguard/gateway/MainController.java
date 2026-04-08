@@ -385,23 +385,7 @@ public class MainController {
                 });
     }
 
-    @PutMapping("/iot/alerts/read-all")
-    public Mono<ResponseEntity<Void>> markAllAlertsAsRead() {
-        return Mono.fromCallable(() -> {
-            List<Alert> alerts = alertRepository.findAll();
-            boolean changed = false;
-            for (Alert alert : alerts) {
-                if ("Nouveau".equals(alert.getStatus())) {
-                    alert.setStatus("Acquittée");
-                    changed = true;
-                }
-            }
-            if (changed) {
-                alertRepository.saveAll(alerts);
-            }
-            return ResponseEntity.ok().<Void>build();
-        }).subscribeOn(Schedulers.boundedElastic());
-    }
+
 
     @GetMapping("/iot/technicians/{id}")
     public Mono<ResponseEntity<User>> getTechnicianById(@PathVariable("id") String id) {
