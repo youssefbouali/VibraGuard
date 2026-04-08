@@ -27,4 +27,5 @@ public class Motor {
     private String rulTrend;
     private String power;
     private String speed;
+    private String localisation;
 }

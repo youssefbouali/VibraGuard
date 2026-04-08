@@ -34,6 +34,7 @@ interface Alert {
   time: string;
   color: string;
   priority: string;
+  status: string;
 }
 
 export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenuClick }: HeaderProps) {
@@ -141,11 +142,23 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
   const handleMarkAllAsRead = async () => {
     try {
       await api.markAllAlertsAsRead();
-      setAlerts([]);
+      setAlerts(prev => prev.map(a => ({ ...a, status: "Read" })));
     } catch (error) {
       console.error("Failed to mark all notifications as read:", error);
     }
   };
+
+  const handleMarkAsRead = async (id: string, currentStatus: string) => {
+    if (currentStatus === "Read") return;
+    try {
+      await api.markAlertAsRead(id);
+      setAlerts(prev => prev.map(a => a.id === id ? { ...a, status: "Read" } : a));
+    } catch (error) {
+      console.error("Failed to mark notification as read:", error);
+    }
+  };
+
+  const unreadCount = alerts.filter(a => a.status !== "Read").length;
 
   return (
     <header className="flex h-auto sm:h-[72px] items-center justify-between px-4 sm:px-6 lg:px-8 py-4 sm:py-0 border-b border-black/[0.08] bg-[#071018] shrink-0 gap-4">
@@ -295,7 +308,7 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                 <path d="M8.55656 17.5C8.85429 18.0156 9.40448 18.3333 9.9999 18.3333C10.5953 18.3333 11.1455 18.0156 11.4432 17.5M2.71823 12.7717C2.4958 13.0155 2.43819 13.3676 2.57132 13.6695C2.70444 13.9715 3.00322 14.1664 3.33323 14.1667H16.6666C16.9965 14.1668 17.2955 13.9722 17.429 13.6704C17.5624 13.3687 17.5053 13.0166 17.2832 12.7725C16.1749 11.63 14.9999 10.4159 14.9999 6.66669C14.9999 3.90711 12.7595 1.66669 9.9999 1.66669C7.24032 1.66669 4.9999 3.90711 4.9999 6.66669C4.9999 10.4159 3.82406 11.63 2.71823 12.7717" stroke="#C9E7E6" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              {alerts.length > 0 && (
+              {unreadCount > 0 && (
                 <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-[#D93F3F] border-2 border-[#071018]" />
               )}
             </button>
@@ -323,11 +336,21 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
                   </div>
                 ) : (
                   alerts.map((alert) => (
-                    <div key={alert.id} className="p-4 border-b border-white/5 hover:bg-white/[0.02] cursor-pointer transition-colors relative group">
+                    <div 
+                      key={alert.id} 
+                      onClick={() => handleMarkAsRead(alert.id, alert.status)}
+                      className={cn(
+                        "p-4 border-b border-white/5 cursor-pointer transition-colors relative group",
+                        alert.status !== "Read" ? "bg-white/[0.04]" : "hover:bg-white/[0.02]"
+                      )}
+                    >
                       <div className="flex gap-3">
                         {getAlertIcon(alert.level)}
                         <div className="flex flex-col gap-1 pr-4">
-                          <p className="text-[#E6F0F2] text-sm leading-snug">
+                          <p className={cn(
+                            "text-sm leading-snug",
+                            alert.status !== "Read" ? "text-white font-medium" : "text-[#E6F0F2]"
+                          )}>
                             {alert.message}
                           </p>
                           <span className="text-[#98A6A8] text-xs flex items-center gap-1">
@@ -335,8 +358,11 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
                             {alert.time}
                           </span>
                         </div>
-                        {alert.priority === "high" && (
-                          <div className="absolute right-4 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#D93F3F]" />
+                        {alert.status !== "Read" && (
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#4FB3AF] shadow-[0_0_8px_rgba(79,179,175,0.4)]" />
+                        )}
+                        {alert.priority === "high" && alert.status === "Read" && (
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[#D93F3F]/40" />
                         )}
                       </div>
                     </div>
@@ -359,7 +385,7 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
             <div className="hidden sm:flex items-center gap-3 pl-6 border-l border-white/10 cursor-pointer hover:opacity-80 transition-opacity">
               <div className="flex flex-col items-end">
                 <span className="text-[#E6F0F2] text-sm font-semibold leading-tight">{user?.fullName || "Utilisateur"}</span>
-                <span className="text-[#C9E7E6] text-xs font-normal leading-tight">Expert Maintenance</span>
+                <span className="text-[#C9E7E6] text-xs font-normal leading-tight">{user?.role || "Expert Maintenance"}</span>
               </div>
                 <User className="w-5 h-5 text-[#C9E7E6]" />
             </div>

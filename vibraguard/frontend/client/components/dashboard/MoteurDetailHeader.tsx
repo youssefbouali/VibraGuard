@@ -1,8 +1,45 @@
 import { Link } from "react-router-dom";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export function MoteurDetailHeader({ motor }: { motor: any }) {
   const isCritique = motor.etatLabel.includes("Critique") || motor.etatLabel.includes("Alerte");
   
+  const handleDownloadReport = () => {
+    const doc = new jsPDF();
+
+    // Title
+    doc.setFontSize(20);
+    doc.setTextColor(0, 122, 61); // Green theme
+    doc.text(`Rapport Technique : ${motor.id}`, 14, 22);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Généré le : ${new Date().toLocaleString()}`, 14, 30);
+
+    // Motor Info Table
+    autoTable(doc, {
+      startY: 40,
+      head: [['Paramètre', 'Valeur']],
+      body: [
+        ['ID Moteur', motor.id],
+        ['Type', motor.type],
+        ['État de Santé', motor.etatLabel],
+        ['Santé (%)', `${motor.etatPct}%`],
+        ['Vibration RMS', motor.vibration],
+        ['Vitesse Nominale', motor.speed || 'N/A'],
+        ['Puissance', motor.power || 'N/A'],
+        ['Localisation', motor.localisation || 'Zone 2'],
+        ['RUL (Durée de vie restante)', `${motor.rul || 85}%`],
+      ],
+      theme: 'striped',
+      headStyles: { fillStyle: 'fill', fillColor: [0, 122, 61] }
+    });
+
+    // Save PDF
+    doc.save(`Rapport_${motor.id}.pdf`);
+  };
+
   return (
     <div className="relative rounded-lg border border-black/[0.08] bg-[#0B1518] overflow-hidden">
       {/* Top gradient border */}
@@ -24,7 +61,7 @@ export function MoteurDetailHeader({ motor }: { motor: any }) {
               {motor.type}
             </span>
             <span className="inline-flex items-center px-3 py-1.5 rounded text-[12px] font-semibold text-[#C9EDEB] bg-[rgba(201,237,235,0.10)] border border-[rgba(201,237,235,0.20)]">
-              Zone 2
+              {motor.localisation || "Zone 2"}
             </span>
             <span 
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[12px] font-semibold"
@@ -72,7 +109,10 @@ export function MoteurDetailHeader({ motor }: { motor: any }) {
             </svg>
             Créer OT
           </Link>
-          <button className="flex items-center gap-2 px-5 h-11 rounded-md border border-black/[0.08] bg-transparent hover:bg-white/5 transition-colors text-[#EAF6F5] text-[14px] font-semibold whitespace-nowrap">
+          <button 
+            onClick={handleDownloadReport}
+            className="flex items-center gap-2 px-5 h-11 rounded-md border border-black/[0.08] bg-transparent hover:bg-white/5 transition-colors text-[#EAF6F5] text-[14px] font-semibold whitespace-nowrap"
+          >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <path d="M3.49992 12.8333C2.85602 12.8333 2.33325 12.3105 2.33325 11.6666V2.33329C2.33325 1.68939 2.85602 1.16663 3.49992 1.16663H8.16658C8.53955 1.16602 8.89734 1.31426 9.16058 1.57846L11.2536 3.67146C11.5185 3.9348 11.6672 4.29309 11.6666 4.66663V11.6666C11.6666 12.3105 11.1438 12.8333 10.4999 12.8333H3.49992" stroke="#EAF6F5" strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M8.16675 1.16663V4.08329C8.16675 4.40524 8.42813 4.66663 8.75008 4.66663H11.6667M5.83341 5.24996H4.66675M9.33341 7.58329H4.66675M9.33341 9.91663H4.66675" stroke="#EAF6F5" strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round"/>

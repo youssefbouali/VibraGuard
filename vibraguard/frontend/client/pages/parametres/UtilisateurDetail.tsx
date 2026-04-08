@@ -310,18 +310,6 @@ export default function UtilisateurDetail() {
               </div>
 
               <div className="flex flex-col gap-8 p-6">
-                {/* Avatar */}
-                <div className="flex items-center gap-6">
-                  <img
-                    src={
-                      userData.avatar ||
-                      "https://api.builder.io/api/v1/image/assets/TEMP/debebd2e98692a4004e72072b04e25237419d788?width=192"
-                    }
-                    alt={name}
-                    className="w-24 h-24 rounded-full border-[3px] border-[#0B1518] ring-2 ring-[#007A3D] object-cover shrink-0"
-                  />
-                </div>
-
                 {/* Fields grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
                   <InputField label="Nom Complet" value={name} onChange={setName} />

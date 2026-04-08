@@ -17,6 +17,9 @@ export default function AjouterMoteur() {
   const [vibration, setVibration] = useState("1.2 mm/s");
   const [vibrationColor, setVibrationColor] = useState("text-[#007A3D]");
   const [trendIcon, setTrendIcon] = useState("stable");
+  const [power, setPower] = useState("");
+  const [speed, setSpeed] = useState("");
+  const [localisation, setLocalisation] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +35,9 @@ export default function AjouterMoteur() {
         vibration,
         vibrationColor,
         trendIcon,
+        power,
+        speed,
+        localisation,
       });
 
       toast.success("Moteur ajouté avec succès!");
@@ -149,6 +155,39 @@ export default function AjouterMoteur() {
                   <option value="down">En baisse</option>
                   <option value="stable">Stable</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#C9E7E6] mb-1.5">Puissance (kW)</label>
+                <input
+                  type="text"
+                  value={power}
+                  onChange={(e) => setPower(e.target.value)}
+                  placeholder="ex: 450 kW"
+                  className="w-full h-11 px-4 rounded-lg border border-white/10 bg-[#0D1316] text-white placeholder-[#64748B] outline-none focus:border-[#0C6CF2]/50 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#C9E7E6] mb-1.5">Vitesse Nominale (RPM)</label>
+                <input
+                  type="text"
+                  value={speed}
+                  onChange={(e) => setSpeed(e.target.value)}
+                  placeholder="ex: 1480 RPM"
+                  className="w-full h-11 px-4 rounded-lg border border-white/10 bg-[#0D1316] text-white placeholder-[#64748B] outline-none focus:border-[#0C6CF2]/50 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#C9E7E6] mb-1.5">Localisation</label>
+                <input
+                  type="text"
+                  value={localisation}
+                  onChange={(e) => setLocalisation(e.target.value)}
+                  placeholder="ex: Zone Broyage - Niveau 2"
+                  className="w-full h-11 px-4 rounded-lg border border-white/10 bg-[#0D1316] text-white placeholder-[#64748B] outline-none focus:border-[#0C6CF2]/50 transition-all"
+                />
               </div>
             </div>
           </div>

@@ -47,7 +47,8 @@ export const api = {
   getMaintenanceCosts: () => apiRequest<any[]>("GET", "/api/v1/bi/maintenance-costs"),
   getInterventions: () => apiRequest<any[]>("GET", "/api/v1/bi/interventions"),
   search: (q: string) => apiRequest<any>("GET", `/api/v1/search?q=${encodeURIComponent(q)}`),
-  markAllAlertsAsRead: () => apiRequest<any>("PUT", "/api/v1/iot/alerts/read-all"),
+  markAllAlertsAsRead: () => apiRequest<any>("POST", "/api/v1/ml/alerts/mark-all-read"),
+  markAlertAsRead: (id: string) => apiRequest<any>("POST", `/api/v1/ml/alerts/${id}/read`),
   getTechnicianById: (id: string) => apiRequest<any>("GET", `/api/v1/iot/technicians/${id}`),
   updateTechnician: (id: string, data: any) => apiRequest<any>("PUT", `/api/v1/iot/technicians/${id}`, data),
 };
