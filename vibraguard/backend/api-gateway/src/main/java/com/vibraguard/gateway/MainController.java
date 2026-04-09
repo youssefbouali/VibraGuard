@@ -310,15 +310,18 @@ public class MainController {
     }
 
     @PostMapping("/ml/alerts/mark-all-read")
-    public Mono<Void> markAllAlertsAsRead() {
+    public Mono<Map<String, Object>> markAllAlertsAsRead() {
         return Mono.fromCallable(() -> {
             List<Alert> unread = alertRepository.findAll().stream()
                 .filter(a -> !"Read".equalsIgnoreCase(a.getStatus()))
                 .collect(java.util.stream.Collectors.toList());
             unread.forEach(a -> a.setStatus("Read"));
             alertRepository.saveAll(unread);
-            return null;
-        }).then().subscribeOn(Schedulers.boundedElastic());
+            Map<String, Object> result = new HashMap<>();
+            result.put("ok", true);
+            result.put("count", unread.size());
+            return result;
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     // Work Order Endpoints

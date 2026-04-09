@@ -23,6 +23,12 @@ export async function apiRequest<T>(
     throw new Error(errorBody.message || "An error occurred");
   }
 
+  // Handle empty body responses (204 No Content, or missing Content-Type)
+  const contentType = res.headers.get("content-type");
+  if (res.status === 204 || res.status === 205 || !contentType || !contentType.includes("application/json")) {
+    return {} as T;
+  }
+
   return res.json();
 }
 
