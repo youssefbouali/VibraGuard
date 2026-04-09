@@ -3,19 +3,27 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/api";
 
 export interface VibrationData {
+  id?: string;
+  motorId?: string;
   time: string;
   x: number;
   y: number;
   z: number;
 }
 
-export function useVibrations() {
+export function useVibrations(motorId?: string) {
   const queryClient = useQueryClient();
-  const queryKey = ["/api/v1/iot/vibrations"];
+  // If motorId is provided, use motor-specific endpoint
+  const queryKey = motorId
+    ? ["/api/v1/iot/motors", motorId, "vibration"]
+    : ["/api/v1/iot/vibrations"];
 
   const query = useQuery<VibrationData[]>({
     queryKey,
-    queryFn: () => apiRequest("GET", "/api/v1/iot/vibrations"),
+    queryFn: () =>
+      motorId
+        ? apiRequest("GET", `/api/v1/iot/motors/${motorId}/vibration`)
+        : apiRequest("GET", "/api/v1/iot/vibrations"),
   });
 
   useEffect(() => {
@@ -28,6 +36,8 @@ export function useVibrations() {
     socket.onmessage = (event) => {
       try {
         const newData: VibrationData = JSON.parse(event.data);
+        // If filtering by motorId, only append matching data
+        if (motorId && newData.motorId && newData.motorId !== motorId) return;
         queryClient.setQueryData<VibrationData[]>(queryKey, (oldData = []) => {
           const updated = [...oldData, newData];
           if (updated.length > 40) return updated.slice(updated.length - 40);
@@ -39,7 +49,7 @@ export function useVibrations() {
     };
 
     return () => socket.close();
-  }, [queryClient, queryKey]);
+  }, [queryClient, motorId]);
 
   return query;
 }

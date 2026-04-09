@@ -15,9 +15,14 @@ async function main() {
     abi: JSON.parse(fs.readFileSync('./artifacts/contracts/WorkOrderRegistry.sol/WorkOrderRegistry.json')).abi
   };
 
-  // Write directly into frontend directory
-  fs.writeFileSync("../frontend/client/lib/WorkOrderRegistry.json", JSON.stringify(data, null, 2));
-  console.log("Contract info exported to frontend!");
+  // Write directly into frontend directory if it exists (local dev), otherwise skip
+  const frontendPath = "../frontend/client/lib";
+  if (fs.existsSync(frontendPath)) {
+    fs.writeFileSync(`${frontendPath}/WorkOrderRegistry.json`, JSON.stringify(data, null, 2));
+    console.log("Contract info exported to frontend!");
+  } else {
+    console.log("Running in isolated container. Artifact not exported to filesystem.");
+  }
 }
 
 main().catch((error) => {

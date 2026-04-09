@@ -16,10 +16,10 @@ export function createServer() {
   const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
   console.log(`📡 Backend proxy target: ${backendUrl}`);
 
-  // Proxy Blockchain RPC requests to Host Machine (Hardhat) via Docker Bridge IP
+  // Proxy Blockchain RPC requests to internal Kubernetes Hardhat service
   app.use(
     createProxyMiddleware({
-      target: "http://192.168.49.1:8545", // Reliable Minikube host gateway IP
+      target: "http://blockchain:8545",
       changeOrigin: true,
       pathFilter: "/blockchain-rpc",
       pathRewrite: { "^/blockchain-rpc": "" },

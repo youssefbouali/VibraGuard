@@ -23,21 +23,7 @@ fi
 echo "🐳 Connecting to Minikube Docker daemon..."
 eval $(minikube docker-env)
 
-# Start Local Blockchain
-echo "⛓️  Starting Local Blockchain (Hardhat)..."
-cd "$ROOT_DIR/vibraguard/blockchain-net"
-# Try to brutally kill any hanging node on 8545 to avoid port collision
-if command -v netstat &> /dev/null || command -v fuser &> /dev/null; then
-    fuser -k 8545/tcp 2>/dev/null || true
-fi
-npm install
-# Start hardhat node in background on all network interfaces
-npx hardhat node --hostname 0.0.0.0 > hardhat.log 2>&1 &
-echo "⏳ Waiting for blockchain node to initialize..."
-sleep 5
-echo "📜 Deploying Smart Contract..."
-npx hardhat run scripts/deploy.js --network localhost
-cd "$ROOT_DIR"
+# No more local background process. Blockchain is now native to Minikube Kubernetes!
 
 # 2. Kubernetes Namespace Setup
 echo "☸️ Ensuring namespace '$NAMESPACE' exists..."
@@ -70,6 +56,10 @@ docker build -t vibraguard-frontend:latest .
 echo "🏗️  Building AI Components (Dockerized)..."
 cd "$ROOT_DIR/vibraguard/ia_model"
 docker build -t vibraguard-ia:latest .
+
+echo "🏗️  Building Blockchain Component (Dockerized)..."
+cd "$ROOT_DIR/vibraguard/blockchain-net"
+docker build -t vibraguard-blockchain:latest .
 
 
 
@@ -236,8 +226,43 @@ spec:
       nodePort: 30008
 EOF
 
+cat <<EOF > k8s/blockchain-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blockchain
+  namespace: $NAMESPACE
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blockchain
+  template:
+    metadata:
+      labels:
+        app: blockchain
+    spec:
+      containers:
+        - name: blockchain
+          image: vibraguard-blockchain:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8545
+EOF
 
-
+cat <<EOF > k8s/blockchain-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: blockchain
+  namespace: $NAMESPACE
+spec:
+  selector:
+    app: blockchain
+  ports:
+    - port: 8545
+      targetPort: 8545
+EOF
 
 
 

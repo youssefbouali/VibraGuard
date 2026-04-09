@@ -9,6 +9,7 @@ import { FFTChart } from "@/components/dashboard/FFTChart";
 import { DernieresAlertes } from "@/components/dashboard/DernieresAlertes";
 import { Header } from "@/components/dashboard/Header";
 import { api } from "@/lib/api";
+import { useVibrations } from "@/hooks/use-vibrations";
 
 const tabs = [
   "Vue d'ensemble",
@@ -27,7 +28,8 @@ export default function MoteurDetail() {
   const [motor, setMotor] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const [vibrations, setVibrations] = useState<any[]>([]);
+  // Real-time vibrations via WebSocket, filtered for this motor
+  const { data: vibrations = [] } = useVibrations(id);
   const [alerts, setAlerts] = useState<any[]>([]);
 
   useEffect(() => {
@@ -35,12 +37,10 @@ export default function MoteurDetail() {
       setLoading(true);
       Promise.all([
         api.getMotorById(id),
-        api.getMotorVibrations(id),
-        api.getAlerts() // Normally we would fetch motor-specific alerts, but for now we'll filter them or use all
+        api.getAlerts()
       ])
-        .then(([motorData, vibData, alertData]) => {
+        .then(([motorData, alertData]) => {
           setMotor(motorData);
-          setVibrations(vibData);
           setAlerts(alertData.filter((a: any) => a.message.includes(id) || a.message.includes(motorData.id)));
         })
         .catch(console.error)
@@ -108,7 +108,14 @@ export default function MoteurDetail() {
         )}
 
         {activeTab === "Vibrations Temps Réel" && (
-          <div className="w-full h-[400px]">
+          <div className="w-full flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+              </span>
+              <span className="text-sm text-green-400 font-medium">Temps Réel — WebSocket actif</span>
+            </div>
             <TendanceVibratoire vibrations={vibrations} />
           </div>
         )}
