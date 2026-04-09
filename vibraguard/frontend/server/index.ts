@@ -16,6 +16,23 @@ export function createServer() {
   const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
   console.log(`📡 Backend proxy target: ${backendUrl}`);
 
+  // Proxy Blockchain RPC requests to Host Machine (Hardhat)
+  app.use(
+    createProxyMiddleware({
+      target: "http://host.minikube.internal:8545",
+      changeOrigin: true,
+      pathFilter: "/blockchain-rpc",
+      pathRewrite: { "^/blockchain-rpc": "" },
+      on: {
+        error: (err, _req, res) => {
+          console.error(`❌ Blockchain Proxy Error:`, err.message);
+          // @ts-ignore
+          if (!res.headersSent) res.status(502).json({ error: "Blockchain node unreachable" });
+        }
+      }
+    })
+  );
+
   app.use(
     createProxyMiddleware({
       target: backendUrl,

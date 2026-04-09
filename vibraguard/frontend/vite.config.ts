@@ -22,6 +22,11 @@ export default defineConfig(({ mode }) => ({
         target: "ws://localhost:8080",
         ws: true,
       },
+      "/blockchain-rpc": {
+        target: "http://127.0.0.1:8545",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/blockchain-rpc/, ''),
+      },
     },
   },
   build: {

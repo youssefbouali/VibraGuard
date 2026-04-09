@@ -20,8 +20,8 @@ export async function submitWorkOrderToBlockchain(order: any) {
       console.warn("Using default contract ABI/Address");
     }
 
-    // Connect to deployed Hardhat node dynamically using current hostname
-    const providerUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:8545` : "http://127.0.0.1:8545";
+    // Connect to deployed Hardhat node dynamically using current hostname and proxy tunnel
+    const providerUrl = typeof window !== 'undefined' ? `${window.location.origin}/blockchain-rpc` : "http://127.0.0.1:8545";
     const provider = new ethers.JsonRpcProvider(providerUrl);
     
     // We get a signer (simulating a connected wallet for this demo)
@@ -54,7 +54,8 @@ export async function fetchWorkOrderEvents() {
       if (dynamicData.address) contractData = dynamicData;
     } catch (e) {}
 
-    const providerUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:8545` : "http://127.0.0.1:8545";
+    // Use the proxy route to bypass firewall blocked ports
+    const providerUrl = typeof window !== 'undefined' ? `${window.location.origin}/blockchain-rpc` : "http://127.0.0.1:8545";
     const provider = new ethers.JsonRpcProvider(providerUrl);
     const contract = new ethers.Contract(contractData.address, contractData.abi, provider);
     
