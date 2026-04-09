@@ -24,10 +24,18 @@ export function createServer() {
       pathFilter: "/blockchain-rpc",
       pathRewrite: { "^/blockchain-rpc": "" },
       on: {
+        proxyReq: (proxyReq, req: any) => {
+          if (req.body && (req.method === 'POST' || req.method === 'PUT')) {
+            const bodyData = JSON.stringify(req.body);
+            proxyReq.setHeader('Content-Type', 'application/json');
+            proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
+            proxyReq.write(bodyData);
+          }
+        },
         error: (err, _req, res) => {
           console.error(`❌ Blockchain Proxy Error:`, err.message);
           // @ts-ignore
-          if (!res.headersSent) res.status(502).json({ error: "Blockchain node unreachable" });
+          if (!res.headersSent) res.status(502).json({ error: "Blockchain node unreachable", details: err.message });
         }
       }
     })
