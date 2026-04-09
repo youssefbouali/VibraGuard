@@ -70,9 +70,9 @@ export function KPICards({ tab, date }: { tab: string; date: string }) {
     <div className="flex flex-wrap gap-4 px-6 lg:px-12">
       <KPICard
         title={`MTBF (${tab})`}
-        value={String(kpis?.mtbf ?? "340")}
+        value={String(kpis?.mtbf ?? "0")}
         unit="h"
-        trend={kpis?.mtbfTrend ?? "+2.4%"}
+        trend={kpis?.mtbfTrend ?? "Stable"}
         trendUp={kpis?.mtbfUp ?? true}
         trendColor="#007A3D"
         iconBg="rgba(0, 122, 61, 0.15)"
@@ -85,9 +85,9 @@ export function KPICards({ tab, date }: { tab: string; date: string }) {
 
       <KPICard
         title={`MTTR (${tab})`}
-        value={String(kpis?.mttr ?? "4.2")}
+        value={String(kpis?.mttr ?? "0")}
         unit="h"
-        trend={kpis?.mttrTrend ?? "-5%"}
+        trend={kpis?.mttrTrend ?? "Stable"}
         trendUp={kpis?.mttrUp ?? false}
         trendColor="#007A3D"
         iconBg="rgba(12, 108, 242, 0.15)"
@@ -100,9 +100,9 @@ export function KPICards({ tab, date }: { tab: string; date: string }) {
 
       <KPICard
         title="Disponibilité"
-        value={String(kpis?.availability ?? "98.2")}
+        value={String(kpis?.availability ?? "0")}
         unit="%"
-        trend={kpis?.availabilityTrend ?? "+0.1%"}
+        trend={kpis?.availabilityTrend ?? "N/A"}
         trendUp={true}
         iconBg="rgba(230, 240, 242, 0.05)"
         icon={
@@ -114,9 +114,9 @@ export function KPICards({ tab, date }: { tab: string; date: string }) {
 
       <KPICard
         title={`Coût ${date}`}
-        value={getSimValue(kpis?.maintenanceCost ?? "450000")}
+        value={getSimValue(kpis?.maintenanceCost ?? "0")}
         unit="MAD"
-        trend={kpis?.maintenanceCostTrend ?? "-2.1%"}
+        trend={kpis?.maintenanceCostTrend ?? "Stable"}
         trendUp={false}
         iconBg="rgba(242, 169, 0, 0.1)"
         icon={

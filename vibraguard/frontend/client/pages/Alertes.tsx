@@ -231,34 +231,36 @@ export default function Alertes() {
             </div>
 
             {/* Pagination UI */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-4 px-2 py-3 border-t border-white/5 shrink-0">
-                <div className="text-[#98A6A8] text-xs font-medium">
-                  Affichage de {startIndex + 1} à {Math.min(startIndex + itemsPerPage, filteredAlertes.length)} sur {filteredAlertes.length} alertes
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                    className="flex h-8 w-8 items-center justify-center rounded border border-white/10 text-[#E2E8F0] hover:bg-white/5 transition-colors disabled:opacity-30"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </button>
-                  
+            <div className="flex flex-wrap items-center justify-between mt-4 px-4 py-3 border border-white/5 bg-[#0D1316]/30 rounded-lg shrink-0">
+              <div className="text-[#98A6A8] text-[13px] font-medium">
+                Affichage de <span className="text-[#E2E8F0] font-bold">{filteredAlertes.length === 0 ? 0 : startIndex + 1}</span> à <span className="text-[#E2E8F0] font-bold">{Math.min(startIndex + itemsPerPage, filteredAlertes.length)}</span> sur <span className="text-[#E2E8F0] font-bold">{filteredAlertes.length}</span> alertes
+              </div>
+              
+              <div className="flex items-center gap-2 mt-2 sm:mt-0">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="flex h-9 px-3 items-center justify-center rounded-md border border-white/10 text-[#E2E8F0] text-sm font-medium hover:bg-white/5 transition-all disabled:opacity-30 disabled:cursor-not-allowed group"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mr-1 group-hover:-translate-x-0.5 transition-transform">
+                    <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  Précédent
+                </button>
+                
+                <div className="flex items-center gap-1 mx-2">
                   {Array.from({ length: totalPages }, (_, i) => i + 1)
                     .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
                     .map((p, i, arr) => {
                       const showEllipsis = i > 0 && p - arr[i - 1] > 1;
                       return (
                         <div key={p} className="flex items-center">
-                          {showEllipsis && <span className="text-[#64748B] px-1">...</span>}
+                          {showEllipsis && <span className="text-[#64748B] px-1 text-sm">...</span>}
                           <button
                             onClick={() => setCurrentPage(p)}
-                            className={`h-8 min-w-[32px] px-2 rounded text-xs font-semibold transition-all ${
+                            className={`h-9 min-w-[36px] px-2 rounded-md text-[13px] font-bold transition-all ${
                               currentPage === p 
-                                ? "bg-[#007A3D] text-white shadow-lg shadow-[#007A3D]/20" 
+                                ? "bg-[#007A3D] text-white shadow-[0_0_15px_rgba(0,122,61,0.3)] scale-110" 
                                 : "text-[#98A6A8] hover:text-[#E2E8F0] hover:bg-white/5"
                             }`}
                           >
@@ -267,19 +269,20 @@ export default function Alertes() {
                         </div>
                       );
                     })}
-
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages}
-                    className="flex h-8 w-8 items-center justify-center rounded border border-white/10 text-[#E2E8F0] hover:bg-white/5 transition-colors disabled:opacity-30"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </button>
                 </div>
+
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="flex h-9 px-3 items-center justify-center rounded-md border border-white/10 text-[#E2E8F0] text-sm font-medium hover:bg-white/5 transition-all disabled:opacity-30 disabled:cursor-not-allowed group"
+                >
+                  Suivant
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="ml-1 group-hover:translate-x-0.5 transition-transform">
+                    <path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
               </div>
-            )}
+            </div>
           </div>
 
           {/* Side panel */}
