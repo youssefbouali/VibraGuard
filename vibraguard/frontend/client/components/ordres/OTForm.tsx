@@ -314,6 +314,7 @@ export function OTForm({ onCancel }: OTFormProps) {
               </div>
             </div>
           </div>
+        </div>
 
         {/* Row Type Maintenance & Tech */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
