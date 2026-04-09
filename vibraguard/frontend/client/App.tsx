@@ -19,6 +19,7 @@ import RapportsBI from "./pages/RapportsBI";
 import AuditBlockchain from "./pages/AuditBlockchain";
 import Parametres from "./pages/Parametres";
 import ProfilUtilisateur from "./pages/ProfilUtilisateur";
+import Notifications from "./pages/Notifications";
 import UtilisateurDetail from "./pages/parametres/UtilisateurDetail";
 import AjouterUtilisateur from "./pages/parametres/AjouterUtilisateur";
 import Login from "./pages/Login";
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/ordres-de-travail/creer" element={<ProtectedRoute><CreerOrdreDeTravail /></ProtectedRoute>} />
             <Route path="/rapports-bi" element={<ProtectedRoute><RapportsBI /></ProtectedRoute>} />
             <Route path="/audit" element={<ProtectedRoute><AuditBlockchain /></ProtectedRoute>} />
+            <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             <Route path="/parametres" element={<ProtectedRoute><Parametres /></ProtectedRoute>} />
             <Route path="/parametres/profil" element={<ProtectedRoute><ProfilUtilisateur /></ProtectedRoute>} />
             <Route path="/parametres/utilisateurs/ajouter" element={<ProtectedRoute><AjouterUtilisateur /></ProtectedRoute>} />

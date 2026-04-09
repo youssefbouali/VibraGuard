@@ -373,7 +373,10 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
             </ScrollArea>
 
             <div className="p-3 bg-white/[0.02] text-center">
-              <button className="text-[#E6F0F2] hover:text-white text-xs font-semibold transition-colors">
+              <button 
+                onClick={() => navigate("/notifications")}
+                className="text-[#E6F0F2] hover:text-white text-xs font-semibold transition-colors"
+              >
                 Voir toutes les notifications
               </button>
             </div>
@@ -386,7 +389,7 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
             <div className="hidden sm:flex items-center gap-3 pl-6 border-l border-white/10 cursor-pointer hover:opacity-80 transition-opacity">
               <div className="flex flex-col items-end">
                 <span className="text-[#E6F0F2] text-sm font-semibold leading-tight">{user?.fullName || "Utilisateur"}</span>
-                <span className="text-[#C9E7E6] text-xs font-normal leading-tight">{user?.role || "Expert Maintenance"}</span>
+                <span className="text-[#C9E7E6] text-xs font-normal leading-tight">{user?.role}</span>
               </div>
                 <User className="w-5 h-5 text-[#C9E7E6]" />
             </div>

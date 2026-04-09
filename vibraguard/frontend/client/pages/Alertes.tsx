@@ -91,7 +91,7 @@ export default function Alertes() {
       severite: severite,
       confiance: a.scoreConfianceIA ?? (a.priority === "high" ? 96 : 85),
       dateHeure: a.time,
-      statut: "Nouveau",
+      statut: a.status || "Nouveau",
       velociteRms: a.velociteRms,
       accelerationPeak: a.accelerationPeak,
       temperature: a.temperature,
@@ -101,6 +101,9 @@ export default function Alertes() {
   });
 
   const selectedAlerte = mappedAlerts.find((a) => a.id === selectedId) ?? null;
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const filteredAlertes = mappedAlerts.filter((a) => {
     if (severiteFilter !== "Toutes" && a.severite !== severiteFilter) return false;
@@ -115,6 +118,10 @@ export default function Alertes() {
     }
     return true;
   });
+
+  const totalPages = Math.ceil(filteredAlertes.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedAlertes = filteredAlertes.slice(startIndex, startIndex + itemsPerPage);
 
   const handleSelect = (id: string) => {
     setSelectedId(id === selectedId ? null : id);
@@ -212,14 +219,67 @@ export default function Alertes() {
         {/* Split content - Fixed height container */}
         <div className="flex flex-1 min-h-0 overflow-hidden h-[calc(100vh-220px)] lg:h-[calc(100vh-180px)]">
           {/* Table area */}
-          <div className="flex-1 min-w-0 overflow-y-auto overflow-x-auto py-6 pr-2">
-            <AlertesTable
-              alertes={filteredAlertes}
-              selectedId={selectedId}
-              onSelect={handleSelect}
-              onAcquitter={handleAcquitter}
-              onEscalader={handleEscalader}
-            />
+          <div className="flex-1 min-w-0 flex flex-col py-6 pr-2">
+            <div className="flex-1 overflow-y-auto">
+              <AlertesTable
+                alertes={paginatedAlertes}
+                selectedId={selectedId}
+                onSelect={handleSelect}
+                onAcquitter={handleAcquitter}
+                onEscalader={handleEscalader}
+              />
+            </div>
+
+            {/* Pagination UI */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-4 px-2 py-3 border-t border-white/5 shrink-0">
+                <div className="text-[#98A6A8] text-xs font-medium">
+                  Affichage de {startIndex + 1} à {Math.min(startIndex + itemsPerPage, filteredAlertes.length)} sur {filteredAlertes.length} alertes
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="flex h-8 w-8 items-center justify-center rounded border border-white/10 text-[#E2E8F0] hover:bg-white/5 transition-colors disabled:opacity-30"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                  
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                    .map((p, i, arr) => {
+                      const showEllipsis = i > 0 && p - arr[i - 1] > 1;
+                      return (
+                        <div key={p} className="flex items-center">
+                          {showEllipsis && <span className="text-[#64748B] px-1">...</span>}
+                          <button
+                            onClick={() => setCurrentPage(p)}
+                            className={`h-8 min-w-[32px] px-2 rounded text-xs font-semibold transition-all ${
+                              currentPage === p 
+                                ? "bg-[#007A3D] text-white shadow-lg shadow-[#007A3D]/20" 
+                                : "text-[#98A6A8] hover:text-[#E2E8F0] hover:bg-white/5"
+                            }`}
+                          >
+                            {p}
+                          </button>
+                        </div>
+                      );
+                    })}
+
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    className="flex h-8 w-8 items-center justify-center rounded border border-white/10 text-[#E2E8F0] hover:bg-white/5 transition-colors disabled:opacity-30"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Side panel */}

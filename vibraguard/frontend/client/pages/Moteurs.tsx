@@ -193,18 +193,17 @@ export default function Moteurs() {
   const [editType, setEditType] = useState("");
   const [editEtat, setEditEtat] = useState<HealthStatus>("Normal");
   const [editVibration, setEditVibration] = useState("");
-
-  const totalMoteurs = (apiMoteurs || []).length;
-  const perPage = 5;
+  const totalMoteurs = filtered.length;
+  const perPage = 10; // Better for standard lists
   const totalPages = Math.ceil(totalMoteurs / perPage) || 1;
+  
+  // Ensure we don't stay on a page that no longer exists after filtering
+  if (currentPage > totalPages && totalPages > 0) {
+    setCurrentPage(totalPages);
+  }
 
-  // backend data is already mapped to frontend format
-  const filtered = (apiMoteurs || []).filter(
-    (m) =>
-      m.id.toLowerCase().includes(search.toLowerCase()) ||
-      m.zone.toLowerCase().includes(search.toLowerCase()) ||
-      m.localisation.toLowerCase().includes(search.toLowerCase())
-  );
+  const startIndex = (currentPage - 1) * perPage;
+  const paginatedMoteurs = filtered.slice(startIndex, startIndex + perPage);
 
   return (
     <DashboardLayout breadcrumb="Moteurs">
@@ -238,7 +237,10 @@ export default function Moteurs() {
                 type="text"
                 placeholder="Rechercher par ID, Zone..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="bg-transparent text-sm text-[#98A6A8] placeholder:text-[#98A6A8] outline-none flex-1 min-w-0"
               />
             </div>
@@ -324,7 +326,7 @@ export default function Moteurs() {
               <span className="text-[13px] font-medium text-[#C9E7E6]">Type</span>
             </div>
             <div className="hidden md:flex items-center px-6 py-4">
-              <span className="text-[13px] font-medium text-[#C9E7E6]">Vibration RMS</span>
+              <span className="text-[13px] font-medium text-[#C9E7E6]">Vibration</span>
             </div>
             <div className="hidden md:flex items-center px-6 py-4">
               <span className="text-[13px] font-medium text-[#C9E7E6]">Dernière Alerte</span>
@@ -336,7 +338,7 @@ export default function Moteurs() {
 
           {/* Table body */}
           <div className="divide-y divide-black/[0.08] overflow-x-auto">
-            {filtered.map((moteur) => (
+            {paginatedMoteurs.map((moteur) => (
               <div
                 key={moteur.id}
                 className="grid grid-cols-[1fr_1fr_auto] md:grid-cols-[2fr_1.8fr_1.3fr_1.5fr_1.4fr_1.5fr_auto] hover:bg-white/[0.02] transition-colors cursor-pointer min-w-full md:min-w-0"
@@ -386,25 +388,12 @@ export default function Moteurs() {
                 </div>
 
                 <div className="flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-[19px] justify-end">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // View Trend
-                      }}
-                      className="flex w-8 h-8 items-center justify-center rounded bg-[#0F2730] hover:bg-[#163340] transition-colors shrink-0"
-                    >
+                    <ActionBtn>
                       <VibrationIcon />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/moteurs/${moteur.id}`);
-                      }}
-                      className="flex w-8 h-8 items-center justify-center rounded bg-[#0F2730] hover:bg-[#163340] transition-colors shrink-0"
-                      title="Voir les détails"
-                    >
+                    </ActionBtn>
+                    <ActionBtn>
                       <EyeIcon />
-                    </button>
+                    </ActionBtn>
                     
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -458,50 +447,52 @@ export default function Moteurs() {
           {/* Pagination */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-3 sm:px-6 py-4 border-t border-black/[0.08] bg-[rgba(15,39,48,0.10)]">
             <span className="text-xs sm:text-[13px] text-[#C9E7E6] order-2 sm:order-1">
-              Affichage de <span className="font-medium text-[#E6F0F2]">1</span> à{" "}
-              <span className="font-medium text-[#E6F0F2]">5</span> sur{" "}
+              Affichage de <span className="font-medium text-[#E6F0F2]">{Math.min(startIndex + 1, totalMoteurs)}</span> à{" "}
+              <span className="font-medium text-[#E6F0F2]">{Math.min(startIndex + perPage, totalMoteurs)}</span> sur{" "}
               <span className="font-medium text-[#E6F0F2]">{totalMoteurs}</span> moteurs
             </span>
 
             <div className="flex items-center gap-2">
               {/* Prev */}
-              <button className="flex w-8 h-8 items-center justify-center rounded border border-black/[0.08] bg-[#0D1316] hover:bg-white/5 transition-colors">
+              <button 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="flex w-8 h-8 items-center justify-center rounded border border-black/[0.08] bg-[#0D1316] hover:bg-white/5 transition-colors disabled:opacity-30"
+              >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M10 12L6 8L10 4" stroke="#E6F0F2" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </button>
 
-              {[1, 2, 3].map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={cn(
-                    "flex w-8 h-8 items-center justify-center rounded text-[13px] font-medium border transition-colors",
-                    currentPage === page
-                      ? "bg-[#007A3D] border-[#007A3D] text-white"
-                      : "bg-[#0D1316] border-black/[0.08] text-[#E6F0F2] hover:bg-white/5"
-                  )}
-                >
-                  {page}
-                </button>
-              ))}
-
-              <span className="text-[#98A6A8] text-base px-1">...</span>
-
-              <button
-                onClick={() => setCurrentPage(totalPages)}
-                className={cn(
-                  "flex w-8 h-8 items-center justify-center rounded text-[13px] font-medium border transition-colors",
-                  currentPage === totalPages
-                    ? "bg-[#007A3D] border-[#007A3D] text-white"
-                    : "bg-[#0D1316] border-black/[0.08] text-[#E6F0F2] hover:bg-white/5"
-                )}
-              >
-                9
-              </button>
+              {Array.from({ length: totalPages }).map((_, i) => {
+                const page = i + 1;
+                // Show only a few pages if too many
+                if (totalPages > 5 && (page > 3 && page < totalPages)) {
+                   if (page === 4) return <span key="dots" className="text-[#98A6A8] text-base px-1">...</span>;
+                   return null;
+                }
+                return (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={cn(
+                      "flex w-8 h-8 items-center justify-center rounded text-[13px] font-medium border transition-colors",
+                      currentPage === page
+                        ? "bg-[#007A3D] border-[#007A3D] text-white"
+                        : "bg-[#0D1316] border-black/[0.08] text-[#E6F0F2] hover:bg-white/5"
+                    )}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
 
               {/* Next */}
-              <button className="flex w-8 h-8 items-center justify-center rounded border border-black/[0.08] bg-[#0D1316] hover:bg-white/5 transition-colors">
+              <button 
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="flex w-8 h-8 items-center justify-center rounded border border-black/[0.08] bg-[#0D1316] hover:bg-white/5 transition-colors disabled:opacity-30"
+              >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M6 12L10 8L6 4" stroke="#E6F0F2" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>

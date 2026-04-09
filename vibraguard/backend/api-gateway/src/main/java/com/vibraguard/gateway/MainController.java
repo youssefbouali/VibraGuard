@@ -102,52 +102,40 @@ public class MainController {
             List<Map<String, Object>> result = motors.stream().map(m -> {
                 Map<String, Object> map = new HashMap<>();
                 map.put("id", m.getId());
-                map.put("zone", "Zone 1"); 
-                map.put("localisation", "Usine Principale");
+                map.put("localisation", m.getLocalisation() != null ? m.getLocalisation() : "");
                 map.put("type", m.getType() != null ? m.getType() : "Inconnu");
                 map.put("puissance", m.getPower() != null ? m.getPower() : "N/A");
                 
-                // Robust mapping for etatSante
-                String status = "Normal";
-                String el = m.getEtatLabel();
-                if (el != null) {
-                    String lowerEl = el.toLowerCase();
-                    if (lowerEl.contains("critique") || lowerEl.contains("danger")) status = "Critique";
-                    else if (lowerEl.contains("alerte") || lowerEl.contains("attention") || lowerEl.contains("warning")) status = "Attention";
-                }
-                map.put("etatSante", status);
+                // Map fields exactly as the frontend expects
+                map.put("etatLabel", m.getEtatLabel() != null ? m.getEtatLabel() : "Normal");
+                map.put("etatColor", m.getEtatColor() != null ? m.getEtatColor() : "#10B981");
+                map.put("etatPct", m.getEtatPct() != 0 ? m.getEtatPct() : 100);
+                map.put("vibration", m.getVibration() != null ? m.getVibration() : "0.0 mm/s");
+                map.put("vibrationColor", m.getVibrationColor() != null ? m.getVibrationColor() : "#10B981");
+                map.put("trendIcon", m.getTrendIcon() != null ? m.getTrendIcon() : "flat");
                 
-                // Map vibration
-                double vib = 0.0;
+                // Keep these for potential analytics usage
+                map.put("etatSante", map.get("etatLabel"));
+                
+                double vibVal = 0.0;
                 try {
                     String vStr = m.getVibration();
                     if (vStr != null && !vStr.isEmpty()) {
-                        // Extract number from "5.8 mm/s" or just "5.8"
                         String numeric = vStr.split(" ")[0].replaceAll("[^0-9.]", "");
-                        if (!numeric.isEmpty()) {
-                            vib = Double.parseDouble(numeric);
-                        }
+                        if (!numeric.isEmpty()) vibVal = Double.parseDouble(numeric);
                     }
                 } catch (Exception e) {}
-                map.put("vibrationRMS", vib);
+                map.put("vibrationRMS", vibVal);
                 
                 // Find latest alert for this motor
                 Optional<Alert> lastAlert = allAlerts.stream()
                     .filter(a -> {
                         String motorIdClean = m.getId().split(" \\(")[0].trim().toLowerCase();
-                        
-                        // 1. Check direct motorId field
                         if (a.getMotorId() != null) {
                             String alertMotorClean = a.getMotorId().split(" \\(")[0].trim().toLowerCase();
                             if (alertMotorClean.equals(motorIdClean)) return true;
                         }
-                        
-                        // 2. Check fallback: message contains motor ID (as seen in frontend Alertes.tsx)
-                        if (a.getMessage() != null) {
-                            String msg = a.getMessage().toLowerCase();
-                            if (msg.contains(motorIdClean)) return true;
-                        }
-                        
+                        if (a.getMessage() != null && a.getMessage().toLowerCase().contains(motorIdClean)) return true;
                         return false;
                     })
                     .sorted((a1, a2) -> {
@@ -165,7 +153,7 @@ public class MainController {
                 }
                 
                 return map;
-            }).collect(Collectors.toList());
+            }).collect(Collectors.toList());联
             
             return Flux.fromIterable(result);
         }).subscribeOn(Schedulers.boundedElastic());

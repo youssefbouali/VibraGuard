@@ -35,8 +35,8 @@ export default function AjouterMoteur() {
         vibration,
         vibrationColor,
         trendIcon,
-        power,
-        speed,
+        power: power ? power + " kW" : "",
+        speed: speed ? speed + " RPM" : "",
         localisation,
       });
 
@@ -160,10 +160,10 @@ export default function AjouterMoteur() {
               <div>
                 <label className="block text-sm font-medium text-[#C9E7E6] mb-1.5">Puissance (kW)</label>
                 <input
-                  type="text"
+                  type="number"
                   value={power}
                   onChange={(e) => setPower(e.target.value)}
-                  placeholder="ex: 450 kW"
+                  placeholder="ex: 450"
                   className="w-full h-11 px-4 rounded-lg border border-white/10 bg-[#0D1316] text-white placeholder-[#64748B] outline-none focus:border-[#0C6CF2]/50 transition-all"
                 />
               </div>
@@ -171,10 +171,10 @@ export default function AjouterMoteur() {
               <div>
                 <label className="block text-sm font-medium text-[#C9E7E6] mb-1.5">Vitesse Nominale (RPM)</label>
                 <input
-                  type="text"
+                  type="number"
                   value={speed}
                   onChange={(e) => setSpeed(e.target.value)}
-                  placeholder="ex: 1480 RPM"
+                  placeholder="ex: 1480"
                   className="w-full h-11 px-4 rounded-lg border border-white/10 bg-[#0D1316] text-white placeholder-[#64748B] outline-none focus:border-[#0C6CF2]/50 transition-all"
                 />
               </div>

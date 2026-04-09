@@ -29,7 +29,7 @@ export function MoteurDetailHeader({ motor }: { motor: any }) {
         ['Vibration RMS', motor.vibration],
         ['Vitesse Nominale', motor.speed || 'N/A'],
         ['Puissance', motor.power || 'N/A'],
-        ['Localisation', motor.localisation || 'Zone 2'],
+        ['Localisation', motor.localisation || ''],
         ['RUL (Durée de vie restante)', `${motor.rul || 85}%`],
       ],
       theme: 'striped',
@@ -61,7 +61,7 @@ export function MoteurDetailHeader({ motor }: { motor: any }) {
               {motor.type}
             </span>
             <span className="inline-flex items-center px-3 py-1.5 rounded text-[12px] font-semibold text-[#C9EDEB] bg-[rgba(201,237,235,0.10)] border border-[rgba(201,237,235,0.20)]">
-              {motor.localisation || "Zone 2"}
+              {motor.localisation || ""}
             </span>
             <span 
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[12px] font-semibold"

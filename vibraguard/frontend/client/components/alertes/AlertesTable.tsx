@@ -63,6 +63,16 @@ const statutConfig: Record<Statut, { color: string; bg: string; border: string }
     bg: "bg-[rgba(148,163,184,0.10)]",
     border: "border-[rgba(148,163,184,0.20)]",
   },
+  Acquittée: {
+    color: "text-[#10B981]",
+    bg: "bg-[rgba(16,185,129,0.10)]",
+    border: "border-[#10B981]/30",
+  },
+  Escaladée: {
+    color: "text-[#EF4444]",
+    bg: "bg-[rgba(239,68,68,0.10)]",
+    border: "border-[#EF4444]/30",
+  },
 };
 
 function ConfidenceBar({ value, severite }: { value: number; severite: Severite }) {
