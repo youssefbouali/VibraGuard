@@ -1,5 +1,5 @@
-const hre = require("hardhat");
-const fs = require("fs");
+import hre from "hardhat";
+import fs from "fs";
 
 async function main() {
   const WorkOrderRegistry = await hre.ethers.deployContract("WorkOrderRegistry");
