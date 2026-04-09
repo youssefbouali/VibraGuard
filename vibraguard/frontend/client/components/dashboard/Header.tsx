@@ -13,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 
 interface BreadcrumbItem {
   label: string;
@@ -144,8 +145,10 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
     try {
       await api.markAllAlertsAsRead();
       setAlerts(prev => prev.map(a => ({ ...a, status: "Read" })));
+      toast.success("Toutes les notifications ont été marquées comme lues");
     } catch (error) {
       console.error("Failed to mark all notifications as read:", error);
+      toast.error("Erreur lors de la mise à jour");
     }
   };
 
@@ -154,6 +157,7 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
     try {
       await api.markAlertAsRead(id);
       setAlerts(prev => prev.map(a => a.id === id ? { ...a, status: "Read" } : a));
+      toast.success("Notification marquée comme lue");
     } catch (error) {
       console.error("Failed to mark notification as read:", error);
     }

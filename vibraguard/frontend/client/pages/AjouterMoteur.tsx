@@ -14,7 +14,7 @@ export default function AjouterMoteur() {
   const [etatLabel, setEtatLabel] = useState("Optimal");
   const [etatColor, setEtatColor] = useState("bg-[#007A3D]");
   const [etatPct, setEtatPct] = useState(100);
-  const [vibration, setVibration] = useState("1.2 mm/s");
+  const [vibration, setVibration] = useState("1.2");
   const [vibrationColor, setVibrationColor] = useState("text-[#007A3D]");
   const [trendIcon, setTrendIcon] = useState("stable");
   const [power, setPower] = useState("");
@@ -32,7 +32,7 @@ export default function AjouterMoteur() {
         etatLabel,
         etatColor,
         etatPct,
-        vibration,
+        vibration: vibration + " mm/s",
         vibrationColor,
         trendIcon,
         power: power ? power + " kW" : "",
@@ -125,7 +125,8 @@ export default function AjouterMoteur() {
               <div>
                 <label className="block text-sm font-medium text-[#C9E7E6] mb-1.5">Vibration Initiale (mm/s)</label>
                 <input
-                  type="text"
+                  type="number"
+                  step="0.1"
                   value={vibration}
                   onChange={(e) => setVibration(e.target.value)}
                   className="w-full h-11 px-4 rounded-lg border border-white/10 bg-[#0D1316] text-white placeholder-[#64748B] outline-none focus:border-[#0C6CF2]/50 transition-all"

@@ -327,13 +327,51 @@ export default function Moteurs() {
         )}
 
         {/* Pagination */}
-        <div className="flex items-center justify-between px-6 py-4 bg-[#0B1518] rounded-lg border border-white/5">
-           <span className="text-[#98A6A8] text-sm">Total: <span className="text-white font-bold">{totalMoteurs}</span> moteurs</span>
-           <div className="flex gap-2">
-              <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="px-3 py-1 bg-white/5 text-white rounded disabled:opacity-30">Prec</button>
-              <span className="text-white px-2 py-1">{currentPage} / {totalPages}</span>
-              <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} className="px-3 py-1 bg-white/5 text-white rounded disabled:opacity-30">Suiv</button>
-           </div>
+        <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4 border-t border-black/[0.08] bg-[#08151A] rounded-lg border border-white/5">
+          <span className="text-[13px] text-[#CFEFF1]">
+            Affichage de {totalMoteurs === 0 ? 0 : (currentPage - 1) * perPage + 1} à {Math.min(currentPage * perPage, totalMoteurs)} sur {totalMoteurs} moteurs
+          </span>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className="flex items-center justify-center h-8 px-3 rounded-md border border-black/[0.08] text-[13px] font-semibold text-[#E8F6F5] hover:bg-white/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Précédent
+            </button>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }).map((_, i) => {
+                const page = i + 1;
+                // Simple logic for small number of pages
+                if (totalPages <= 5 || (page <= 3 || page === totalPages)) {
+                   return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`flex items-center justify-center w-8 h-8 rounded text-[13px] transition-colors ${currentPage === page
+                          ? "bg-[#007A3D] text-white font-semibold"
+                          : "text-[#CFEFF1] hover:bg-white/5 font-normal"
+                        }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                }
+                // Show ellipsis if we are between 3 and totalPages-1
+                if (page === 4 && totalPages > 5) {
+                   return <span key="dots" className="text-[#CFEFF1] px-1">...</span>;
+                }
+                return null;
+              })}
+            </div>
+            <button
+              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+              className="flex items-center justify-center h-8 px-3 rounded-md border border-black/[0.08] text-[13px] font-semibold text-[#E8F6F5] hover:bg-white/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Suivant
+            </button>
+          </div>
         </div>
 
         {/* Update Modal */}

@@ -139,8 +139,8 @@ export function AlertesTable({
       <div className="flex flex-col gap-[7px] pt-2 min-w-[700px]">
         {alertes.map((alerte) => {
           const isSelected = alerte.id === selectedId;
-          const sev = severiteConfig[alerte.severite];
-          const stat = statutConfig[alerte.statut];
+          const sev = severiteConfig[alerte.severite] || severiteConfig["Mineur"];
+          const stat = (statutConfig as any)[alerte.statut] || statutConfig["Nouveau"];
 
           return (
             <div
