@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { X, Bell, Check, Clock, AlertCircle, Info, LogOut, User, Settings } from "lucide-react";
