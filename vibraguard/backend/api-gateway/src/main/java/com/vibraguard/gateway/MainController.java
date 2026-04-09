@@ -457,7 +457,8 @@ public class MainController {
             
             List<WorkOrder> workOrders = workOrderRepository.findAll();
             List<Alert> allAlerts = alertRepository.findAll();
-            long totalMotors = motorRepository.count();
+            List<Motor> allMotors = motorRepository.findAll();
+            long totalMotors = allMotors.size();
             
             // 1. Calculations for CURRENT data
             double totalOperatingTime = totalMotors * 720.0;
