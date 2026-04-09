@@ -31,8 +31,8 @@ if command -v netstat &> /dev/null || command -v fuser &> /dev/null; then
     fuser -k 8545/tcp 2>/dev/null || true
 fi
 npm install
-# Start hardhat node in background
-npx hardhat node > hardhat.log 2>&1 &
+# Start hardhat node in background on all network interfaces
+npx hardhat node --hostname 0.0.0.0 > hardhat.log 2>&1 &
 echo "⏳ Waiting for blockchain node to initialize..."
 sleep 5
 echo "📜 Deploying Smart Contract..."

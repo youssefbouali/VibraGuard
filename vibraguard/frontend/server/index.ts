@@ -20,7 +20,9 @@ export function createServer() {
     createProxyMiddleware({
       target: backendUrl,
       changeOrigin: true,
+      ws: true, // Enable WebSocket proxying
       pathFilter: (path) => {
+        if (path.startsWith("/ws")) return true; // Proxy websocket traffic
         if (!path.startsWith("/api")) return false;
         const frontendRoutes = ["/api/ping", "/api/demo"];
         return !frontendRoutes.some(route => path.startsWith(route));
