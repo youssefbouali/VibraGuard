@@ -1,21 +1,22 @@
 package com.vibraguard.gateway;
 
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class VibrationStreamService {
 
     private final Sinks.Many<String> vibrationSink = Sinks.many().multicast().directBestEffort();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @KafkaListener(topics = "vibration_data", groupId = "vibraguard-gateway-group")
-    public void consume(String message) {
+    public void emit(com.vibraguard.gateway.entity.VibrationData data) {
         try {
-            vibrationSink.tryEmitNext(message);
+            String json = objectMapper.writeValueAsString(data);
+            vibrationSink.tryEmitNext(json);
         } catch (Exception e) {
-            System.err.println("Error emitting vibration data: " + e.getMessage());
+            System.err.println("Error serializing vibration data: " + e.getMessage());
         }
     }
 

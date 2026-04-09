@@ -44,6 +44,9 @@ public class MainController {
     private InventoryPartRepository inventoryPartRepository;
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private VibrationStreamService vibrationStreamService;
 
     @PostConstruct
     public void seedData() {
@@ -242,7 +245,9 @@ public class MainController {
             if (data.getTime() == null) {
                 data.setTime(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
             }
-            return vibrationRepository.save(data);
+            VibrationData saved = vibrationRepository.save(data);
+            vibrationStreamService.emit(saved);
+            return saved;
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
