@@ -20,6 +20,7 @@ export default function AjouterMoteur() {
   const [power, setPower] = useState("");
   const [speed, setSpeed] = useState("");
   const [localisation, setLocalisation] = useState("");
+  const [site, setSite] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +39,7 @@ export default function AjouterMoteur() {
         power: power ? power + " kW" : "",
         speed: speed ? speed + " RPM" : "",
         localisation,
+        site,
       });
 
       toast.success("Moteur ajouté avec succès!");
@@ -177,6 +179,17 @@ export default function AjouterMoteur() {
                   onChange={(e) => setSpeed(e.target.value)}
                   placeholder="ex: 1480"
                   className="w-full h-11 px-4 rounded-lg border border-white/10 bg-[#0D1316] text-white placeholder-[#64748B] outline-none focus:border-[#0C6CF2]/50 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#C9E7E6] mb-1.5">Site / Complexe</label>
+                <input
+                   type="text"
+                   value={site}
+                   onChange={(e) => setSite(e.target.value)}
+                   placeholder="ex: Complexe Jorf Lasfar"
+                   className="w-full h-11 px-4 rounded-lg border border-white/10 bg-[#0D1316] text-white placeholder-[#64748B] outline-none focus:border-[#0C6CF2]/50 transition-all"
                 />
               </div>
 

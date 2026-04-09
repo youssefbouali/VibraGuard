@@ -26,4 +26,5 @@ public class WorkOrder {
     private String type; // Préventif, Correctif
     private double cost;
     private String duration;
+    private String parts;
 }

@@ -108,10 +108,21 @@ export function OTForm({ onCancel }: OTFormProps) {
         priority: severity,
         duration: `${hours}h ${minutes}m`,
         cost: parseFloat(cout) || 0,
-        type: typeMaintenance
+        type: typeMaintenance,
+        parts: parts.map(p => p.name).join(", ")
       };
       
-      await api.createWorkOrder(workOrder);
+      const createdWo = await api.createWorkOrder(workOrder);
+      
+      // Send to local blockchain parallel to DB
+      import("@/lib/blockchain").then(async ({ submitWorkOrderToBlockchain }) => {
+        const txHash = await submitWorkOrderToBlockchain({ ...workOrder, id: createdWo.id });
+        if (txHash) {
+          toast.success("OT sécurisé avec succès sur la Blockchain !", {
+            description: `Hash: ${txHash.substring(0, 10)}...${txHash.substring(txHash.length - 8)}`
+          });
+        }
+      });
       toast.success("Ordre de travail créé avec succès !");
       onCancel(); // Navigate back
     } catch (error) {

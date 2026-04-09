@@ -78,6 +78,7 @@ public class MainController {
                 if (motor.getPower() != null) existing.setPower(motor.getPower());
                 if (motor.getSpeed() != null) existing.setSpeed(motor.getSpeed());
                 if (motor.getLocalisation() != null) existing.setLocalisation(motor.getLocalisation());
+                if (motor.getSite() != null) existing.setSite(motor.getSite());
                 return motorRepository.save(existing);
             }).orElseGet(() -> {
                 motor.setId(id);
@@ -103,6 +104,7 @@ public class MainController {
                 Map<String, Object> map = new HashMap<>();
                 map.put("id", m.getId());
                 map.put("localisation", m.getLocalisation() != null ? m.getLocalisation() : "");
+                map.put("zone", m.getSite() != null ? m.getSite() : "Site Indéfini");
                 map.put("type", m.getType() != null ? m.getType() : "Inconnu");
                 map.put("puissance", m.getPower() != null ? m.getPower() : "N/A");
                 
@@ -351,6 +353,7 @@ public class MainController {
                 existing.setType(workOrder.getType());
                 existing.setCost(workOrder.getCost());
                 existing.setDuration(workOrder.getDuration());
+                existing.setParts(workOrder.getParts());
                 return workOrderRepository.save(existing);
             }).orElseGet(() -> {
                 workOrder.setId(id);
@@ -534,7 +537,13 @@ public class MainController {
             kpis.put("maintenanceCostTrend", "Réel (MAD)");
             kpis.put("maintenanceCostUp", false);
             
-            kpis.put("sitesConnected", siteMtbfRepository.count());
+            long distinctSites = allMotors.stream()
+                .map(Motor::getSite)
+                .filter(Objects::nonNull)
+                .distinct()
+                .count();
+
+            kpis.put("sitesConnected", distinctSites);
             kpis.put("activeAlerts", allAlerts.size());
             return kpis;
         }).subscribeOn(Schedulers.boundedElastic());

@@ -23,8 +23,16 @@ public class WebSocketConfig {
         map.put("/ws/vibrations", vibrationWebSocketHandler);
 
         SimpleUrlHandlerMapping handlerMapping = new SimpleUrlHandlerMapping();
-        handlerMapping.setOrder(1);
+        handlerMapping.setOrder(-1); // High priority
+        
+        Map<String, org.springframework.web.cors.CorsConfiguration> corsMap = new HashMap<>();
+        org.springframework.web.cors.CorsConfiguration corsConfig = new org.springframework.web.cors.CorsConfiguration();
+        corsConfig.setAllowedOrigins(java.util.Arrays.asList("*"));
+        corsConfig.setAllowedMethods(java.util.Arrays.asList("GET"));
+        corsMap.put("/ws/**", corsConfig);
+        
         handlerMapping.setUrlMap(map);
+        handlerMapping.setCorsConfigurations(corsMap);
         return handlerMapping;
     }
 

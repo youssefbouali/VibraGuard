@@ -23,6 +23,22 @@ fi
 echo "🐳 Connecting to Minikube Docker daemon..."
 eval $(minikube docker-env)
 
+# Start Local Blockchain
+echo "⛓️  Starting Local Blockchain (Hardhat)..."
+cd "$ROOT_DIR/vibraguard/blockchain-net"
+# Try to brutally kill any hanging node on 8545 to avoid port collision
+if command -v netstat &> /dev/null || command -v fuser &> /dev/null; then
+    fuser -k 8545/tcp 2>/dev/null || true
+fi
+npm install
+# Start hardhat node in background
+npx hardhat node > hardhat.log 2>&1 &
+echo "⏳ Waiting for blockchain node to initialize..."
+sleep 5
+echo "📜 Deploying Smart Contract..."
+npx hardhat run scripts/deploy.js --network localhost
+cd "$ROOT_DIR"
+
 # 2. Kubernetes Namespace Setup
 echo "☸️ Ensuring namespace '$NAMESPACE' exists..."
 kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -

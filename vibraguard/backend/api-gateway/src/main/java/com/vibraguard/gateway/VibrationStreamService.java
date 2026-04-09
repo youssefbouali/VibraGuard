@@ -12,7 +12,11 @@ public class VibrationStreamService {
 
     @KafkaListener(topics = "vibration_data", groupId = "vibraguard-gateway-group")
     public void consume(String message) {
-        vibrationSink.tryEmitNext(message);
+        try {
+            vibrationSink.tryEmitNext(message);
+        } catch (Exception e) {
+            System.err.println("Error emitting vibration data: " + e.getMessage());
+        }
     }
 
     public Flux<String> getVibrationStream() {

@@ -43,6 +43,7 @@ public class AuthService {
                 .employeeId(user.getEmployeeId())
                 .phoneNumber(user.getPhoneNumber())
                 .department(user.getDepartment())
+                .role(user.getRole())
                 .build();
     }
 
@@ -62,6 +63,7 @@ public class AuthService {
                 .employeeId(user.getEmployeeId())
                 .phoneNumber(user.getPhoneNumber())
                 .department(user.getDepartment())
+                .role(user.getRole())
                 .build();
     }
 
@@ -74,6 +76,7 @@ public class AuthService {
                 .employeeId(user.getEmployeeId())
                 .phoneNumber(user.getPhoneNumber())
                 .department(user.getDepartment())
+                .role(user.getRole())
                 .build();
     }
 
