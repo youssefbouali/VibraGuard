@@ -62,4 +62,4 @@ export function InterventionChart({ tab, date }: { tab: string; date: string }) 
       </div>
     </div>
   );
-}联职员表。
+}

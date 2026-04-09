@@ -153,7 +153,7 @@ public class MainController {
                 }
                 
                 return map;
-            }).collect(Collectors.toList());联
+            }).collect(Collectors.toList());
             
             return Flux.fromIterable(result);
         }).subscribeOn(Schedulers.boundedElastic());
