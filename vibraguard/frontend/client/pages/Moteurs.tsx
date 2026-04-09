@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Loader2, Trash2, Edit, MoreHorizontal, Save, X } from "lucide-react";
+import { Loader2, Trash2, Edit, MoreHorizontal, Save, X, Plus } from "lucide-react";
 import { useMoteurs } from "@/hooks/use-moteurs";
 
 type HealthStatus = "Critique" | "Attention" | "Normal";
@@ -158,7 +158,7 @@ export default function Moteurs() {
             onClick={() => navigate("/moteurs/ajouter")}
             className="flex items-center gap-2 px-4 h-10 rounded-md bg-[#007A3D] hover:bg-[#006633] transition-colors text-white text-sm font-medium whitespace-nowrap"
           >
-            <MoreHorizontal className="w-4 h-4 text-white rotate-90" />
+            <Plus className="w-4 h-4 text-white" />
             <span className="hidden sm:inline">Ajouter un Moteur</span>
             <span className="sm:hidden">Ajouter</span>
           </button>

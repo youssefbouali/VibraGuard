@@ -38,6 +38,9 @@ export function KanbanBoard() {
     date: wo.dueDate,
     assignee: wo.assignedTo,
     status: wo.status === "Nouveau" ? "todo" : wo.status === "En cours" ? "inprogress" : "done",
+    type: wo.type,
+    cost: wo.cost,
+    duration: wo.duration,
   }));
 
   const filtered = mappedTasks.filter(

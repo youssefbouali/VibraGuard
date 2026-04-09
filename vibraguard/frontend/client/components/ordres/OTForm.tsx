@@ -55,6 +55,7 @@ export function OTForm({ onCancel }: OTFormProps) {
   const [partSearch, setPartSearch] = useState("");
   const [cout, setCout] = useState("");
   const [description, setDescription] = useState("");
+  const [typeMaintenance, setTypeMaintenance] = useState("Préventif");
   
   const [availableMotors, setAvailableMotors] = useState<Motor[]>([]);
   const [availableTechnicians, setAvailableTechnicians] = useState<Technician[]>([]);
@@ -106,7 +107,8 @@ export function OTForm({ onCancel }: OTFormProps) {
         dueDate: date,
         priority: severity,
         duration: `${hours}h ${minutes}m`,
-        cost: parseFloat(cout) || 0
+        cost: parseFloat(cout) || 0,
+        type: typeMaintenance
       };
       
       await api.createWorkOrder(workOrder);
@@ -310,6 +312,39 @@ export function OTForm({ onCancel }: OTFormProps) {
                   <span className="text-[#98A6A8] text-[12px] font-medium">m</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+        {/* Row Type Maintenance & Tech */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+           {/* Type de Maintenance */}
+           <div className="flex flex-col gap-2">
+            <label className="text-[#C9E7E6] text-[13px] font-medium">Type de Maintenance</label>
+            <div className="flex h-12 p-1 rounded-[6px] border border-black/[0.08] bg-[#0D1316] shadow-[inset_0_2px_4px_1px_rgba(0,0,0,0.10)]">
+              <button
+                type="button"
+                onClick={() => setTypeMaintenance("Préventif")}
+                className={cn(
+                  "flex-1 flex items-center justify-center rounded-[4px] text-[13px] font-semibold transition-all",
+                  typeMaintenance === "Préventif" 
+                    ? "bg-[#007A3D] text-white shadow-lg" 
+                    : "text-[#98A6A8] hover:text-[#C9E7E6]"
+                )}
+              >
+                Préventif
+              </button>
+              <button
+                type="button"
+                onClick={() => setTypeMaintenance("Correctif")}
+                className={cn(
+                  "flex-1 flex items-center justify-center rounded-[4px] text-[13px] font-semibold transition-all",
+                  typeMaintenance === "Correctif" 
+                    ? "bg-[#0C6CF2] text-white shadow-lg" 
+                    : "text-[#98A6A8] hover:text-[#C9E7E6]"
+                )}
+              >
+                Correctif
+              </button>
             </div>
           </div>
 

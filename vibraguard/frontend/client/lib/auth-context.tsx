@@ -6,6 +6,7 @@ interface User {
     employeeId: string;
     phoneNumber: string;
     department: string;
+    role: string;
 }
 
 interface AuthContextType {

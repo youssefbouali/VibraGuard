@@ -142,24 +142,33 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
   }, [isSearchVisible]);
 
   const handleMarkAllAsRead = async () => {
+    // Optimistic update
+    const previousAlerts = [...alerts];
+    setAlerts(prev => prev.map(a => ({ ...a, status: "Read" })));
+    
     try {
       await api.markAllAlertsAsRead();
-      setAlerts(prev => prev.map(a => ({ ...a, status: "Read" })));
       toast.success("Toutes les notifications ont été marquées comme lues");
     } catch (error) {
       console.error("Failed to mark all notifications as read:", error);
+      setAlerts(previousAlerts); // Rollback
       toast.error("Erreur lors de la mise à jour");
     }
   };
 
   const handleMarkAsRead = async (id: string, currentStatus: string) => {
     if (currentStatus === "Read") return;
+    
+    // Optimistic update
+    const previousAlerts = [...alerts];
+    setAlerts(prev => prev.map(a => a.id === id ? { ...a, status: "Read" } : a));
+
     try {
       await api.markAlertAsRead(id);
-      setAlerts(prev => prev.map(a => a.id === id ? { ...a, status: "Read" } : a));
       toast.success("Notification marquée comme lue");
     } catch (error) {
       console.error("Failed to mark notification as read:", error);
+      setAlerts(previousAlerts); // Rollback
     }
   };
 

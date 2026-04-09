@@ -13,6 +13,9 @@ export interface OT {
   assignee?: string;
   unassigned?: boolean;
   status: Status;
+  type?: string;
+  cost?: number;
+  duration?: string;
 }
 
 const PriorityBadge = ({ priority }: { priority: Priority }) => {
@@ -169,6 +172,32 @@ export function KanbanCard({ ot, onClick }: KanbanCardProps) {
       <div className="flex items-center gap-1.5">
         <MachineIcon />
         <span className="text-[13px] text-[#98A6A8]">{ot.machine}</span>
+      </div>
+
+      {/* Type + Duration */}
+      <div className="flex items-center gap-3">
+        {ot.type && (
+          <span className={cn(
+            "text-[11px] px-2 py-0.5 rounded font-bold uppercase",
+            ot.type === "Préventif" ? "bg-[#007A3D]/10 text-[#007A3D]" : "bg-[#0C6CF2]/10 text-[#0C6CF2]"
+          )}>
+            {ot.type}
+          </span>
+        )}
+        {ot.duration && (
+          <div className="flex items-center gap-1">
+             <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                <path d="M7 12.8335C10.2217 12.8335 12.8333 10.2218 12.8333 7.00016C12.8333 3.7785 10.2217 1.16683 7 1.16683C3.77834 1.16683 1.16667 3.7785 1.16667 7.00016C1.16667 10.2218 3.77834 12.8335 7 12.8335Z" stroke="#98A6A8" strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M7 3.5V7L9.33333 8.16667" stroke="#98A6A8" strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round"/>
+             </svg>
+             <span className="text-[11px] text-[#98A6A8]">{ot.duration}</span>
+          </div>
+        )}
+        {ot.cost !== undefined && ot.cost > 0 && (
+           <span className="text-[11px] font-bold text-[#E6F0F2] ml-auto">
+             {ot.cost.toLocaleString()} MAD
+           </span>
+        )}
       </div>
 
       {/* Footer: date + assignee */}

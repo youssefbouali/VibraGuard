@@ -31,7 +31,14 @@ export default function Login() {
       }
 
       const data = await response.json();
-      login(data.token, { email: data.email, fullName: data.fullName });
+      login(data.token, { 
+        email: data.email, 
+        fullName: data.fullName, 
+        role: data.role || "Utilisateur", 
+        employeeId: data.employeeId || "",
+        phoneNumber: data.phoneNumber || "",
+        department: data.department || "Maintenance"
+      });
 
       toast.success("Connexion réussie !");
       navigate("/dashboard");

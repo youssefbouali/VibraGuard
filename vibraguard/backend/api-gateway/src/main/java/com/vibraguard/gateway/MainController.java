@@ -348,6 +348,8 @@ public class MainController {
                 existing.setPriority(workOrder.getPriority());
                 existing.setAssignedTo(workOrder.getAssignedTo());
                 existing.setDueDate(workOrder.getDueDate());
+                existing.setType(workOrder.getType());
+                existing.setCost(workOrder.getCost());
                 existing.setDuration(workOrder.getDuration());
                 return workOrderRepository.save(existing);
             }).orElseGet(() -> {
@@ -452,7 +454,7 @@ public class MainController {
             
             List<WorkOrder> workOrders = workOrderRepository.findAll();
             List<Alert> allAlerts = alertRepository.findAll();
-            long totalMotors = motorRepository.count() > 0 ? motorRepository.count() : 10;
+            long totalMotors = motorRepository.count();
             
             // 1. Calculations for CURRENT data
             double totalOperatingTime = totalMotors * 720.0;
@@ -532,7 +534,7 @@ public class MainController {
             kpis.put("maintenanceCostTrend", "Réel (MAD)");
             kpis.put("maintenanceCostUp", false);
             
-            kpis.put("sitesConnected", siteMtbfRepository.count() > 0 ? siteMtbfRepository.count() : 4);
+            kpis.put("sitesConnected", siteMtbfRepository.count());
             kpis.put("activeAlerts", allAlerts.size());
             return kpis;
         }).subscribeOn(Schedulers.boundedElastic());
