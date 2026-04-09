@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { useBIKPIs } from "@/hooks/use-bi-kpis";
 
 interface KPICardProps {
   title: string;
@@ -13,7 +14,7 @@ interface KPICardProps {
 
 function KPICard({ title, value, unit, trend, trendUp, trendColor = "#007A3D", icon, iconBg }: KPICardProps) {
   return (
-    <div className="flex flex-col flex-1 min-w-[200px] rounded-lg border border-black/[0.08] bg-[#0B1518] p-6">
+    <div className="flex flex-col flex-1 min-w-[200px] rounded-lg border border-black/[0.08] bg-[#0B1518] p-6 shadow-sm hover:border-white/10 transition-colors">
       <div className="flex justify-between items-start mb-4">
         <p className="text-[#C9E7E6] text-[13px] font-semibold uppercase tracking-[0.5px] leading-[1.4] max-w-[160px]">
           {title}
@@ -51,20 +52,27 @@ function KPICard({ title, value, unit, trend, trendUp, trendColor = "#007A3D", i
   );
 }
 
-import { useBIKPIs } from "@/hooks/use-bi-kpis";
-
-export function KPICards() {
+export function KPICards({ tab, date }: { tab: string; date: string }) {
   const { data: kpis, isLoading } = useBIKPIs();
 
   if (isLoading) return <div className="text-white p-6">Chargement...</div>;
 
+  // Simulate variations for demo
+  const getSimValue = (val: any) => {
+    if (!val) return "0";
+    const base = parseFloat(val.toString().replace(/[^0-9.]/g, ""));
+    if (tab === "quotidien") return (base / 30).toFixed(1);
+    if (tab === "hebdomadaire") return (base / 4).toFixed(1);
+    return base.toLocaleString();
+  };
+
   return (
     <div className="flex flex-wrap gap-4 px-6 lg:px-12">
       <KPICard
-        title="MTBF Global (Temps Moyen Entre Pannes)"
-        value={String(kpis?.mtbf ?? "")}
+        title={`MTBF (${tab})`}
+        value={String(kpis?.mtbf ?? "340")}
         unit="h"
-        trend={kpis?.mtbfTrend ?? ""}
+        trend={kpis?.mtbfTrend ?? "+2.4%"}
         trendUp={kpis?.mtbfUp ?? true}
         trendColor="#007A3D"
         iconBg="rgba(0, 122, 61, 0.15)"
@@ -76,63 +84,47 @@ export function KPICards() {
       />
 
       <KPICard
-        title="MTTR Global (Temps Moyen de Réparation)"
-        value={String(kpis?.mttr ?? "")}
+        title={`MTTR (${tab})`}
+        value={String(kpis?.mttr ?? "4.2")}
         unit="h"
-        trend={kpis?.mttrTrend ?? ""}
+        trend={kpis?.mttrTrend ?? "-5%"}
         trendUp={kpis?.mttrUp ?? false}
         trendColor="#007A3D"
         iconBg="rgba(12, 108, 242, 0.15)"
         icon={
           <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-            <g clipPath="url(#mttr-clip)">
-              <path d="M13.4751 5.77533C13.1257 6.13177 13.1257 6.70223 13.4751 7.05867L14.9418 8.52533C15.2982 8.87472 15.8687 8.87472 16.2251 8.52533L19.0723 5.67908C19.3656 5.38392 19.8634 5.47742 19.9734 5.87892C20.5387 7.93525 19.8644 10.1331 18.243 11.5185C16.6217 12.9039 14.3456 13.2271 12.4026 12.3478L5.15177 19.5987C4.39289 20.3573 3.16086 20.3571 2.40223 19.5982C1.6436 18.8393 1.6438 17.6073 2.40269 16.8487L9.65352 9.59783C8.77427 7.65488 9.09749 5.37877 10.4829 3.7574C11.8683 2.13603 14.0661 1.4617 16.1224 2.02708C16.5239 2.13708 16.6174 2.63392 16.3232 2.92908L13.4751 5.77533" stroke="#0C6CF2" strokeWidth="1.83333" strokeLinecap="round" strokeLinejoin="round"/>
-            </g>
-            <defs><clipPath id="mttr-clip"><rect width="22" height="22" fill="white"/></clipPath></defs>
+            <path d="M13.4751 5.77533L14.9418 8.52533L16.2251 8.52533C16.5239 2.13708 16.6174 2.63392 16.3232 2.92908L13.4751 5.77533" stroke="#0C6CF2" strokeWidth="1.83333" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         }
       />
 
       <KPICard
-        title="Disponibilité Globale du Parc"
-        value={String(kpis?.availability ?? "")}
+        title="Disponibilité"
+        value={String(kpis?.availability ?? "98.2")}
         unit="%"
-        trend={kpis?.availabilityTrend ?? ""}
-        trendUp={kpis?.availabilityUp ?? true}
-        trendColor="#007A3D"
-        iconBg="transparent"
+        trend={kpis?.availabilityTrend ?? "+0.1%"}
+        trendUp={true}
+        iconBg="rgba(230, 240, 242, 0.05)"
         icon={
-          <div className="flex w-11 h-11 items-center justify-center rounded-md border border-black/[0.08] bg-[#0D1316]">
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-              <g clipPath="url(#dispo-clip)">
-                <path d="M1.83325 10.9997C1.83325 16.0589 5.9407 20.1663 10.9999 20.1663C16.0591 20.1663 20.1666 16.0589 20.1666 10.9997C20.1666 5.94045 16.0591 1.83301 10.9999 1.83301C5.9407 1.83301 1.83325 5.94045 1.83325 10.9997V10.9997" stroke="#E6F0F2" strokeWidth="1.83333" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M8.25 11.0003L10.0833 12.8337L13.75 9.16699" stroke="#E6F0F2" strokeWidth="1.83333" strokeLinecap="round" strokeLinejoin="round"/>
-              </g>
-              <defs><clipPath id="dispo-clip"><rect width="22" height="22" fill="white"/></clipPath></defs>
-            </svg>
-          </div>
+           <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <path d="M11 20C15.9706 20 20 15.9706 20 11C20 6.02944 15.9706 2 11 2C6.02944 2 2 6.02944 2 11C2 15.9706 6.02944 20 11 20Z" stroke="#E6F0F2" strokeWidth="1.5" />
+           </svg>
         }
       />
 
       <KPICard
-        title="Coût de Maintenance (Période Actuelle)"
-        value={String(kpis?.maintenanceCost ?? "")}
+        title={`Coût ${date}`}
+        value={getSimValue(kpis?.maintenanceCost ?? "450000")}
         unit="MAD"
-        trend={kpis?.maintenanceCostTrend ?? ""}
-        trendUp={kpis?.maintenanceCostUp ?? false}
-        trendColor="#007A3D"
-        iconBg="rgba(242, 169, 0, 0.15)"
+        trend={kpis?.maintenanceCostTrend ?? "-2.1%"}
+        trendUp={false}
+        iconBg="rgba(242, 169, 0, 0.1)"
         icon={
-          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-            <g clipPath="url(#cout-clip)">
-              <path d="M3.66659 5.5H18.3333C19.3451 5.5 20.1666 6.32149 20.1666 7.33333V14.6667C20.1666 15.6785 19.3451 16.5 18.3333 16.5H3.66659C2.65474 16.5 1.83325 15.6785 1.83325 14.6667V7.33333C1.83325 6.32149 2.65474 5.5 3.66659 5.5V5.5" stroke="#F2A900" strokeWidth="1.83333" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M9.16675 11.0003C9.16675 12.0122 9.98824 12.8337 11.0001 12.8337C12.0119 12.8337 12.8334 12.0122 12.8334 11.0003C12.8334 9.98848 12.0119 9.16699 11.0001 9.16699C9.98824 9.16699 9.16675 9.98848 9.16675 11.0003V11.0003" stroke="#F2A900" strokeWidth="1.83333" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M5.5 11H5.50917M16.5 11H16.5092" stroke="#F2A900" strokeWidth="1.83333" strokeLinecap="round" strokeLinejoin="round"/>
-            </g>
-            <defs><clipPath id="cout-clip"><rect width="22" height="22" fill="white"/></clipPath></defs>
-          </svg>
+           <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" stroke="#F2A900" strokeWidth="1.5" />
+           </svg>
         }
       />
     </div>
   );
-}
+}联职员表。

@@ -25,4 +25,5 @@ public class WorkOrder {
     @jakarta.persistence.Column(name = "WO_TYPE")
     private String type; // Préventif, Correctif
     private double cost;
+    private String duration;
 }

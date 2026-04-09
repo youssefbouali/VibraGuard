@@ -51,4 +51,5 @@ export const api = {
   markAlertAsRead: (id: string) => apiRequest<any>("POST", `/api/v1/ml/alerts/${id}/read`),
   getTechnicianById: (id: string) => apiRequest<any>("GET", `/api/v1/iot/technicians/${id}`),
   updateTechnician: (id: string, data: any) => apiRequest<any>("PUT", `/api/v1/iot/technicians/${id}`, data),
+  createInventoryPart: (data: any) => apiRequest<any>("POST", "/api/v1/iot/inventory-parts", data),
 };

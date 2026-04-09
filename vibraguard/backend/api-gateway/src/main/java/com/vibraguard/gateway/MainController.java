@@ -348,6 +348,7 @@ public class MainController {
                 existing.setPriority(workOrder.getPriority());
                 existing.setAssignedTo(workOrder.getAssignedTo());
                 existing.setDueDate(workOrder.getDueDate());
+                existing.setDuration(workOrder.getDuration());
                 return workOrderRepository.save(existing);
             }).orElseGet(() -> {
                 workOrder.setId(id);
@@ -410,6 +411,19 @@ public class MainController {
     public Flux<InventoryPart> getInventoryParts() {
         return Flux.defer(() -> Flux.fromIterable(inventoryPartRepository.findAll()))
                 .subscribeOn(Schedulers.boundedElastic());
+    }
+
+    @PostMapping("/iot/inventory-parts")
+    public Mono<InventoryPart> createInventoryPart(@RequestBody InventoryPart part) {
+        return Mono.fromCallable(() -> {
+            if (part.getId() == null) {
+                part.setId("P-" + (inventoryPartRepository.count() + 100));
+            }
+            if (part.getStockColor() == null) {
+                part.setStockColor(part.getStock() > 5 ? "green" : "amber");
+            }
+            return inventoryPartRepository.save(part);
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     @PostMapping("/iot/inventory/decrement/{id}")

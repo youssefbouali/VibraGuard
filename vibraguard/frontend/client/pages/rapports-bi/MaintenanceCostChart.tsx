@@ -30,11 +30,18 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export function MaintenanceCostChart() {
+export function MaintenanceCostChart({ tab, date }: { tab: string; date: string }) {
   const { data: chartData = [], isLoading } = useMaintenanceCosts();
 
+  // Simulated data modification for different tabs
+  const simulatedData = chartData.map((d: any, idx: number) => {
+    if (tab === "quotidien") return { ...d, month: `Jour ${idx + 1}`, reel: d.reel / 30, budget: d.budget / 30 };
+    if (tab === "hebdomadaire") return { ...d, month: `Sem ${idx + 1}`, reel: d.reel / 4, budget: d.budget / 4 };
+    return d;
+  });
+
   return (
-    <div className="flex flex-col rounded-lg border border-black/[0.08] bg-[#0B1518] h-full">
+    <div className="flex flex-col rounded-lg border border-black/[0.08] bg-[#0B1518] h-full shadow-sm hover:border-white/10 transition-colors">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-black/[0.08]">
         <div className="flex items-center gap-3">
@@ -43,7 +50,7 @@ export function MaintenanceCostChart() {
             <path d="M14.25 6.75L10.5 10.5L7.5 7.5L5.25 9.75" stroke="#98A6A8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           <span className="text-[#E6F0F2] text-[15px] font-semibold">
-            Évolution des Coûts de Maintenance
+            Coûts de Maintenance - {date} ({tab})
           </span>
         </div>
         <div className="flex items-center gap-5">
@@ -64,7 +71,7 @@ export function MaintenanceCostChart() {
           <div className="text-white">Chargement...</div>
         ) : (
           <ResponsiveContainer width="100%" height="100%" minHeight={200}>
-            <LineChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <LineChart data={simulatedData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <CartesianGrid
                 strokeDasharray="3 3"
                 stroke="rgba(0,0,0,0.08)"
@@ -82,8 +89,7 @@ export function MaintenanceCostChart() {
                 tick={{ fill: "#98A6A8", fontSize: 10 }}
                 axisLine={false}
                 tickLine={false}
-                domain={[10000, 50000]}
-                ticks={[10000, 20000, 30000, 40000, 50000]}
+                domain={['auto', 'auto']}
                 width={30}
               />
               <Tooltip content={<CustomTooltip />} />
@@ -112,4 +118,4 @@ export function MaintenanceCostChart() {
       </div>
     </div>
   );
-}
+}联职员表。

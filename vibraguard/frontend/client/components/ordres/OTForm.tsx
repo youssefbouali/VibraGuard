@@ -1,8 +1,11 @@
-import { useState, useEffect } from "react";
-import { cn } from "@/lib/utils";
-import { api } from "@/lib/api";
-import { toast } from "sonner";
-import { Loader2, User } from "lucide-react";
+import { Loader2, User, Plus } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface Part {
   id?: string;
@@ -41,7 +44,8 @@ export function OTForm({ onCancel }: OTFormProps) {
   const [anomalie, setAnoalie] = useState("");
   const [severity, setSeverity] = useState("Critique");
   const [date, setDate] = useState("");
-  const [duree, setDuree] = useState("");
+  const [hours, setHours] = useState("");
+  const [minutes, setMinutes] = useState("");
   const [technicien, setTechnicien] = useState("");
   const [parts, setParts] = useState<Part[]>([]);
   const [partSearch, setPartSearch] = useState("");
@@ -55,6 +59,12 @@ export function OTForm({ onCancel }: OTFormProps) {
   const [severityOpen, setSeverityOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // New Part Modal State
+  const [isPartDialogOpen, setIsPartDialogOpen] = useState(false);
+  const [newPartName, setNewPartName] = useState("");
+  const [newPartStock, setNewPartStock] = useState("");
+  const [isCreatingPart, setIsCreatingPart] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -91,7 +101,8 @@ export function OTForm({ onCancel }: OTFormProps) {
         assignedTo: technicien,
         dueDate: date,
         priority: severity,
-        // Optional: you could extend the backend to handle more fields
+        duration: `${hours}h ${minutes}m`,
+        cost: parseFloat(cout) || 0
       };
       
       await api.createWorkOrder(workOrder);
@@ -110,6 +121,31 @@ export function OTForm({ onCancel }: OTFormProps) {
       setParts([...parts, part]);
     }
     setPartSearch("");
+  };
+
+  const handleCreatePart = async () => {
+    if (!newPartName || !newPartStock) {
+      toast.error("Veuillez remplir tous les champs.");
+      return;
+    }
+    setIsCreatingPart(true);
+    try {
+      const created = await api.createInventoryPart({
+        name: newPartName,
+        stock: parseInt(newPartStock),
+      }) as any;
+      
+      setAvailableParts([...availableParts, created]);
+      setParts([...parts, created]);
+      setIsPartDialogOpen(false);
+      setNewPartName("");
+      setNewPartStock("");
+      toast.success("Nouvelle pièce ajoutée et sélectionnée.");
+    } catch (err) {
+      toast.error("Erreur lors de la création de la pièce.");
+    } finally {
+      setIsCreatingPart(false);
+    }
   };
 
   const severityStyle = SEVERITY_COLORS[severity] ?? SEVERITY_COLORS["Critique"];
@@ -245,17 +281,30 @@ export function OTForm({ onCancel }: OTFormProps) {
               </div>
 
               {/* Durée */}
-              <div className="flex h-12 px-4 items-center gap-3 rounded-[6px] border border-black/[0.08] bg-[#0D1316] shadow-[inset_0_2px_4px_1px_rgba(0,0,0,0.10)] w-[140px] shrink-0">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="shrink-0">
-                  <path d="M1.5 9C1.5 13.1394 4.86064 16.5 9 16.5C13.1394 16.5 16.5 13.1394 16.5 9C16.5 4.86064 13.1394 1.5 9 1.5C4.86064 1.5 1.5 4.86064 1.5 9V9" stroke="#98A6A8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M9 4.5V9L12 10.5" stroke="#98A6A8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <input
-                  value={duree}
-                  onChange={(e) => setDuree(e.target.value)}
-                  placeholder="4h 30m"
-                  className="flex-1 bg-transparent text-[#E6F0F2] text-[14px] font-medium outline-none placeholder:text-[#757575] min-w-0"
-                />
+              <div className="flex h-12 items-center gap-2 shrink-0">
+                <div className="flex h-12 px-3 items-center gap-2 rounded-[6px] border border-black/[0.08] bg-[#0D1316] shadow-[inset_0_2px_4px_1px_rgba(0,0,0,0.10)] w-[80px]">
+                  <input
+                    type="number"
+                    min="0"
+                    value={hours}
+                    onChange={(e) => setHours(e.target.value)}
+                    placeholder="HH"
+                    className="w-full bg-transparent text-[#E6F0F2] text-[14px] font-medium outline-none placeholder:text-[#757575] text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <span className="text-[#98A6A8] text-[12px] font-medium">h</span>
+                </div>
+                <div className="flex h-12 px-3 items-center gap-2 rounded-[6px] border border-black/[0.08] bg-[#0D1316] shadow-[inset_0_2px_4px_1px_rgba(0,0,0,0.10)] w-[80px]">
+                  <input
+                    type="number"
+                    min="0"
+                    max="59"
+                    value={minutes}
+                    onChange={(e) => setMinutes(e.target.value)}
+                    placeholder="MM"
+                    className="w-full bg-transparent text-[#E6F0F2] text-[14px] font-medium outline-none placeholder:text-[#757575] text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <span className="text-[#98A6A8] text-[12px] font-medium">m</span>
+                </div>
               </div>
             </div>
           </div>
@@ -307,27 +356,49 @@ export function OTForm({ onCancel }: OTFormProps) {
                   placeholder="Rechercher une pièce..."
                   className="w-full bg-transparent text-[#E6F0F2] text-[13px] outline-none placeholder:text-[#757575] h-8"
                 />
+                
                 {partSearch && (
                   <div className="absolute left-0 top-[calc(100%+6px)] z-30 w-full rounded-[6px] border border-white/[0.08] bg-[#0D1316] shadow-lg overflow-hidden">
-                    {availableParts
-                      .filter(p => p.name.toLowerCase().includes(partSearch.toLowerCase()))
-                      .map(p => (
-                        <button
-                          key={p.id}
-                          type="button"
-                          onClick={() => handleAddPart(p)}
-                          className="flex items-center justify-between px-4 py-2 w-full hover:bg-white/5 transition-colors"
-                        >
-                          <span className="text-[#E6F0F2] text-[13px]">{p.name}</span>
-                          <span className={cn("text-[11px] font-bold", p.stockColor === "green" ? "text-[#007A3D]" : "text-[#F2A900]")}>
-                            (Stock: {p.stock})
-                          </span>
-                        </button>
-                      ))}
+                    <div className="max-h-[200px] overflow-y-auto">
+                      {availableParts
+                        .filter(p => p.name.toLowerCase().includes(partSearch.toLowerCase()))
+                        .map(p => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => handleAddPart(p)}
+                            className="flex items-center justify-between px-4 py-2 w-full hover:bg-white/5 transition-colors"
+                          >
+                            <span className="text-[#E6F0F2] text-[13px]">{p.name}</span>
+                            <span className={cn("text-[11px] font-bold", p.stockColor === "green" ? "text-[#007A3D]" : "text-[#F2A900]")}>
+                              (Stock: {p.stock})
+                            </span>
+                          </button>
+                        ))}
+                      
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewPartName(partSearch);
+                          setIsPartDialogOpen(true);
+                        }}
+                        className="flex items-center gap-2 px-4 py-2.5 w-full bg-[#10B981]/10 hover:bg-[#10B981]/20 transition-colors border-t border-white/5"
+                      >
+                        <Plus className="w-4 h-4 text-[#10B981]" />
+                        <span className="text-[#10B981] text-[13px] font-semibold">Ajouter "{partSearch}" au magasin</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
+            <button
+               type="button"
+               onClick={() => setIsPartDialogOpen(true)}
+               className="text-[12px] text-[#4FB3AF] hover:text-[#7EDBD7] font-medium mt-1 underline underline-offset-4"
+            >
+              + Ajouter une pièce inexistante
+            </button>
           </div>
 
           {/* Coût estimé */}
@@ -391,6 +462,58 @@ export function OTForm({ onCancel }: OTFormProps) {
           {isSubmitting ? "Enregistrement..." : "Enregistrer l'Ordre"}
         </button>
       </div>
+
+      {/* New Part Dialog */}
+      <Dialog open={isPartDialogOpen} onOpenChange={setIsPartDialogOpen}>
+        <DialogContent className="bg-[#0A1114] border-white/10 text-white max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-[#E6F0F2]">
+              Nouvelle pièce au magasin
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-6 flex flex-col gap-6">
+            <div className="flex flex-col gap-2">
+              <label className="text-[#98A6A8] text-xs font-semibold uppercase tracking-wider">Nom de la pièce</label>
+              <input
+                value={newPartName}
+                onChange={(e) => setNewPartName(e.target.value)}
+                placeholder="Ex: Roulement à billes"
+                className="w-full h-11 px-4 rounded-md border border-white/10 bg-[#0D1316] text-white outline-none focus:border-[#4FB3AF]/50"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[#98A6A8] text-xs font-semibold uppercase tracking-wider">Quantité initiale en stock</label>
+              <input
+                type="number"
+                value={newPartStock}
+                onChange={(e) => setNewPartStock(e.target.value)}
+                placeholder="0"
+                className="w-full h-11 px-4 rounded-md border border-white/10 bg-[#0D1316] text-white outline-none focus:border-[#4FB3AF]/50"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-3 sm:gap-0">
+            <button
+              onClick={() => setIsPartDialogOpen(false)}
+              className="px-4 py-2 rounded-md border border-white/10 text-sm font-medium hover:bg-white/5 transition-colors"
+              disabled={isCreatingPart}
+            >
+              Annuler
+            </button>
+            <button
+              onClick={handleCreatePart}
+              disabled={isCreatingPart}
+              className="px-4 py-2 rounded-md bg-[#10B981] hover:bg-[#0da06f] text-white text-sm font-semibold transition-colors disabled:opacity-50 flex items-center gap-2"
+            >
+              {isCreatingPart && <Loader2 className="w-4 h-4 animate-spin" />}
+              Ajouter au magasin
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

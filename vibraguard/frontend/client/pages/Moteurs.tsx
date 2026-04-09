@@ -18,6 +18,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Loader2, Trash2, Edit, MoreHorizontal, Save, X } from "lucide-react";
+import { useMoteurs } from "@/hooks/use-moteurs";
 
 type HealthStatus = "Critique" | "Attention" | "Normal";
 
@@ -31,64 +32,8 @@ interface Moteur {
   vibrationRMS: number;
   derniereAlerte: string;
   alerteRef?: string;
+  etatColor?: string;
 }
-
-const moteursData: Moteur[] = [
-  {
-    id: "MTR-Broyeur-04",
-    zone: "Zone 2",
-    localisation: "Ligne de Concasseur",
-    type: "Asynchrone",
-    puissance: "350kW",
-    etatSante: "Critique",
-    vibrationRMS: 14.2,
-    derniereAlerte: "Il y a 2h",
-    alerteRef: "#ALT-8402",
-  },
-  {
-    id: "MTR-Ventil-12",
-    zone: "Zone 4",
-    localisation: "Séchage Thermique",
-    type: "Synchrone",
-    puissance: "120kW",
-    etatSante: "Attention",
-    vibrationRMS: 6.8,
-    derniereAlerte: "Il y a 1j",
-    alerteRef: "#ALT-8395",
-  },
-  {
-    id: "MTR-Conv-01",
-    zone: "Zone 1",
-    localisation: "Bande de Transport A",
-    type: "Asynchrone",
-    puissance: "55kW",
-    etatSante: "Normal",
-    vibrationRMS: 1.2,
-    derniereAlerte: "Aucune",
-  },
-  {
-    id: "MTR-Pompe-08",
-    zone: "Zone 3",
-    localisation: "Station Lavage",
-    type: "Asynchrone",
-    puissance: "200kW",
-    etatSante: "Normal",
-    vibrationRMS: 2.4,
-    derniereAlerte: "Il y a 15j",
-    alerteRef: "Résolue",
-  },
-  {
-    id: "MTR-Broyeur-02",
-    zone: "Zone 2",
-    localisation: "Ligne de Concasseur",
-    type: "Asynchrone",
-    puissance: "400kW",
-    etatSante: "Attention",
-    vibrationRMS: 7.5,
-    derniereAlerte: "Il y a 5h",
-    alerteRef: "#ALT-8400",
-  },
-];
 
 const statusConfig: Record<HealthStatus, { color: string; bg: string; border: string; dot: string; glow: string }> = {
   Critique: {
@@ -114,7 +59,7 @@ const statusConfig: Record<HealthStatus, { color: string; bg: string; border: st
   },
 };
 
-const vibrationColor: Record<HealthStatus, string> = {
+const vibrationColor: Record<string, string> = {
   Critique: "text-[#D93F3F]",
   Attention: "text-[#F2A900]",
   Normal: "text-[#007A3D]",
@@ -148,16 +93,8 @@ const EyeIcon = () => (
   </svg>
 );
 
-const DotsIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <path d="M7.33325 7.99998C7.33325 8.36792 7.63198 8.66665 7.99992 8.66665C8.36786 8.66665 8.66659 8.36792 8.66659 7.99998C8.66659 7.63204 8.36786 7.33331 7.99992 7.33331C7.63198 7.33331 7.33325 7.63204 7.33325 7.99998V7.99998" stroke="#C9E7E6" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M12 7.99998C12 8.36792 12.2987 8.66665 12.6667 8.66665C13.0346 8.66665 13.3333 8.36792 13.3333 7.99998C13.3333 7.63204 13.0346 7.33331 12.6667 7.33331C12.2987 7.33331 12 7.63204 12 7.99998V7.99998" stroke="#C9E7E6" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M2.66675 7.99998C2.66675 8.36792 2.96547 8.66665 3.33341 8.66665C3.70136 8.66665 4.00008 8.36792 4.00008 7.99998C4.00008 7.63204 3.70136 7.33331 3.33341 7.33331C2.96547 7.33331 2.66675 7.63204 2.66675 7.99998V7.99998" stroke="#C9E7E6" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
 function HealthBadge({ status }: { status: HealthStatus }) {
-  const cfg = statusConfig[status];
+  const cfg = statusConfig[status] || statusConfig["Normal"];
   return (
     <span className={cn("inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[13px] font-medium", cfg.bg, cfg.border, cfg.color)}>
       <span className={cn("w-2 h-2 rounded-full shrink-0", cfg.dot, cfg.glow)} />
@@ -174,14 +111,12 @@ function ActionBtn({ children }: { children: React.ReactNode }) {
   );
 }
 
-import { useMoteurs } from "@/hooks/use-moteurs";
-
-// ... (types and statusConfig remain)
-
 export default function Moteurs() {
   const navigate = useNavigate();
   const [view, setView] = useState<"liste" | "carte">("liste");
   const [search, setSearch] = useState("");
+  const [selectedZone, setSelectedZone] = useState("Toutes les zones");
+  const [selectedStatus, setSelectedStatus] = useState("Tous");
   const [currentPage, setCurrentPage] = useState(1);
 
   const { data: apiMoteurs, isLoading, refetch } = useMoteurs() as any;
@@ -193,22 +128,29 @@ export default function Moteurs() {
   const [editType, setEditType] = useState("");
   const [editEtat, setEditEtat] = useState<HealthStatus>("Normal");
   const [editVibration, setEditVibration] = useState("");
-  const totalMoteurs = filtered.length;
-  const perPage = 10; // Better for standard lists
-  const totalPages = Math.ceil(totalMoteurs / perPage) || 1;
-  
-  // Ensure we don't stay on a page that no longer exists after filtering
-  if (currentPage > totalPages && totalPages > 0) {
-    setCurrentPage(totalPages);
-  }
 
+  const filtered = (apiMoteurs || []).filter((m: any) => {
+    const matchesSearch = (m.id + m.localisation + m.zone).toLowerCase().includes(search.toLowerCase());
+    const matchesZone = selectedZone === "Toutes les zones" || m.zone === selectedZone;
+    const status = m.etatSante || (m.etatColor === "bg-[#007A3D]" ? "Normal" : m.etatColor === "bg-[#F2A900]" ? "Attention" : "Critique");
+    const matchesStatus = selectedStatus === "Tous" || status === selectedStatus;
+    return matchesSearch && matchesZone && matchesStatus;
+  });
+
+  const totalMoteurs = filtered.length;
+  const perPage = 10;
+  const totalPages = Math.ceil(totalMoteurs / perPage) || 1;
   const startIndex = (currentPage - 1) * perPage;
   const paginatedMoteurs = filtered.slice(startIndex, startIndex + perPage);
+
+  const zones = ["Toutes les zones", ...new Set((apiMoteurs || []).map((m: any) => m.zone))];
+  const statuses = ["Tous", "Normal", "Attention", "Critique"];
 
   return (
     <DashboardLayout breadcrumb="Moteurs">
       <div className="flex flex-col gap-4 sm:gap-6">
         {isLoading && <div className="text-white">Chargement des données...</div>}
+        
         {/* Title row */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <h1 className="text-xl sm:text-2xl lg:text-[24px] font-semibold text-[#E6F0F2]">Liste des Moteurs</h1>
@@ -216,9 +158,7 @@ export default function Moteurs() {
             onClick={() => navigate("/moteurs/ajouter")}
             className="flex items-center gap-2 px-4 h-10 rounded-md bg-[#007A3D] hover:bg-[#006633] transition-colors text-white text-sm font-medium whitespace-nowrap"
           >
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path d="M3.75 9H14.25M9 3.75V14.25" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <MoreHorizontal className="w-4 h-4 text-white rotate-90" />
             <span className="hidden sm:inline">Ajouter un Moteur</span>
             <span className="sm:hidden">Ajouter</span>
           </button>
@@ -246,30 +186,39 @@ export default function Moteurs() {
             </div>
 
             {/* Zone dropdown */}
-            <button className="flex items-center gap-2 h-10 px-4 rounded-md border border-black/[0.08] bg-[#0D1316] text-[#E6F0F2] text-sm min-w-[160px]">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
-                <path d="M13.3334 6.66665C13.3334 9.99531 9.64075 13.462 8.40075 14.5326C8.16344 14.7111 7.83672 14.7111 7.59941 14.5326C6.35941 13.462 2.66675 9.99531 2.66675 6.66665C2.66675 3.7231 5.05653 1.33331 8.00008 1.33331C10.9436 1.33331 13.3334 3.7231 13.3334 6.66665" stroke="#98A6A8" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M6 6.66669C6 7.77052 6.89617 8.66669 8 8.66669C9.10383 8.66669 10 7.77052 10 6.66669C10 5.56286 9.10383 4.66669 8 4.66669C6.89617 4.66669 6 5.56286 6 6.66669V6.66669" stroke="#98A6A8" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <span className="flex-1 text-left">Toutes les zones</span>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
-                <path d="M4 6L8 10L12 6" stroke="#98A6A8" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 h-10 px-4 rounded-md border border-black/[0.08] bg-[#0D1316] text-[#E6F0F2] text-sm min-w-[160px]">
+                  <span className="flex-1 text-left">{selectedZone}</span>
+                  <MoreHorizontal className="w-4 h-4 text-[#98A6A8]" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-[#0D1316] border-white/10 text-white min-w-[160px]">
+                {zones.map(z => (
+                  <DropdownMenuItem key={z} onClick={() => { setSelectedZone(z); setCurrentPage(1); }} className="hover:bg-white/5 cursor-pointer">
+                    {z}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* État dropdown */}
-            <button className="flex items-center gap-2 h-10 px-4 rounded-md border border-black/[0.08] bg-[#0D1316] text-[#E6F0F2] text-sm min-w-[160px]">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
-                <g clipPath="url(#etat-clip)">
-                  <path d="M14.6666 7.99998H13.0133C12.4145 7.9987 11.8883 8.39676 11.7266 8.97331L10.1599 14.5466C10.1392 14.6178 10.074 14.6666 9.99992 14.6666C9.92584 14.6666 9.86066 14.6178 9.83992 14.5466L6.15992 1.45331C6.13918 1.3822 6.07399 1.33331 5.99992 1.33331C5.92584 1.33331 5.86066 1.3822 5.83992 1.45331L4.27325 7.02665C4.11225 7.60082 3.58957 7.99827 2.99325 7.99998H1.33325" stroke="#98A6A8" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
-                </g>
-                <defs><clipPath id="etat-clip"><rect width="16" height="16" fill="white" /></clipPath></defs>
-              </svg>
-              <span className="flex-1 text-left">État: Tous</span>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
-                <path d="M4 6L8 10L12 6" stroke="#98A6A8" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 h-10 px-4 rounded-md border border-black/[0.08] bg-[#0D1316] text-[#E6F0F2] text-sm min-w-[160px]">
+                  <span className="flex-1 text-left">État: {selectedStatus}</span>
+                  <MoreHorizontal className="w-4 h-4 text-[#98A6A8]" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-[#0D1316] border-white/10 text-white min-w-[160px]">
+                {statuses.map(s => (
+                  <DropdownMenuItem key={s} onClick={() => { setSelectedStatus(s); setCurrentPage(1); }} className="hover:bg-white/5 cursor-pointer flex items-center gap-2">
+                    {s !== "Tous" && <div className={cn("w-2 h-2 rounded-full", s === "Normal" ? "bg-[#007A3D]" : s === "Attention" ? "bg-[#F2A900]" : "bg-[#D93F3F]")} />}
+                    {s}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* View toggle */}
@@ -283,9 +232,6 @@ export default function Moteurs() {
                   : "text-[#C9E7E6] hover:text-white"
               )}
             >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M2 3.33331H2.00667M2 7.99998H2.00667M2 12.6666H2.00667M5.33333 3.33331H14M5.33333 7.99998H14M5.33333 12.6666H14" stroke="currentColor" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
               Liste
             </button>
             <button
@@ -297,299 +243,133 @@ export default function Moteurs() {
                   : "text-[#C9E7E6] hover:text-white"
               )}
             >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M9.404 3.70202C9.77922 3.88951 10.2208 3.88951 10.596 3.70202L13.0353 2.48202C13.2421 2.37867 13.4877 2.38985 13.6843 2.51157C13.8809 2.63328 14.0003 2.84815 14 3.07935V11.5887C13.9999 11.8411 13.8572 12.0718 13.6313 12.1847L10.596 13.7027C10.2208 13.8902 9.77922 13.8902 9.404 13.7027L6.596 12.2987C6.22079 12.1112 5.77922 12.1112 5.404 12.2987L2.96467 13.5187C2.75775 13.6221 2.51202 13.6108 2.31541 13.489C2.11881 13.3671 1.99943 13.152 2 12.9207V4.41202C2.00014 4.15957 2.14285 3.92886 2.36867 3.81602L5.404 2.29802C5.77922 2.11052 6.22079 2.11052 6.596 2.29802L9.404 3.70202M10 3.84268V13.8427M6 2.15735V12.1573" stroke="currentColor" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
               Carte
             </button>
           </div>
         </div>
 
-        {/* Table - Responsive */}
-        <div className="rounded-lg border border-black/[0.08] bg-[#0B1518] overflow-x-auto">
-          {/* Table header - Hide columns on mobile */}
-          <div className="grid grid-cols-[1fr_1fr_auto] md:grid-cols-[2fr_1.8fr_1.3fr_1.5fr_1.4fr_1.5fr_auto] border-b border-black/[0.08] bg-[rgba(15,39,48,0.30)] min-w-full md:min-w-0">
-            <div className="flex items-center gap-2 px-3 sm:px-6 py-4">
-              <span className="text-xs sm:text-[13px] font-medium text-[#C9E7E6]">ID Moteur</span>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="hidden sm:block">
-                <path d="M6.99996 2.91669V11.0834M11.0833 7.00002L6.99996 11.0834L2.91663 7.00002" stroke="#C9E7E6" strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+        {/* View content */}
+        {view === "liste" ? (
+          <div className="rounded-lg border border-black/[0.08] bg-[#0B1518] overflow-x-auto">
+            <div className="grid grid-cols-[1.5fr_1fr_1.5fr_1fr_1fr_auto] border-b border-black/[0.08] bg-[rgba(15,39,48,0.30)]">
+              <div className="px-6 py-4 text-[13px] font-medium text-[#C9E7E6]">ID / Loc</div>
+              <div className="px-6 py-4 text-[13px] font-medium text-[#C9E7E6]">Santé</div>
+              <div className="px-6 py-4 text-[13px] font-medium text-[#C9E7E6]">Type / Pwr</div>
+              <div className="px-6 py-4 text-[13px] font-medium text-[#C9E7E6]">Vibration</div>
+              <div className="px-6 py-4 text-[13px] font-medium text-[#C9E7E6]">Alerte</div>
+              <div className="px-6 py-4 text-right pr-10 text-[13px] font-medium text-[#C9E7E6]">Actions</div>
             </div>
-            <div className="flex items-center px-3 sm:px-6 py-4">
-              <span className="text-xs sm:text-[13px] font-medium text-[#C9E7E6]">État Santé</span>
-            </div>
-            {/* Hidden on mobile */}
-            <div className="hidden md:flex items-center px-6 py-4">
-              <span className="text-[13px] font-medium text-[#C9E7E6]">Localisation</span>
-            </div>
-            <div className="hidden md:flex items-center px-6 py-4">
-              <span className="text-[13px] font-medium text-[#C9E7E6]">Type</span>
-            </div>
-            <div className="hidden md:flex items-center px-6 py-4">
-              <span className="text-[13px] font-medium text-[#C9E7E6]">Vibration</span>
-            </div>
-            <div className="hidden md:flex items-center px-6 py-4">
-              <span className="text-[13px] font-medium text-[#C9E7E6]">Dernière Alerte</span>
-            </div>
-            <div className="flex items-center justify-end px-3 sm:px-6 py-4">
-              <span className="text-xs sm:text-[13px] font-medium text-[#C9E7E6]">Actions</span>
-            </div>
-          </div>
 
-          {/* Table body */}
-          <div className="divide-y divide-black/[0.08] overflow-x-auto">
-            {paginatedMoteurs.map((moteur) => (
-              <div
-                key={moteur.id}
-                className="grid grid-cols-[1fr_1fr_auto] md:grid-cols-[2fr_1.8fr_1.3fr_1.5fr_1.4fr_1.5fr_auto] hover:bg-white/[0.02] transition-colors cursor-pointer min-w-full md:min-w-0"
-                onClick={() => navigate(`/moteurs/${moteur.id}`)}
-              >
-                {/* ID Moteur */}
-                <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-[19px]">
-                  <div className="flex w-8 h-8 items-center justify-center rounded bg-[rgba(12,108,242,0.15)] shrink-0">
-                    <MoteurIcon />
-                  </div>
-                  <span className="text-xs sm:text-[14px] font-semibold text-[#E6F0F2] hover:text-[#0EA5E9] truncate transition-colors">{moteur.id}</span>
-                </div>
-
-                {/* État Santé - Mobile Position */}
-                <div className="flex items-center px-3 sm:px-6 py-[20px]">
-                  <HealthBadge status={moteur.etatSante || "Normal"} />
-                </div>
-
-                {/* Hidden on Mobile, Visible on MD+ */}
-                <div className="hidden md:flex flex-col justify-center gap-1 px-6 py-4">
-                  <span className="text-[14px] text-[#E6F0F2]">{moteur.zone}</span>
-                  <span className="text-[13px] text-[#C9E7E6]">{moteur.localisation}</span>
-                </div>
-
-                <div className="hidden md:flex flex-col justify-center gap-1 px-6 py-4">
-                  <span className="text-[14px] text-[#E6F0F2]">{moteur.type}</span>
-                  <span className="text-[13px] text-[#C9E7E6]">{moteur.puissance}</span>
-                </div>
-
-                <div className="hidden md:flex items-center gap-1 px-6 py-[25px]">
-                  <span className={cn("text-[15px] font-semibold", vibrationColor[moteur.etatSante || "Normal"])}>
-                    {moteur.vibrationRMS ?? 0}
-                  </span>
-                  <span className="text-[13px] text-[#C9E7E6]">mm/s</span>
-                </div>
-
-                <div className="hidden md:flex flex-col justify-center gap-1 px-6 py-4">
-                  <span className="text-[14px] text-[#E6F0F2]">{moteur.derniereAlerte}</span>
-                  {moteur.alerteRef && moteur.alerteRef !== "Résolue" && (
-                    <span className={cn("text-[13px]", statusConfig[moteur.etatSante].color)}>
-                      {moteur.alerteRef}
-                    </span>
-                  )}
-                  {moteur.alerteRef === "Résolue" && (
-                    <span className="text-[13px] text-[#C9E7E6]">Résolue</span>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-[19px] justify-end">
-                    <ActionBtn>
-                      <VibrationIcon />
-                    </ActionBtn>
-                    <ActionBtn>
-                      <EyeIcon />
-                    </ActionBtn>
-                    
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button 
-                          onClick={(e) => e.stopPropagation()}
-                          className="flex w-8 h-8 items-center justify-center rounded bg-[#0F2730] hover:bg-[#163340] transition-colors shrink-0"
-                        >
-                          <MoreHorizontal className="w-4 h-4 text-[#C9E7E6]" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="bg-[#0D1316] border-white/10 text-white">
-                        <DropdownMenuItem 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedMotor(moteur);
-                            setEditType(moteur.type);
-                            setEditEtat(moteur.etatSante);
-                            setEditVibration(moteur.vibrationRMS.toString() + " mm/s");
-                            setIsUpdateDialogOpen(true);
-                          }}
-                          className="hover:bg-white/5 cursor-pointer flex items-center gap-2"
-                        >
-                          <Edit className="w-4 h-4" />
-                          Modifier
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            if (confirm(`Voulez-vous vraiment supprimer le moteur ${moteur.id} ?`)) {
-                              try {
-                                await api.deleteMotor(moteur.id);
-                                toast.success("Moteur supprimé");
-                                refetch();
-                              } catch (err) {
-                                toast.error("Erreur lors de la suppression");
-                              }
-                            }
-                          }}
-                          className="hover:bg-red-500/20 text-red-500 cursor-pointer flex items-center gap-2"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          Supprimer
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Pagination */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-3 sm:px-6 py-4 border-t border-black/[0.08] bg-[rgba(15,39,48,0.10)]">
-            <span className="text-xs sm:text-[13px] text-[#C9E7E6] order-2 sm:order-1">
-              Affichage de <span className="font-medium text-[#E6F0F2]">{Math.min(startIndex + 1, totalMoteurs)}</span> à{" "}
-              <span className="font-medium text-[#E6F0F2]">{Math.min(startIndex + perPage, totalMoteurs)}</span> sur{" "}
-              <span className="font-medium text-[#E6F0F2]">{totalMoteurs}</span> moteurs
-            </span>
-
-            <div className="flex items-center gap-2">
-              {/* Prev */}
-              <button 
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="flex w-8 h-8 items-center justify-center rounded border border-black/[0.08] bg-[#0D1316] hover:bg-white/5 transition-colors disabled:opacity-30"
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M10 12L6 8L10 4" stroke="#E6F0F2" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-
-              {Array.from({ length: totalPages }).map((_, i) => {
-                const page = i + 1;
-                // Show only a few pages if too many
-                if (totalPages > 5 && (page > 3 && page < totalPages)) {
-                   if (page === 4) return <span key="dots" className="text-[#98A6A8] text-base px-1">...</span>;
-                   return null;
-                }
+            <div className="divide-y divide-black/[0.08]">
+              {paginatedMoteurs.map((m: any) => {
+                const status = (m.etatSante as HealthStatus) || (m.etatColor === "bg-[#007A3D]" ? "Normal" : m.etatColor === "bg-[#F2A900]" ? "Attention" : "Critique");
                 return (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={cn(
-                      "flex w-8 h-8 items-center justify-center rounded text-[13px] font-medium border transition-colors",
-                      currentPage === page
-                        ? "bg-[#007A3D] border-[#007A3D] text-white"
-                        : "bg-[#0D1316] border-black/[0.08] text-[#E6F0F2] hover:bg-white/5"
-                    )}
-                  >
-                    {page}
-                  </button>
+                  <div key={m.id} className="grid grid-cols-[1.5fr_1fr_1.5fr_1fr_1fr_auto] hover:bg-white/[0.02] transition-colors cursor-pointer" onClick={() => navigate(`/moteurs/${m.id}`)}>
+                    <div className="px-6 py-4 flex flex-col">
+                      <span className="text-white font-bold">{m.id}</span>
+                      <span className="text-[#98A6A8] text-xs">{m.zone} - {m.localisation}</span>
+                    </div>
+                    <div className="px-6 py-4 items-center flex">
+                      <HealthBadge status={status} />
+                    </div>
+                    <div className="px-6 py-4 flex flex-col">
+                      <span className="text-white text-sm">{m.type}</span>
+                      <span className="text-[#98A6A8] text-xs">{m.puissance}</span>
+                    </div>
+                    <div className="px-6 py-4 flex items-center gap-1">
+                      <span className={cn("font-bold text-lg", vibrationColor[status])}>{m.vibrationRMS}</span>
+                      <span className="text-[#98A6A8] text-xs">mm/s</span>
+                    </div>
+                    <div className="px-6 py-4 text-sm text-[#98A6A8]">{m.derniereAlerte || "N/A"}</div>
+                    <div className="px-6 py-4 flex items-center justify-end gap-2 pr-10">
+                       <ActionBtn><VibrationIcon /></ActionBtn>
+                       <DropdownMenu>
+                         <DropdownMenuTrigger asChild>
+                           <button onClick={(e) => e.stopPropagation()} className="p-2"><MoreHorizontal className="w-4 h-4 text-[#C9E7E6]" /></button>
+                         </DropdownMenuTrigger>
+                         <DropdownMenuContent className="bg-[#0D1316] text-white">
+                           <DropdownMenuItem onClick={(e) => {e.stopPropagation(); setSelectedMotor(m); setIsUpdateDialogOpen(true);}}>Modifier</DropdownMenuItem>
+                           <DropdownMenuItem className="text-red-500" onClick={async (e) => {e.stopPropagation(); await api.deleteMotor(m.id); refetch();}}>Supprimer</DropdownMenuItem>
+                         </DropdownMenuContent>
+                       </DropdownMenu>
+                    </div>
+                  </div>
                 );
               })}
-
-              {/* Next */}
-              <button 
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="flex w-8 h-8 items-center justify-center rounded border border-black/[0.08] bg-[#0D1316] hover:bg-white/5 transition-colors disabled:opacity-30"
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M6 12L10 8L6 4" stroke="#E6F0F2" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
             </div>
           </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {paginatedMoteurs.map((m: any) => {
+              const status = (m.etatSante as HealthStatus) || (m.etatColor === "bg-[#007A3D]" ? "Normal" : m.etatColor === "bg-[#F2A900]" ? "Attention" : "Critique");
+              return (
+                <div key={m.id} onClick={() => navigate(`/moteurs/${m.id}`)} className="bg-[#0B1518] rounded-xl border border-white/5 p-6 hover:border-[#0EA5E9]/30 transition-all cursor-pointer">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="p-3 rounded-lg bg-[#0C6CF2]/10"><MoteurIcon /></div>
+                    <HealthBadge status={status} />
+                  </div>
+                  <h3 className="text-white font-bold text-lg mb-1">{m.id}</h3>
+                  <p className="text-[#98A6A8] text-sm mb-6">{m.zone} • {m.localisation}</p>
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
+                    <div>
+                      <p className="text-[#64748B] text-[10px] font-bold uppercase mb-1">Vibration</p>
+                      <p className={cn("text-xl font-bold", vibrationColor[status])}>{m.vibrationRMS} <span className="text-xs font-normal opacity-60">mm/s</span></p>
+                    </div>
+                    <div>
+                      <p className="text-[#64748B] text-[10px] font-bold uppercase mb-1">Type</p>
+                      <p className="text-white font-medium">{m.type}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Pagination */}
+        <div className="flex items-center justify-between px-6 py-4 bg-[#0B1518] rounded-lg border border-white/5">
+           <span className="text-[#98A6A8] text-sm">Total: <span className="text-white font-bold">{totalMoteurs}</span> moteurs</span>
+           <div className="flex gap-2">
+              <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="px-3 py-1 bg-white/5 text-white rounded disabled:opacity-30">Prec</button>
+              <span className="text-white px-2 py-1">{currentPage} / {totalPages}</span>
+              <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} className="px-3 py-1 bg-white/5 text-white rounded disabled:opacity-30">Suiv</button>
+           </div>
         </div>
 
-        {/* Update Dialog */}
+        {/* Update Modal */}
         <Dialog open={isUpdateDialogOpen} onOpenChange={setIsUpdateDialogOpen}>
-          <DialogContent className="bg-[#0A1114] border-white/10 text-white max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-[#E6F0F2]">
-                Modifier le Moteur {selectedMotor?.id}
-              </DialogTitle>
-            </DialogHeader>
-            
-            <div className="py-6 flex flex-col gap-6">
-              <div className="flex flex-col gap-2">
-                <label className="text-[#98A6A8] text-xs font-semibold uppercase tracking-wider">Type de Moteur</label>
-                <input
-                  value={editType}
-                  onChange={(e) => setEditType(e.target.value)}
-                  className="w-full h-11 px-4 rounded-md border border-white/10 bg-[#0D1316] text-white outline-none focus:border-[#0C6CF2]/50"
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label className="text-[#98A6A8] text-xs font-semibold uppercase tracking-wider">Vibration (mm/s)</label>
-                <input
-                  value={editVibration}
-                  onChange={(e) => setEditVibration(e.target.value)}
-                  className="w-full h-11 px-4 rounded-md border border-white/10 bg-[#0D1316] text-white outline-none focus:border-[#0C6CF2]/50"
-                />
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <label className="text-[#98A6A8] text-xs font-semibold uppercase tracking-wider">État de Santé</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(["Normal", "Attention", "Critique"] as HealthStatus[]).map((st) => (
-                    <button
-                      key={st}
-                      type="button"
-                      onClick={() => setEditEtat(st)}
-                      className={cn(
-                        "flex flex-col items-center gap-2 p-3 rounded-md border transition-all",
-                        editEtat === st 
-                          ? "border-[#0EA5E9] bg-[#0EA5E9]/10" 
-                          : "border-white/5 bg-white/5 hover:bg-white/10"
-                      )}
-                    >
-                      <div className={cn("w-2 h-2 rounded-full", 
-                        st === "Normal" ? "bg-[#007A3D]" : st === "Attention" ? "bg-[#F2A900]" : "bg-[#D93F3F]"
-                      )} />
-                      <span className="text-[12px] font-medium">{st}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+          <DialogContent className="bg-[#0A1114] border-white/10 text-white">
+            <DialogHeader><DialogTitle>Modifier Moteur {selectedMotor?.id}</DialogTitle></DialogHeader>
+            <div className="py-4 flex flex-col gap-4">
+               <div>
+                  <label className="text-xs text-[#98A6A8] mb-1 block">Type</label>
+                  <input value={editType} onChange={e => setEditType(e.target.value)} className="w-full bg-[#0D1316] border border-white/10 p-2 rounded" />
+               </div>
+               <div>
+                  <label className="text-xs text-[#98A6A8] mb-1 block">État</label>
+                  <select value={editEtat} onChange={e => setEditEtat(e.target.value as any)} className="w-full bg-[#0D1316] border border-white/10 p-2 rounded">
+                    <option value="Normal">Normal</option>
+                    <option value="Attention">Attention</option>
+                    <option value="Critique">Critique</option>
+                  </select>
+               </div>
             </div>
-
-            <DialogFooter className="gap-3 sm:gap-0">
-              <button
-                onClick={() => setIsUpdateDialogOpen(false)}
-                className="px-4 py-2 rounded-md border border-white/10 text-sm font-medium hover:bg-white/5 transition-colors"
-                disabled={isUpdating}
-              >
-                Annuler
-              </button>
-              <button
+            <DialogFooter>
+               <button onClick={() => setIsUpdateDialogOpen(false)} className="px-4 py-2">Annuler</button>
+               <button 
                 onClick={async () => {
-                  if (!selectedMotor) return;
-                  setIsUpdating(true);
-                  try {
-                    const original = apiMoteurs.find((m: any) => m.id === selectedMotor.id);
-                    await api.updateMotor(selectedMotor.id, {
-                      ...original,
-                      type: editType,
-                      vibration: editVibration,
-                      etatLabel: editEtat + " (Manuel)",
-                      etatColor: editEtat === "Normal" ? "bg-[#007A3D]" : editEtat === "Attention" ? "bg-[#F2A900]" : "bg-[#D93F3F]"
-                    });
-                    toast.success("Moteur mis à jour");
-                    refetch();
-                    setIsUpdateDialogOpen(false);
-                  } catch (err) {
-                    toast.error("Erreur lors de la mise à jour");
-                  } finally {
-                    setIsUpdating(false);
-                  }
+                   setIsUpdating(true);
+                   try {
+                     await api.updateMotor(selectedMotor!.id, { ...selectedMotor, type: editType, etatSante: editEtat });
+                     toast.success("Mis à jour");
+                     refetch();
+                     setIsUpdateDialogOpen(false);
+                   } finally { setIsUpdating(false); }
                 }}
-                disabled={isUpdating}
-                className="px-4 py-2 rounded-md bg-[#007A3D] hover:bg-[#006a34] text-white text-sm font-semibold transition-colors disabled:opacity-50 flex items-center gap-2"
-              >
-                {isUpdating && <Loader2 className="w-4 h-4 animate-spin" />}
-                Enregistrer
-              </button>
+                className="bg-[#007A3D] px-4 py-2 rounded text-white font-bold"
+               >
+                 {isUpdating ? "..." : "Enregistrer"}
+               </button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -597,4 +377,4 @@ export default function Moteurs() {
     </DashboardLayout>
   );
 }
-
+联职员表。

@@ -14,7 +14,11 @@ type Tab = "quotidien" | "hebdomadaire" | "mensuel";
 
 export default function RapportsBI() {
   const [activeTab, setActiveTab] = useState<Tab>("hebdomadaire");
+  const [selectedDate, setSelectedDate] = useState("Avril 2026");
   const [isExporting, setIsExporting] = useState(false);
+  const [isDateMenuOpen, setIsDateMenuOpen] = useState(false);
+
+  const availableDates = ["Janvier 2026", "Février 2026", "Mars 2026", "Avril 2026", "Mai 2026"];
 
   const handleExportPDF = async () => {
     try {
@@ -115,19 +119,38 @@ export default function RapportsBI() {
             </h1>
 
             <div className="flex flex-wrap items-center gap-3">
-              {/* Date range */}
-              <div className="relative flex items-center gap-2 h-10 px-4 rounded-md border border-black/[0.08] bg-[#0B1518] min-w-[200px]">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="shrink-0">
-                  <path d="M6 1.5V4.5M12 1.5V4.5" stroke="#98A6A8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M3.75 3H14.25C15.0779 3 15.75 3.67213 15.75 4.5V15C15.75 15.8279 15.0779 16.5 14.25 16.5H3.75C2.92213 16.5 2.25 15.8279 2.25 15V4.5C2.25 3.67213 2.92213 3 3.75 3V3" stroke="#98A6A8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M2.25 7.5H15.75" stroke="#98A6A8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                <span className="text-[#E6F0F2] text-[14px] font-medium flex-1 whitespace-nowrap uppercase">
-                  {new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
-                </span>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
-                  <path d="M4 6L8 10L12 6" stroke="#98A6A8" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+              {/* Date range selection */}
+              <div className="relative">
+                <button 
+                  onClick={() => setIsDateMenuOpen(!isDateMenuOpen)}
+                  className="relative flex items-center gap-2 h-10 px-4 rounded-md border border-black/[0.08] bg-[#0B1518] min-w-[200px]"
+                >
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="shrink-0">
+                    <path d="M6 1.5V4.5M12 1.5V4.5" stroke="#98A6A8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M3.75 3H14.25C15.0779 3 15.75 3.67213 15.75 4.5V15C15.75 15.8279 15.0779 16.5 14.25 16.5H3.75C2.92213 16.5 2.25 15.8279 2.25 15V4.5C2.25 3.67213 2.92213 3 3.75 3V3" stroke="#98A6A8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M2.25 7.5H15.75" stroke="#98A6A8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span className="text-[#E6F0F2] text-[14px] font-medium flex-1 whitespace-nowrap uppercase">
+                    {selectedDate}
+                  </span>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
+                    <path d="M4 6L8 10L12 6" stroke="#98A6A8" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+                
+                {isDateMenuOpen && (
+                  <div className="absolute left-0 top-full mt-2 w-full z-50 rounded-md border border-white/10 bg-[#0D1316] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                    {availableDates.map(date => (
+                      <button
+                        key={date}
+                        onClick={() => { setSelectedDate(date); setIsDateMenuOpen(false); }}
+                        className={`w-full text-left px-4 py-3 text-sm transition-colors hover:bg-white/5 ${selectedDate === date ? 'text-[#007A3D] font-bold' : 'text-[#98A6A8]'}`}
+                      >
+                        {date}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Export PDF */}
@@ -196,25 +219,25 @@ export default function RapportsBI() {
         {/* Page content */}
         <div className="flex flex-col gap-6 py-8">
           {/* KPI Cards */}
-          <KPICards />
+          <KPICards tab={activeTab} date={selectedDate} />
 
           {/* Charts row: Maintenance cost + Intervention donut */}
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-6">
             <div className="min-h-[320px]">
-              <MaintenanceCostChart />
+              <MaintenanceCostChart tab={activeTab} date={selectedDate} />
             </div>
             <div className="min-h-[320px]">
-              <InterventionChart />
+              <InterventionChart tab={activeTab} date={selectedDate} />
             </div>
           </div>
 
           {/* Bottom row: Map + MTBF by Site */}
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-6 pb-4">
             <div className="min-h-[380px]">
-              <CartographieSites />
+              <CartographieSites tab={activeTab} date={selectedDate} />
             </div>
             <div className="min-h-[380px]">
-              <MtbfBySiteChart />
+              <MtbfBySiteChart tab={activeTab} date={selectedDate} />
             </div>
           </div>
         </div>
