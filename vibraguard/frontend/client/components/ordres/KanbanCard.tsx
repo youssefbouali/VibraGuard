@@ -16,6 +16,7 @@ export interface OT {
   type?: string;
   cost?: number;
   duration?: string;
+  parts?: string[];
 }
 
 const PriorityBadge = ({ priority }: { priority: Priority }) => {
@@ -200,6 +201,17 @@ export function KanbanCard({ ot, onClick }: KanbanCardProps) {
         )}
       </div>
 
+      {/* Parts List */}
+      {ot.parts && ot.parts.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {ot.parts.map((p, i) => (
+            <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-[#98A6A8]">
+              {p}
+            </span>
+          ))}
+        </div>
+      )}
+
       {/* Footer: date + assignee */}
       <div className="flex items-center justify-between pt-3 border-t border-black/[0.08]">
         <div className="flex items-center gap-1.5">
@@ -221,15 +233,21 @@ export function KanbanCard({ ot, onClick }: KanbanCardProps) {
         </div>
 
         {ot.unassigned ? (
-          <div className="flex w-6 h-6 items-center justify-center rounded-full bg-[rgba(7,16,24,0.13)]">
-            <UnassignedIcon />
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-[#98A6A8]">Non assigné</span>
+            <div className="flex w-6 h-6 items-center justify-center rounded-full bg-[rgba(7,16,24,0.13)]">
+              <UnassignedIcon />
+            </div>
           </div>
         ) : ot.assignee ? (
-          <img
-            src={avatarMap[ot.assignee] || avatarMap.karim}
-            alt="Assignee"
-            className="w-6 h-6 rounded-full border border-black/[0.08] object-cover bg-[#041018]"
-          />
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-medium text-[#C9E7E6]">{ot.assignee}</span>
+            <img
+              src={avatarMap[ot.assignee.toLowerCase()] || avatarMap.karim}
+              alt="Assignee"
+              className="w-6 h-6 rounded-full border border-black/[0.08] object-cover bg-[#041018]"
+            />
+          </div>
         ) : null}
       </div>
     </div>

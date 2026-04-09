@@ -36,11 +36,12 @@ export function KanbanBoard() {
         ? "basse" 
         : "moyenne",
     date: wo.dueDate,
-    assignee: wo.assignedTo,
+    assignee: wo.assignedTo?.name || wo.assignedTo || "Non assigné",
     status: wo.status === "Nouveau" ? "todo" : wo.status === "En cours" ? "inprogress" : "done",
     type: wo.type,
     cost: wo.cost,
     duration: wo.duration,
+    parts: wo.parts ? wo.parts.split(",").map((p: string) => p.trim()) : [],
   }));
 
   const filtered = mappedTasks.filter(

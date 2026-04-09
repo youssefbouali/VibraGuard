@@ -401,17 +401,20 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
           <DropdownMenuTrigger asChild>
             <div className="hidden sm:flex items-center gap-3 pl-6 border-l border-white/10 cursor-pointer hover:opacity-80 transition-opacity">
               <div className="flex flex-col items-end">
-                <span className="text-[#E6F0F2] text-sm font-semibold leading-tight">{user?.fullName || "Utilisateur"}</span>
-                <span className="text-[#C9E7E6] text-xs font-normal leading-tight">{user?.role}</span>
+                <span className="text-[#E6F0F2] text-sm font-semibold">{user?.fullName || "Utilisateur"}</span>
+                <span className="text-[#00B976] text-[10px] font-bold uppercase tracking-wider">{user?.role || "Membre"}</span>
               </div>
                 <User className="w-5 h-5 text-[#C9E7E6]" />
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56 bg-[#0A1A27] border-white/10 text-[#E6F0F2] shadow-2xl" align="end" sideOffset={8}>
             <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{user?.fullName || "Utilisateur"}</p>
-                <p className="text-xs leading-none text-[#98A6A8]">{user?.email || ""}</p>
+              <div className="flex flex-col space-y-1.5 py-1">
+                <p className="text-sm font-bold text-white">{user?.fullName || "Utilisateur"}</p>
+                <div className="flex flex-col">
+                  <p className="text-[10px] font-bold text-[#00B976] uppercase tracking-wide">{user?.role || "Accès Standard"}</p>
+                  <p className="text-[11px] text-[#98A6A8] truncate">{user?.email || ""}</p>
+                </div>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator className="bg-white/5" />
