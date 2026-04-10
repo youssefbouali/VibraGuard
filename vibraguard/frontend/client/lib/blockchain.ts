@@ -9,15 +9,92 @@ const DEFAULT_ABI = [
 
 const DEFAULT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3"; // Typical first hardhat address
 
+// Cache for contract data to ensure both functions use the same address
+let contractDataCache: { address: string; abi: any[] } | null = null;
+
+/**
+ * Try to find the actual deployed contract address by looking for code at known addresses
+ */
+async function discoverContractAddress(provider: ethers.Provider): Promise<string | null> {
+  console.log("🔎 Attempting to discover contract address...");
+  
+  // Try a few common Hardhat deployment addresses in order
+  const candidateAddresses = [
+    "0x5FbDB2315678afecb367f032d93F642f64180aa3", // Most common first deployment
+    "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",  // Second common address
+    "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",  // Third common address
+  ];
+
+  for (const addr of candidateAddresses) {
+    try {
+      const code = await provider.getCode(addr);
+      if (code && code !== "0x") {
+        console.log("✅ Found contract code at:", addr);
+        return addr;
+      }
+    } catch (e) {
+      console.log("⚠️ Error checking address", addr, e);
+    }
+  }
+  
+  console.warn("⚠️ Could not discover contract address");
+  return null;
+}
+
+async function getContractData() {
+  // Return cached data if available
+  if (contractDataCache) {
+    console.log("📦 Using cached contract address:", contractDataCache.address);
+    return contractDataCache;
+  }
+
+  let contractData = { address: DEFAULT_ADDRESS, abi: DEFAULT_ABI };
+  
+  // Try to load from WorkOrderRegistry.json
+  try {
+    const dynamicData = await import("./WorkOrderRegistry.json");
+    if (dynamicData.address) {
+      contractData = dynamicData as any;
+      console.log("✅ Loaded contract address from WorkOrderRegistry.json:", dynamicData.address);
+    }
+  } catch (e) {
+    console.log("⚠️ WorkOrderRegistry.json not found, attempting discovery...");
+    
+    // Try to discover the actual deployed address
+    try {
+      const providerUrl = typeof window !== 'undefined' ? `${window.location.origin}/blockchain-rpc` : "http://127.0.0.1:8545";
+      const provider = new ethers.JsonRpcProvider(providerUrl);
+      const discoveredAddress = await discoverContractAddress(provider);
+      
+      if (discoveredAddress) {
+        contractData.address = discoveredAddress;
+      } else {
+        console.warn("⚠️ Using default fallback address:", DEFAULT_ADDRESS);
+      }
+    } catch (discoveryError) {
+      console.warn("⚠️ Discovery failed, using default address:", DEFAULT_ADDRESS, discoveryError);
+    }
+  }
+
+  // Cache it for consistent use across the session
+  contractDataCache = contractData;
+  
+  // Also save to localStorage for persistence across page reloads
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('workOrderRegistryAddress', contractData.address);
+      console.log("💾 Saved contract address to localStorage:", contractData.address);
+    } catch (e) {
+      console.warn("Could not save to localStorage:", e);
+    }
+  }
+  
+  return contractData;
+}
+
 export async function submitWorkOrderToBlockchain(order: any) {
   try {
-    let contractData = { address: DEFAULT_ADDRESS, abi: DEFAULT_ABI };
-    try {
-      const dynamicData = await import("./WorkOrderRegistry.json");
-      if (dynamicData.address) contractData = dynamicData as any;
-    } catch (e) {
-      console.warn("Using default contract ABI/Address");
-    }
+    let contractData = await getContractData();
 
     const providerUrl = typeof window !== 'undefined' ? `${window.location.origin}/blockchain-rpc` : "http://127.0.0.1:8545";
     const provider = new ethers.JsonRpcProvider(providerUrl);
@@ -28,6 +105,9 @@ export async function submitWorkOrderToBlockchain(order: any) {
 
     const contract = new ethers.Contract(contractData.address, contractData.abi, signer);
 
+    console.log("📤 Submitting work order to blockchain...");
+    console.log("📍 Contract address:", contractData.address);
+    
     const tx = await contract.createWorkOrder(
       order.id || ("W-" + Math.floor(Math.random() * 10000)),
       order.title || "Sans titre",
@@ -35,32 +115,66 @@ export async function submitWorkOrderToBlockchain(order: any) {
       order.priority || "medium"
     );
 
+    console.log("⏳ Waiting for transaction to be mined...");
     const receipt = await tx.wait();
-    console.log("✅ Mined to blockchain! TX Hash:", receipt.hash);
+    
+    console.log("✅ Mined to blockchain!");
+    console.log("   TX Hash:", receipt.hash);
+    console.log("   Block:", receipt.blockNumber);
+    console.log("   Contract Address:", contractData.address);
+    
+    // Confirm the address is cached for future use
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('workOrderRegistryAddress', contractData.address);
+      } catch (e) {}
+    }
+    
     return receipt.hash;
   } catch (error) {
-    console.error("Blockchain error:", error);
+    console.error("❌ Blockchain submission error:", error);
     return null; 
   }
 }
 
+
 export async function fetchWorkOrderEvents() {
   try {
-    let contractData: { address: string; abi: any[] } = { address: DEFAULT_ADDRESS, abi: DEFAULT_ABI };
-    try {
-      const dynamicData = await import("./WorkOrderRegistry.json");
-      if (dynamicData.address) contractData = dynamicData as any;
-    } catch (e) {}
+    const contractData = await getContractData();
+    
+    console.log("🔍 ========== FETCHING WORK ORDER LOGS ==========");
+    console.log("📍 Contract Address:", contractData.address);
 
     const providerUrl = typeof window !== 'undefined' ? `${window.location.origin}/blockchain-rpc` : "http://127.0.0.1:8545";
+    console.log("🌐 Provider URL:", providerUrl);
+    
     const provider = new ethers.JsonRpcProvider(providerUrl);
+    
+    // Verify we can reach the provider
+    try {
+      const chainId = await provider.getNetwork();
+      console.log("✅ Connected to chain ID:", chainId.chainId);
+    } catch (e) {
+      console.error("❌ Could not connect to provider:", e);
+      return [];
+    }
+
     const iface = new ethers.Interface(contractData.abi);
 
     // Compute the topic hash for WorkOrderCreated event
-    // Using getLogs directly avoids indexed-string filtering bug in ethers v6
+    const eventSignature = "WorkOrderCreated(string indexed id,string title,string asset,string priority,address creator,uint timestamp)";
     const eventTopic = iface.getEvent("WorkOrderCreated")?.topicHash;
-    if (!eventTopic) return [];
+    
+    if (!eventTopic) {
+      console.warn("⚠️ Could not compute WorkOrderCreated event topic");
+      return [];
+    }
 
+    console.log("📋 Event Signature:", eventSignature);
+    console.log("🏷️  Event Topic:", eventTopic);
+
+    console.log("📡 Querying logs from block 0 to latest...");
+    
     const logs = await provider.getLogs({
       address: contractData.address,
       topics: [eventTopic],
@@ -68,9 +182,32 @@ export async function fetchWorkOrderEvents() {
       toBlock: "latest",
     });
 
-    return logs.map((log) => {
+    console.log(`📊 Found ${logs.length} log(s) matching the WorkOrderCreated event`);
+
+    if (logs.length === 0) {
+      console.warn("⚠️ NO LOGS FOUND - This could mean:");
+      console.warn("   1. No work orders have been created yet");
+      console.warn("   2. The contract address is incorrect");
+      console.warn("   3. The blockchain was reset");
+      console.warn("   4. The event is not being emitted properly");
+    }
+
+    return logs.map((log, idx) => {
       try {
+        console.log(`\n🔎 Decoding log ${idx + 1}...`);
+        console.log("   Transaction Hash:", log.transactionHash);
+        console.log("   Block Number:", log.blockNumber);
+        
         const decoded = iface.decodeEventLog("WorkOrderCreated", log.data, log.topics);
+        
+        console.log("   ✅ Decoded successfully:");
+        console.log("      - ID:", decoded[0]);
+        console.log("      - Title:", decoded[1]);
+        console.log("      - Asset:", decoded[2]);
+        console.log("      - Priority:", decoded[3]);
+        console.log("      - Creator:", decoded[4]);
+        console.log("      - Timestamp:", new Date(Number(decoded[5]) * 1000).toISOString());
+        
         return {
           hash: log.transactionHash,
           bloc: `#${log.blockNumber}`,
@@ -83,13 +220,14 @@ export async function fetchWorkOrderEvents() {
           user: decoded[4]?.toString() || "—", // creator address
         };
       } catch (decodeErr) {
-        console.warn("Failed to decode log:", decodeErr);
+        console.warn("   ❌ Failed to decode log:", decodeErr);
         return null;
       }
     }).filter(Boolean).reverse(); // newest first
 
   } catch (err) {
-    console.error("Failed to fetch blockchain events:", err);
+    console.error("❌ ========== BLOCKCHAIN FETCH ERROR ==========");
+    console.error(err);
     return [];
   }
 }
