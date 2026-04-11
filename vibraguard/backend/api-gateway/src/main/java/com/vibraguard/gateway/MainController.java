@@ -89,11 +89,18 @@ public class MainController {
             return;
         }
 
+        Optional<User> currentUserOpt = currentUser(principal);
         Optional<User> assignedUser = userRepository.findAll().stream()
                 .filter(u -> u.getFullName() != null && u.getFullName().equalsIgnoreCase(workOrder.getAssignedTo()))
                 .findFirst();
 
         if (assignedUser.isEmpty()) {
+            return;
+        }
+
+        // Skip notification if admin assigned to themselves
+        if (currentUserOpt.isPresent() && currentUserOpt.get().getFullName() != null &&
+                currentUserOpt.get().getFullName().equalsIgnoreCase(assignedUser.get().getFullName())) {
             return;
         }
 

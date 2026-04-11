@@ -17,6 +17,27 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const calculatePasswordStrength = (pwd: string) => {
+    let strength = 0;
+    const hasLowerCase = /[a-z]/.test(pwd);
+    const hasUpperCase = /[A-Z]/.test(pwd);
+    const hasNumbers = /\d/.test(pwd);
+    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd);
+    
+    if (pwd.length >= 8) strength++;
+    if (pwd.length >= 12) strength++;
+    if (hasLowerCase) strength++;
+    if (hasUpperCase) strength++;
+    if (hasNumbers) strength++;
+    if (hasSpecialChar) strength++;
+    
+    if (strength <= 2) return { level: "Faible", score: 1 };
+    if (strength <= 4) return { level: "Moyen", score: 2 };
+    return { level: "Fort", score: 3 };
+  };
+
+  const passwordStrength = calculatePasswordStrength(password);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -245,12 +266,23 @@ export default function Register() {
                 {/* Password strength */}
                 <div className="flex items-center gap-2 mt-1.5">
                   <div className="flex gap-1 flex-1">
-                    <div className="h-1 flex-1 rounded-full bg-[#10B981]" />
-                    <div className="h-1 flex-1 rounded-full bg-[#10B981]" />
-                    <div className="h-1 flex-1 rounded-full bg-[#10B981]" />
+                    <div className={`h-1 flex-1 rounded-full transition-colors ${
+                      passwordStrength.score >= 1 ? "bg-[#EF4444]" : "bg-[rgba(255,255,255,0.10)]"
+                    }`} />
+                    <div className={`h-1 flex-1 rounded-full transition-colors ${
+                      passwordStrength.score >= 2 ? "bg-[#F59E0B]" : "bg-[rgba(255,255,255,0.10)]"
+                    }`} />
+                    <div className={`h-1 flex-1 rounded-full transition-colors ${
+                      passwordStrength.score >= 3 ? "bg-[#10B981]" : "bg-[rgba(255,255,255,0.10)]"
+                    }`} />
                     <div className="h-1 flex-1 rounded-full bg-[rgba(255,255,255,0.10)]" />
                   </div>
-                  <span className="text-[#10B981] text-xs font-medium">Fort</span>
+                  <span className={`text-xs font-medium transition-colors ${
+                    passwordStrength.score === 1 ? "text-[#EF4444]" :
+                    passwordStrength.score === 2 ? "text-[#F59E0B]" :
+                    passwordStrength.score === 3 ? "text-[#10B981]" :
+                    "text-[#64748B]"
+                  }`}>{password ? passwordStrength.level : "Fort"}</span>
                 </div>
               </FormField>
               <FormField label="Confirmation">
