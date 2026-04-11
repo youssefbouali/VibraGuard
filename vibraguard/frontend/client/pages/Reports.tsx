@@ -35,18 +35,8 @@ export default function Reports() {
   const loadReports = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      const response = await fetch("/api/v1/reports", {
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setReports(data);
-      } else {
-        toast.error("Erreur lors du chargement des rapports");
-      }
+      const data = await apiRequest<Report[]>("GET", "/api/v1/reports");
+      setReports(data);
     } catch (error) {
       console.error(error);
       toast.error("Erreur lors du chargement des rapports");
@@ -104,27 +94,14 @@ export default function Reports() {
         fileContent = XLSX.write(wb, { type: "base64" });
       }
 
-      const token = localStorage.getItem("token");
-      const response = await fetch("/api/v1/reports/generate", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({
-          ...formData,
-          fileContent,
-        }),
+      const newReport = await apiRequest<any>("POST", "/api/v1/reports/generate", {
+        ...formData,
+        fileContent,
       });
 
-      if (response.ok) {
-        const newReport = await response.json();
-        setReports([newReport, ...reports]);
-        setShowGenerateModal(false);
-        toast.success("Rapport généré et stocké sur IPFS");
-      } else {
-        toast.error("Erreur lors de la génération du rapport");
-      }
+      setReports([newReport, ...reports]);
+      setShowGenerateModal(false);
+      toast.success("Rapport généré et stocké sur IPFS");
     } catch (error) {
       console.error(error);
       toast.error("Erreur lors de la génération du rapport");
@@ -136,11 +113,10 @@ export default function Reports() {
   const handleDownload = async (reportId: string, title: string) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`/api/v1/reports/${reportId}/download`, {
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        }
-      });
+      const headers = new Headers();
+      if (token) headers.append("Authorization", `Bearer ${token}`);
+      
+      const response = await fetch(`/api/v1/reports/${reportId}/download`, { headers });
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -170,20 +146,9 @@ export default function Reports() {
     if (!confirm("Êtes-vous sûr de vouloir supprimer ce rapport ?")) return;
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`/api/v1/reports/${reportId}`, {
-        method: "DELETE",
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        }
-      });
-
-      if (response.ok) {
-        setReports(reports.filter((r) => r.id !== reportId));
-        toast.success("Rapport supprimé");
-      } else {
-        toast.error("Erreur lors de la suppression");
-      }
+      await apiRequest("DELETE", `/api/v1/reports/${reportId}`);
+      setReports(reports.filter((r) => r.id !== reportId));
+      toast.success("Rapport supprimé");
     } catch (error) {
       console.error(error);
       toast.error("Erreur lors de la suppression");
