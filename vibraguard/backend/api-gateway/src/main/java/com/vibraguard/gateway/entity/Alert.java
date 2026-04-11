@@ -25,6 +25,7 @@ public class Alert {
     private String status; // Nouveau, Acquittée, Escaladée
     private String motorId;
     private String title;
+    private String recipientEmail;
     private Double velociteRms;
     private Double accelerationPeak;
     private Double temperature;

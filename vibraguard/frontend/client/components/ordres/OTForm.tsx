@@ -10,6 +10,7 @@ import {
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth-context";
 
 interface Part {
   id?: string;
@@ -65,6 +66,11 @@ export function OTForm({ onCancel }: OTFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { user } = useAuth();
+  const role = user?.role?.toLowerCase() || "";
+  const isAdmin = role.includes("admin") || role.includes("administrateur");
+  const isTechnician = role.includes("technicien") || role.includes("technician");
+
   // New Part Modal State
   const [isPartDialogOpen, setIsPartDialogOpen] = useState(false);
   const [newPartName, setNewPartName] = useState("");
@@ -85,7 +91,11 @@ export function OTForm({ onCancel }: OTFormProps) {
         setAvailableParts(invParts);
         
         if (motors.length > 0) setMoteur(motors[0].id);
-        if (technicians.length > 0) setTechnicien(technicians[0].name);
+        if (isTechnician && user?.fullName) {
+          setTechnicien(user.fullName);
+        } else if (technicians.length > 0) {
+          setTechnicien(technicians[0].name);
+        }
       } catch (error) {
         console.error("Failed to fetch form data:", error);
         toast.error("Erreur lors du chargement des données.");
@@ -95,6 +105,12 @@ export function OTForm({ onCancel }: OTFormProps) {
     };
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (isTechnician && user?.fullName) {
+      setTechnicien(user.fullName);
+    }
+  }, [isTechnician, user?.fullName]);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -365,25 +381,37 @@ export function OTForm({ onCancel }: OTFormProps) {
             <label className="text-[#C9E7E6] text-[13px] font-medium">Technicien assigné</label>
             <div className="flex h-12 px-4 items-center gap-3 rounded-[6px] border border-black/[0.08] bg-[#0D1316] shadow-[inset_0_2px_4px_1px_rgba(0,0,0,0.10)]">
               <User className="w-5 h-5 text-[#C9E7E6]" />
-              <select
-                value={technicien}
-                onChange={(e) => setTechnicien(e.target.value)}
-                className="flex-1 bg-transparent text-[#E6F0F2] text-[14px] font-medium outline-none appearance-none cursor-pointer"
-              >
-                {isLoading ? (
-                  <option>Chargement...</option>
-                ) : (
-                  availableTechnicians.map((t) => (
-                    <option key={t.id} value={t.name} className="bg-[#0D1316]">
-                      {t.name}
-                    </option>
-                  ))
-                )}
-              </select>
+              {isAdmin ? (
+                <select
+                  value={technicien}
+                  onChange={(e) => setTechnicien(e.target.value)}
+                  className="flex-1 bg-transparent text-[#E6F0F2] text-[14px] font-medium outline-none appearance-none cursor-pointer"
+                >
+                  {isLoading ? (
+                    <option>Chargement...</option>
+                  ) : (
+                    availableTechnicians.map((t) => (
+                      <option key={t.id} value={t.name} className="bg-[#0D1316]">
+                        {t.name}
+                      </option>
+                    ))
+                  )}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  value={technicien}
+                  readOnly
+                  className="flex-1 bg-transparent text-[#E6F0F2] text-[14px] font-medium outline-none cursor-not-allowed"
+                />
+              )}
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="shrink-0">
                 <path d="M4.5 6.75L9 11.25L13.5 6.75" stroke="#98A6A8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
+            {!isAdmin && (
+              <p className="text-[#98A6A8] text-xs mt-1">Vous ne pouvez pas modifier le technicien assigné.</p>
+            )}
           </div>
         </div>
 

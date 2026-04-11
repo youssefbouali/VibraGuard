@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAlerts } from "@/hooks/use-alerts";
+import { useAuth } from "@/lib/auth-context";
 
 const navItems = [
   {
@@ -96,6 +97,16 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
     return item;
   });
 
+  const { user } = useAuth();
+  const isAdmin = user?.role ? user.role.toLowerCase().includes("admin") || user.role.toLowerCase().includes("administrateur") : false;
+
+  const filteredNavItems = dynamicNavItems.filter((item) => {
+    if (["Rapports BI", "Audit Blockchain", "Paramètres"].includes(item.label)) {
+      return isAdmin;
+    }
+    return true;
+  });
+
   return (
     <aside
       className={cn(
@@ -126,7 +137,7 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
 
       {/* Nav */}
       <nav className="flex-1 flex flex-col gap-2 p-4 overflow-y-auto">
-        {dynamicNavItems.map((item) => {
+        {filteredNavItems.map((item) => {
           const isActive =
             item.href === "/dashboard"
               ? location.pathname === item.href

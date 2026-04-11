@@ -9,8 +9,10 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.security.Principal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -52,6 +54,62 @@ public class MainController {
     public void seedData() {
         // Data is now primarily managed through the UI or ML services.
         // We avoid hardcoded default values as per request.
+    }
+
+    private Optional<User> currentUser(Principal principal) {
+        if (principal == null) {
+            return Optional.empty();
+        }
+        return userRepository.findByEmail(principal.getName());
+    }
+
+    private boolean isAdmin(Principal principal) {
+        return currentUser(principal)
+                .map(u -> u.getRole() != null && u.getRole().toLowerCase().contains("admin"))
+                .orElse(false);
+    }
+
+    private boolean isTechnician(Principal principal) {
+        return currentUser(principal)
+                .map(u -> u.getRole() != null && (u.getRole().toLowerCase().contains("technicien") || u.getRole().toLowerCase().contains("technician")))
+                .orElse(false);
+    }
+
+    private boolean isAllowedAlert(Principal principal, Alert alert) {
+        if (isAdmin(principal)) {
+            return true;
+        }
+        return currentUser(principal)
+                .map(u -> alert.getRecipientEmail() == null || u.getEmail().equalsIgnoreCase(alert.getRecipientEmail()))
+                .orElse(false);
+    }
+
+    private void maybeCreateWorkOrderNotification(WorkOrder workOrder, Principal principal) {
+        if (!isAdmin(principal) || workOrder.getAssignedTo() == null) {
+            return;
+        }
+
+        Optional<User> assignedUser = userRepository.findAll().stream()
+                .filter(u -> u.getFullName() != null && u.getFullName().equalsIgnoreCase(workOrder.getAssignedTo()))
+                .findFirst();
+
+        if (assignedUser.isEmpty()) {
+            return;
+        }
+
+        User technician = assignedUser.get();
+        Alert newAlert = new Alert();
+        newAlert.setId("ALR-" + UUID.randomUUID().toString().substring(0, 8));
+        newAlert.setTitle("Nouvel ordre de travail");
+        newAlert.setMessage("Un nouvel ordre a été assigné à vous : " + workOrder.getTitle() + " sur " + workOrder.getAsset() + ".");
+        newAlert.setLevel("Attention");
+        newAlert.setStatus("Nouveau");
+        newAlert.setPriority("Important");
+        newAlert.setColor("#0EA5E9");
+        newAlert.setTime(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+        newAlert.setMotorId(workOrder.getAsset());
+        newAlert.setRecipientEmail(technician.getEmail());
+        alertRepository.save(newAlert);
     }
 
     // IoT Endpoints
@@ -253,37 +311,51 @@ public class MainController {
 
     // ML Endpoints
     @GetMapping("/ml/alerts")
-    public Flux<Alert> getAlerts() {
-        return Flux.defer(() -> Flux.fromIterable(alertRepository.findAll()))
-                .subscribeOn(Schedulers.boundedElastic());
+    public Flux<Alert> getAlerts(Principal principal) {
+        return Flux.defer(() -> {
+            List<Alert> allAlerts = alertRepository.findAll();
+            List<Alert> visible = allAlerts.stream()
+                    .filter(alert -> isAllowedAlert(principal, alert))
+                    .collect(Collectors.toList());
+            return Flux.fromIterable(visible);
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     @GetMapping("/ml/alerts/{id}")
-    public Mono<ResponseEntity<Alert>> getAlertById(@PathVariable("id") String id) {
+    public Mono<ResponseEntity<Alert>> getAlertById(@PathVariable("id") String id, Principal principal) {
         return Mono.fromCallable(() -> alertRepository.findById(id))
                 .subscribeOn(Schedulers.boundedElastic())
-                .map(opt -> opt.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build()));
+                .map(opt -> opt.map(alert -> {
+                    if (!isAllowedAlert(principal, alert)) {
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                    }
+                    return ResponseEntity.ok(alert);
+                }).orElse(ResponseEntity.notFound().build()));
     }
 
     @PutMapping("/ml/alerts/{id}")
-    public Mono<Alert> updateAlert(@PathVariable("id") String id, @RequestBody Alert alert) {
-        return Mono.fromCallable(() -> {
-            return alertRepository.findById(id).map(existing -> {
-                existing.setStatus(alert.getStatus());
-                existing.setMessage(alert.getMessage());
-                existing.setLevel(alert.getLevel());
-                existing.setPriority(alert.getPriority());
-                if(alert.getVelociteRms() != null) existing.setVelociteRms(alert.getVelociteRms());
-                if(alert.getAccelerationPeak() != null) existing.setAccelerationPeak(alert.getAccelerationPeak());
-                if(alert.getTemperature() != null) existing.setTemperature(alert.getTemperature());
-                if(alert.getScoreConfianceIA() != null) existing.setScoreConfianceIA(alert.getScoreConfianceIA());
-                if(alert.getDepassementSeuil() != null) existing.setDepassementSeuil(alert.getDepassementSeuil());
-                return alertRepository.save(existing);
-            }).orElseGet(() -> {
-                alert.setId(id);
-                return alertRepository.save(alert);
-            });
-        }).subscribeOn(Schedulers.boundedElastic());
+    public Mono<ResponseEntity<Alert>> updateAlert(@PathVariable("id") String id, @RequestBody Alert alert, Principal principal) {
+        return Mono.fromCallable(() -> alertRepository.findById(id))
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(opt -> {
+                    if (opt.isEmpty()) {
+                        return Mono.just(ResponseEntity.notFound().<Alert>build());
+                    }
+                    Alert existing = opt.get();
+                    if (!isAllowedAlert(principal, existing)) {
+                        return Mono.just(ResponseEntity.status(HttpStatus.FORBIDDEN).<Alert>build());
+                    }
+                    existing.setStatus(alert.getStatus());
+                    existing.setMessage(alert.getMessage());
+                    existing.setLevel(alert.getLevel());
+                    existing.setPriority(alert.getPriority());
+                    if(alert.getVelociteRms() != null) existing.setVelociteRms(alert.getVelociteRms());
+                    if(alert.getAccelerationPeak() != null) existing.setAccelerationPeak(alert.getAccelerationPeak());
+                    if(alert.getTemperature() != null) existing.setTemperature(alert.getTemperature());
+                    if(alert.getScoreConfianceIA() != null) existing.setScoreConfianceIA(alert.getScoreConfianceIA());
+                    if(alert.getDepassementSeuil() != null) existing.setDepassementSeuil(alert.getDepassementSeuil());
+                    return Mono.just(ResponseEntity.ok(alertRepository.save(existing)));
+                });
     }
 
     @PostMapping("/ml/alerts")
@@ -300,20 +372,28 @@ public class MainController {
     }
 
     @PostMapping("/ml/alerts/{id}/read")
-    public Mono<Alert> markAlertAsRead(@PathVariable("id") String id) {
-        return Mono.fromCallable(() -> {
-            return alertRepository.findById(id).map(a -> {
-                a.setStatus("Read");
-                return alertRepository.save(a);
-            }).orElse(null);
-        }).subscribeOn(Schedulers.boundedElastic());
+    public Mono<ResponseEntity<Alert>> markAlertAsRead(@PathVariable("id") String id, Principal principal) {
+        return Mono.fromCallable(() -> alertRepository.findById(id))
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(opt -> {
+                    if (opt.isEmpty()) {
+                        return Mono.just(ResponseEntity.notFound().<Alert>build());
+                    }
+                    Alert alert = opt.get();
+                    if (!isAllowedAlert(principal, alert)) {
+                        return Mono.just(ResponseEntity.status(HttpStatus.FORBIDDEN).<Alert>build());
+                    }
+                    alert.setStatus("Read");
+                    return Mono.just(ResponseEntity.ok(alertRepository.save(alert)));
+                });
     }
 
     @PostMapping("/ml/alerts/mark-all-read")
-    public Mono<Map<String, Object>> markAllAlertsAsRead() {
+    public Mono<Map<String, Object>> markAllAlertsAsRead(Principal principal) {
         return Mono.fromCallable(() -> {
             List<Alert> unread = alertRepository.findAll().stream()
                 .filter(a -> !"Read".equalsIgnoreCase(a.getStatus()))
+                .filter(a -> isAllowedAlert(principal, a))
                 .collect(java.util.stream.Collectors.toList());
             unread.forEach(a -> a.setStatus("Read"));
             alertRepository.saveAll(unread);
@@ -326,37 +406,78 @@ public class MainController {
 
     // Work Order Endpoints
     @GetMapping("/iot/work-orders")
-    public Flux<WorkOrder> getWorkOrders() {
-        return Flux.defer(() -> Flux.fromIterable(workOrderRepository.findAll()))
-                .subscribeOn(Schedulers.boundedElastic());
+    public Flux<WorkOrder> getWorkOrders(Principal principal) {
+        return Flux.defer(() -> {
+            List<WorkOrder> allWorkOrders = workOrderRepository.findAll();
+            if (isAdmin(principal)) {
+                return Flux.fromIterable(allWorkOrders);
+            }
+
+            Optional<User> current = currentUser(principal);
+            if (current.isPresent() && isTechnician(principal)) {
+                String currentName = current.get().getFullName();
+                List<WorkOrder> filtered = allWorkOrders.stream()
+                        .filter(wo -> currentName != null && currentName.equals(wo.getAssignedTo()))
+                        .collect(Collectors.toList());
+                return Flux.fromIterable(filtered);
+            }
+
+            return Flux.empty();
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     @GetMapping("/iot/work-orders/{id}")
-    public Mono<ResponseEntity<WorkOrder>> getWorkOrderById(@PathVariable("id") String id) {
+    public Mono<ResponseEntity<WorkOrder>> getWorkOrderById(@PathVariable("id") String id, Principal principal) {
         return Mono.fromCallable(() -> workOrderRepository.findById(id))
                 .subscribeOn(Schedulers.boundedElastic())
-                .map(opt -> opt.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build()));
+                .map(opt -> {
+                    if (opt.isEmpty()) {
+                        return ResponseEntity.notFound().build();
+                    }
+                    if (!isAdmin(principal) && isTechnician(principal)) {
+                        User current = currentUser(principal).orElse(null);
+                        if (current == null || !Objects.equals(current.getFullName(), opt.get().getAssignedTo())) {
+                            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                        }
+                    }
+                    return ResponseEntity.ok(opt.get());
+                });
     }
 
     @PostMapping("/iot/work-orders")
-    public Mono<WorkOrder> createWorkOrder(@RequestBody WorkOrder workOrder) {
+    public Mono<WorkOrder> createWorkOrder(@RequestBody WorkOrder workOrder, Principal principal) {
         return Mono.fromCallable(() -> {
             if (workOrder.getId() == null) {
                 workOrder.setId("W-" + (workOrderRepository.count() + 458));
             }
-            return workOrderRepository.save(workOrder);
+            if (isTechnician(principal)) {
+                User current = currentUser(principal).orElse(null);
+                if (current != null && current.getFullName() != null) {
+                    workOrder.setAssignedTo(current.getFullName());
+                }
+            }
+            WorkOrder saved = workOrderRepository.save(workOrder);
+            maybeCreateWorkOrderNotification(saved, principal);
+            return saved;
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
     @PutMapping("/iot/work-orders/{id}")
-    public Mono<WorkOrder> updateWorkOrder(@PathVariable("id") String id, @RequestBody WorkOrder workOrder) {
+    public Mono<WorkOrder> updateWorkOrder(@PathVariable("id") String id, @RequestBody WorkOrder workOrder, Principal principal) {
         return Mono.fromCallable(() -> {
             return workOrderRepository.findById(id).map(existing -> {
                 existing.setTitle(workOrder.getTitle());
                 existing.setAsset(workOrder.getAsset());
                 existing.setStatus(workOrder.getStatus());
                 existing.setPriority(workOrder.getPriority());
-                existing.setAssignedTo(workOrder.getAssignedTo());
+                if (isAdmin(principal)) {
+                    existing.setAssignedTo(workOrder.getAssignedTo());
+                } else if (isTechnician(principal)) {
+                    User current = currentUser(principal).orElse(null);
+                    if (current != null && current.getFullName() != null) {
+                        existing.setAssignedTo(current.getFullName());
+                    }
+                }
                 existing.setDueDate(workOrder.getDueDate());
                 existing.setType(workOrder.getType());
                 existing.setCost(workOrder.getCost());
@@ -365,6 +486,12 @@ public class MainController {
                 return workOrderRepository.save(existing);
             }).orElseGet(() -> {
                 workOrder.setId(id);
+                if (isTechnician(principal)) {
+                    User current = currentUser(principal).orElse(null);
+                    if (current != null && current.getFullName() != null) {
+                        workOrder.setAssignedTo(current.getFullName());
+                    }
+                }
                 return workOrderRepository.save(workOrder);
             });
         }).subscribeOn(Schedulers.boundedElastic());

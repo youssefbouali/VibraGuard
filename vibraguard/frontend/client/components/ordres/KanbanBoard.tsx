@@ -11,6 +11,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 
 
 import { useWorkOrders } from "@/hooks/use-work-orders";
@@ -44,7 +45,16 @@ export function KanbanBoard() {
     parts: wo.parts ? wo.parts.split(",").map((p: string) => p.trim()) : [],
   }));
 
-  const filtered = mappedTasks.filter(
+  const { user } = useAuth();
+  const currentRole = user?.role?.toLowerCase() || "";
+  const isTechnician = currentRole.includes("technicien") || currentRole.includes("technician");
+  const currentUserName = user?.fullName?.toLowerCase() || "";
+
+  const visibleTasks = isTechnician
+    ? mappedTasks.filter((task) => task.assignee.toLowerCase().includes(currentUserName))
+    : mappedTasks;
+
+  const filtered = visibleTasks.filter(
     (t) =>
       t.id.toLowerCase().includes(search.toLowerCase()) ||
       t.title.toLowerCase().includes(search.toLowerCase()) ||
