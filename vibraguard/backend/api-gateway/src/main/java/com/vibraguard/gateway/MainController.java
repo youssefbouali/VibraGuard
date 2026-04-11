@@ -327,10 +327,10 @@ public class MainController {
                 .subscribeOn(Schedulers.boundedElastic())
                 .map(opt -> opt.map(alert -> {
                     if (!isAllowedAlert(principal, alert)) {
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                        return ResponseEntity.<Alert>status(HttpStatus.FORBIDDEN).build();
                     }
                     return ResponseEntity.ok(alert);
-                }).orElse(ResponseEntity.notFound().build()));
+                }).orElse(ResponseEntity.<Alert>notFound().build()));
     }
 
     @PutMapping("/ml/alerts/{id}")
