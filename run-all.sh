@@ -129,6 +129,11 @@ echo "🚀 Deploying Core Applications..."
 cd "$ROOT_DIR"
 mkdir -p k8s
 
+# Create placeholder ConfigMap for contract address (will be updated after deployment)
+kubectl create configmap workorder-registry-config \
+    --from-literal=CONTRACT_ADDRESS="0x0000000000000000000000000000000000000000" \
+    -n $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+
 # Generate/Update manifests (kept for portability matching your all.sh logic)
 cat <<EOF > k8s/backend-deployment.yaml
 apiVersion: apps/v1
@@ -208,6 +213,12 @@ spec:
           env:
             - name: BACKEND_URL
               value: "http://backend"
+            - name: VITE_WORKORDER_REGISTRY_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: workorder-registry-config
+                  key: CONTRACT_ADDRESS
+                  optional: true
 EOF
 
 cat <<EOF > k8s/frontend-service.yaml
@@ -376,6 +387,70 @@ EOF
 
 
 kubectl apply -f k8s/ -n $NAMESPACE
+
+# 6. Deploy WorkOrderRegistry Smart Contract
+echo "🔗 Waiting for Blockchain service to be ready..."
+for i in {1..30}; do
+    if kubectl wait --for=condition=ready pod -l app=blockchain -n $NAMESPACE --timeout=5s 2>/dev/null; then
+        break
+    fi
+    echo "   Waiting... ($i/30)"
+done
+
+# Get Minikube IP for blockchain RPC access from host
+MINIKUBE_IP=$(minikube ip)
+BLOCKCHAIN_RPC_URL="http://$MINIKUBE_IP:30008/blockchain-rpc"
+
+echo "📝 Deploying WorkOrderRegistry contract..."
+echo "   Using RPC endpoint: $BLOCKCHAIN_RPC_URL"
+
+cd "$ROOT_DIR/vibraguard/blockchain-net"
+
+# Wait a bit for the Hardhat node to fully initialize
+sleep 5
+
+# Deploy contract to the blockchain service
+DEPLOY_OUTPUT=$(BLOCKCHAIN_RPC_URL="$BLOCKCHAIN_RPC_URL" npx hardhat run scripts/deploy.js --network localhost 2>&1 || true)
+echo "$DEPLOY_OUTPUT"
+
+# Extract contract address from deployment output
+CONTRACT_ADDRESS=$(echo "$DEPLOY_OUTPUT" | grep -oP '(?<=deployed to )\K0x[a-fA-F0-9]{40}' | head -1)
+
+if [ -z "$CONTRACT_ADDRESS" ]; then
+    echo "⚠️  Could not extract contract address. Checking deployment output:"
+    echo "$DEPLOY_OUTPUT" | grep -i "0x\|address\|deployed" || true
+fi
+
+if [ -n "$CONTRACT_ADDRESS" ]; then
+    echo "✅ WorkOrderRegistry deployed at: $CONTRACT_ADDRESS"
+    
+    # Copy deployment artifact to frontend if deployment directory exists
+    if [ -f "deployments/WorkOrderRegistry.json" ]; then
+        echo "📋 Copying contract artifact to frontend..."
+        mkdir -p "../frontend/client/lib"
+        cp "deployments/WorkOrderRegistry.json" "../frontend/client/lib/WorkOrderRegistry.json" 2>/dev/null || true
+        echo "✅ Contract artifact copied to frontend"
+    fi
+    
+    # Create ConfigMap with contract address
+    kubectl create configmap workorder-registry-config \
+        --from-literal=CONTRACT_ADDRESS="$CONTRACT_ADDRESS" \
+        -n $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+    
+    # Update frontend deployment to include contract address env var
+    kubectl set env deployment/frontend \
+        VITE_WORKORDER_REGISTRY_ADDRESS="$CONTRACT_ADDRESS" \
+        -n $NAMESPACE 2>/dev/null || echo "⚠️  Note: Frontend will use contract address on next restart"
+    
+    echo "📌 Contract address configured: $CONTRACT_ADDRESS"
+else
+    echo "⚠️  Contract deployment may have failed or address extraction unsuccessful"
+    echo "   You can manually deploy with:"
+    echo "   cd vibraguard/blockchain-net"
+    echo "   BLOCKCHAIN_RPC_URL=http://$MINIKUBE_IP:30008/blockchain-rpc npx hardhat run scripts/deploy.js --network localhost"
+fi
+
+cd "$ROOT_DIR"
 
 # 6. Status Summary
 echo "======================================================"
