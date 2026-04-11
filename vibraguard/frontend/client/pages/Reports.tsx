@@ -35,7 +35,12 @@ export default function Reports() {
   const loadReports = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/v1/reports");
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/v1/reports", {
+        headers: {
+          "Authorization": token ? `Bearer ${token}` : "",
+        }
+      });
       if (response.ok) {
         const data = await response.json();
         setReports(data);
@@ -99,9 +104,13 @@ export default function Reports() {
         fileContent = XLSX.write(wb, { type: "base64" });
       }
 
+      const token = localStorage.getItem("token");
       const response = await fetch("/api/v1/reports/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": token ? `Bearer ${token}` : "",
+        },
         body: JSON.stringify({
           ...formData,
           fileContent,
@@ -126,7 +135,12 @@ export default function Reports() {
 
   const handleDownload = async (reportId: string, title: string) => {
     try {
-      const response = await fetch(`/api/v1/reports/${reportId}/download`);
+      const token = localStorage.getItem("token");
+      const response = await fetch(`/api/v1/reports/${reportId}/download`, {
+        headers: {
+          "Authorization": token ? `Bearer ${token}` : "",
+        }
+      });
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -156,8 +170,12 @@ export default function Reports() {
     if (!confirm("Êtes-vous sûr de vouloir supprimer ce rapport ?")) return;
 
     try {
+      const token = localStorage.getItem("token");
       const response = await fetch(`/api/v1/reports/${reportId}`, {
         method: "DELETE",
+        headers: {
+          "Authorization": token ? `Bearer ${token}` : "",
+        }
       });
 
       if (response.ok) {
