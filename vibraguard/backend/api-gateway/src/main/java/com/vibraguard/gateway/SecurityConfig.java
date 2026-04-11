@@ -14,7 +14,8 @@ import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
-
+import org.springframework.http.HttpStatus;
+import reactor.core.publisher.Mono;
 @Configuration
 @EnableWebFluxSecurity
 @RequiredArgsConstructor
@@ -34,6 +35,9 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .httpBasic(httpBasic -> httpBasic.disable())
                 .formLogin(formLogin -> formLogin.disable())
+                .exceptionHandling(ex -> ex.authenticationEntryPoint((swe, e) -> 
+                        Mono.fromRunnable(() -> swe.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED))
+                ))
                 .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/api/v1/auth/**", "/login", "/register", "/forgot-password").permitAll()
