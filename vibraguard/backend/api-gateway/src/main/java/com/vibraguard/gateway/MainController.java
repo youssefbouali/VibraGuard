@@ -81,12 +81,21 @@ public class MainController {
     }
 
     private boolean isAllowedAlert(Principal principal, Alert alert) {
+        Optional<User> current = currentUser(principal);
+        if (current.isEmpty()) {
+            return false;
+        }
+        User u = current.get();
+
+        String recipient = alert.getRecipientEmail();
+        if (recipient != null && !recipient.trim().isEmpty()) {
+            return u.getEmail().equalsIgnoreCase(recipient.trim());
+        }
+
         if (isAdmin(principal)) {
             return true;
         }
-        return currentUser(principal)
-                .map(u -> alert.getRecipientEmail() == null || u.getEmail().equalsIgnoreCase(alert.getRecipientEmail()))
-                .orElse(false);
+        return true; // General alerts shown to everyone if no recipient
     }
 
     private void maybeCreateWorkOrderNotification(WorkOrder workOrder, Principal principal) {
@@ -433,7 +442,7 @@ public class MainController {
             if (current.isPresent() && isTechnician(principal)) {
                 String currentName = current.get().getFullName();
                 List<WorkOrder> filtered = allWorkOrders.stream()
-                        .filter(wo -> currentName != null && currentName.equals(wo.getAssignedTo()))
+                        .filter(wo -> currentName != null && wo.getAssignedTo() != null && currentName.trim().equalsIgnoreCase(wo.getAssignedTo().trim()))
                         .collect(Collectors.toList());
                 return Flux.fromIterable(filtered);
             }
@@ -452,7 +461,8 @@ public class MainController {
                     }
                     if (!isAdmin(principal) && isTechnician(principal)) {
                         User current = currentUser(principal).orElse(null);
-                        if (current == null || !Objects.equals(current.getFullName(), opt.get().getAssignedTo())) {
+                        String assignedTo = opt.get().getAssignedTo();
+                        if (current == null || current.getFullName() == null || assignedTo == null || !current.getFullName().trim().equalsIgnoreCase(assignedTo.trim())) {
                             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
                         }
                     }

@@ -18,6 +18,7 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
 
   const calculatePasswordStrength = (pwd: string) => {
+    if (!pwd) return { level: "", score: 0 };
     let strength = 0;
     const hasLowerCase = /[a-z]/.test(pwd);
     const hasUpperCase = /[A-Z]/.test(pwd);
@@ -282,7 +283,7 @@ export default function Register() {
                     passwordStrength.score === 2 ? "text-[#F59E0B]" :
                     passwordStrength.score === 3 ? "text-[#10B981]" :
                     "text-[#64748B]"
-                  }`}>{password ? passwordStrength.level : "Fort"}</span>
+                  }`}>{password ? passwordStrength.level : ""}</span>
                 </div>
               </FormField>
               <FormField label="Confirmation">
