@@ -1,4 +1,6 @@
 import { useAudit } from "@/hooks/use-audit";
+import { toast } from "@/components/ui/use-toast";
+import { ethers } from "ethers";
 
 interface Transaction {
   hash: string;
@@ -6,7 +8,7 @@ interface Transaction {
   moteur: string;
   intervention: string;
   date: string;
-  user: { name: string; avatar: string };
+  user: { name: string };
 }
 
 // Data is now fetched via useQuery
@@ -45,10 +47,61 @@ export function TransactionTable() {
     intervention: tx.action || tx.intervention,
     date: tx.date,
     user: {
-      name: tx.user || "Karim B.",
-      avatar: "https://api.builder.io/api/v1/image/assets/TEMP/7b02cb388b87f56a63a235a8d02a1683e015ed41?width=56"
+      name: tx.user || "Inconnu"
     }
   }));
+
+  const copyHash = async (hash: string) => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(hash);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = hash;
+        textarea.style.position = "fixed";
+        textarea.style.left = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+      toast({ title: "Hash copié", description: "Le hash de transaction a été copié dans le presse-papiers." });
+    } catch (error) {
+      toast({ title: "Échec du copier", description: "Impossible de copier le hash de transaction." });
+      console.error("Failed to copy hash", error);
+    }
+  };
+
+  const verifyIntegrity = async (hash: string) => {
+    try {
+      const providerUrl = `${window.location.origin}/blockchain-rpc`;
+      const provider = new ethers.JsonRpcProvider(providerUrl);
+      const receipt = await provider.getTransactionReceipt(hash);
+
+      if (!receipt) {
+        throw new Error("Transaction introuvable sur la blockchain.");
+      }
+
+      if (receipt.status !== 1) {
+        throw new Error("La transaction a échoué ou n'est pas valide.");
+      }
+
+      if (!receipt.logs || receipt.logs.length === 0) {
+        toast({
+          title: "Intégrité vérifiée avec réserve",
+          description: "La transaction existe, mais aucun log de contrat n'a été trouvé.",
+        });
+      } else {
+        toast({
+          title: "Intégrité vérifiée",
+          description: "La transaction est présente sur la blockchain et valide.",
+        });
+      }
+    } catch (error: any) {
+      toast({ title: "Intégrité invalide", description: error?.message || "La vérification a échoué." });
+      console.error("Transaction verification failed", error);
+    }
+  };
 
   if (isLoading) return <div className="p-6 text-white text-sm">Chargement de l'audit blockchain...</div>;
 
@@ -89,7 +142,12 @@ export function TransactionTable() {
                 <td className="px-6 py-[18px]">
                   <div className="flex items-center gap-2 px-2.5 py-1.5 rounded border border-[rgba(12,108,242,0.15)] bg-[rgba(12,108,242,0.08)] w-fit">
                     <span className="text-[#0C6CF2] text-[13px] font-mono">{tx.hash}</span>
-                    <button className="opacity-70 hover:opacity-100 transition-opacity">
+                    <button
+                      type="button"
+                      onClick={() => copyHash(tx.hash)}
+                      title="Copier le hash"
+                      className="opacity-70 hover:opacity-100 transition-opacity"
+                    >
                       <CopyIcon />
                     </button>
                   </div>
@@ -122,19 +180,17 @@ export function TransactionTable() {
 
                 {/* Utilisateur */}
                 <td className="px-6 py-[18px]">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={tx.user.avatar}
-                      alt={tx.user.name}
-                      className="w-7 h-7 rounded-full border border-black/[0.08] object-cover shrink-0"
-                    />
-                    <span className="text-[#E6F0F2] text-sm font-medium">{tx.user.name}</span>
-                  </div>
+                  <span className="text-[#E6F0F2] text-sm font-medium">{tx.user.name}</span>
                 </td>
 
                 {/* Verify */}
                 <td className="px-6 py-[18px] text-right">
-                  <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded border border-[rgba(12,108,242,0.25)] bg-[rgba(12,108,242,0.10)] hover:bg-[rgba(12,108,242,0.20)] transition-colors whitespace-nowrap">
+                  <button
+                    type="button"
+                    onClick={() => verifyIntegrity(tx.hash)}
+                    title="Vérifier l'intégrité de la transaction"
+                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded border border-[rgba(12,108,242,0.25)] bg-[rgba(12,108,242,0.10)] hover:bg-[rgba(12,108,242,0.20)] transition-colors whitespace-nowrap"
+                  >
                     <VerifyIcon />
                     <span className="text-[#0C6CF2] text-[13px] font-semibold">Vérifier intégrité</span>
                   </button>
