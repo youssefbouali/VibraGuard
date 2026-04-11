@@ -4,6 +4,7 @@ import com.vibraguard.gateway.entity.*;
 import com.vibraguard.gateway.repository.*;
 import com.vibraguard.gateway.auth.model.User;
 import com.vibraguard.gateway.auth.repository.UserRepository;
+import com.vibraguard.gateway.service.IpfsService;
 import jakarta.annotation.PostConstruct;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Flux;
@@ -46,6 +47,10 @@ public class MainController {
     private InventoryPartRepository inventoryPartRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private ReportRepository reportRepository;
+    @Autowired
+    private IpfsService ipfsService;
     
     @Autowired
     private VibrationStreamService vibrationStreamService;
@@ -792,6 +797,136 @@ public class MainController {
     public Flux<TraceabilityStep> getTraceability() {
         return Flux.defer(() -> Flux.fromIterable(traceabilityRepository.findAll()))
                 .subscribeOn(Schedulers.boundedElastic());
+    }
+
+    // Report Endpoints with IPFS Integration
+    @GetMapping("/reports")
+    public Mono<List<Report>> getReports(Principal principal) {
+        return Mono.fromCallable(() -> {
+            if (isAdmin(principal)) {
+                return reportRepository.findAll();
+            } else {
+                Optional<User> user = currentUser(principal);
+                return user.map(u -> reportRepository.findByCreatedByEmail(u.getEmail()))
+                        .orElse(new ArrayList<>());
+            }
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
+
+    @PostMapping("/reports/generate")
+    public Mono<Report> generateReport(@RequestBody Map<String, String> request, Principal principal) {
+        return Mono.fromCallable(() -> {
+            Optional<User> user = currentUser(principal);
+            if (user.isEmpty()) {
+                throw new RuntimeException("User not found");
+            }
+
+            String type = request.getOrDefault("type", "pdf"); // pdf or excel
+            String frequency = request.getOrDefault("frequency", "quotidien");
+            byte[] fileContent = request.getOrDefault("fileContent", "").getBytes();
+
+            if (fileContent.length == 0) {
+                throw new RuntimeException("File content is empty");
+            }
+
+            try {
+                // Upload file to IPFS
+                String fileName = "report-" + System.currentTimeMillis() + "." + type;
+                String ipfsHash = ipfsService.uploadFile(fileContent, fileName);
+
+                // Create report record
+                Report report = new Report();
+                report.setId("RPT-" + UUID.randomUUID().toString().substring(0, 8));
+                report.setTitle("Rapport " + frequency + " - " + new Date());
+                report.setType(type);
+                report.setFrequency(frequency);
+                report.setIpfsHash(ipfsHash);
+                report.setCreatedBy(user.get().getFullName());
+                report.setCreatedByEmail(user.get().getEmail());
+                report.setCreatedAt(System.currentTimeMillis());
+                report.setShareLink(generateShareLink(report.getId()));
+                report.setPublic(true);
+                report.setDownloadCount(0);
+                report.setStatus("stored");
+
+                return reportRepository.save(report);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to generate report: " + e.getMessage());
+            }
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
+
+    @GetMapping("/reports/{id}")
+    public Mono<ResponseEntity<Report>> getReportById(@PathVariable String id, Principal principal) {
+        return Mono.fromCallable(() -> {
+            Optional<Report> report = reportRepository.findById(id);
+            if (report.isEmpty()) {
+                return ResponseEntity.notFound().<Report>build();
+            }
+
+            Report r = report.get();
+            // Check access: admins can see all, others only their own
+            if (!isAdmin(principal)) {
+                Optional<User> user = currentUser(principal);
+                if (user.isEmpty() || !user.get().getEmail().equals(r.getCreatedByEmail())) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).<Report>build();
+                }
+            }
+
+            return ResponseEntity.ok(r);
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
+
+    @GetMapping("/reports/{id}/download")
+    public Mono<ResponseEntity<byte[]>> downloadReport(@PathVariable String id, Principal principal) {
+        return Mono.fromCallable(() -> {
+            Optional<Report> report = reportRepository.findById(id);
+            if (report.isEmpty()) {
+                return ResponseEntity.notFound().<byte[]>build();
+            }
+
+            try {
+                Report r = report.get();
+                byte[] content = ipfsService.downloadFile(r.getIpfsHash());
+
+                // Increment download count
+                r.setDownloadCount(r.getDownloadCount() + 1);
+                reportRepository.save(r);
+
+                return ResponseEntity.ok()
+                        .header("Content-Disposition", "attachment; filename=\"" + r.getTitle() + "." + r.getType() + "\"")
+                        .header("Content-Type", r.getType().equals("pdf") ? "application/pdf" : "application/vnd.ms-excel")
+                        .body(content);
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).<byte[]>build();
+            }
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
+
+    @DeleteMapping("/reports/{id}")
+    public Mono<ResponseEntity<?>> deleteReport(@PathVariable String id, Principal principal) {
+        return Mono.fromCallable(() -> {
+            Optional<Report> report = reportRepository.findById(id);
+            if (report.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Report r = report.get();
+            // Only admins or report creator can delete
+            if (!isAdmin(principal)) {
+                Optional<User> user = currentUser(principal);
+                if (user.isEmpty() || !user.get().getEmail().equals(r.getCreatedByEmail())) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                }
+            }
+
+            reportRepository.deleteById(id);
+            return ResponseEntity.ok().build();
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
+
+    private String generateShareLink(String reportId) {
+        return "/reports/share/" + reportId;
     }
 
 }

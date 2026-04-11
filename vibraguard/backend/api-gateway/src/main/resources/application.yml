@@ -14,3 +14,9 @@ spring:
       ddl-auto: update
     show-sql: true
   # H2 console removed as we are using Oracle now
+
+# IPFS Configuration
+ipfs:
+  api:
+    url: ${IPFS_API_URL:http://localhost:5001}
+

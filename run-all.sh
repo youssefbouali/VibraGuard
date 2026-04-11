@@ -117,12 +117,15 @@ cd "$ROOT_DIR"
 #helm upgrade --install spark-operator spark/spark-kubernetes-operator -n $NAMESPACE
 #helm upgrade --install redis bitnami/redis -n $NAMESPACE --set architecture=standalone
 #helm upgrade --install elasticsearch elastic/elasticsearch -n $NAMESPACE --set replicas=1
+
 # IPFS
-#if ! kubectl get deployment ipfs -n $NAMESPACE > /dev/#null 2>&1; then
-#    echo "🌐 Deploying IPFS..."
-#    kubectl create deployment ipfs --image=ipfs/#kubo:latest -n $NAMESPACE
-#    kubectl expose deployment ipfs --type=NodePort #--port=5001 --target-port=5001 --node-port=30001 -n #$NAMESPACE || true
-#fi
+echo "🌐 Deploying IPFS..."
+if ! kubectl get deployment ipfs -n $NAMESPACE > /dev/null 2>&1; then
+    kubectl create deployment ipfs --image=ipfs/kubo:latest -n $NAMESPACE
+    kubectl expose deployment ipfs --type=NodePort --port=5001 -n $NAMESPACE || true
+else
+    echo "✅ IPFS is already deployed."
+fi
 
 # 5. Apply Application Manifests
 echo "🚀 Deploying Core Applications..."

@@ -16,6 +16,7 @@ import AlerteDetail from "./pages/AlerteDetail";
 import OrdresDeTravail from "./pages/OrdresDeTravail";
 import CreerOrdreDeTravail from "./pages/CreerOrdreDeTravail";
 import RapportsBI from "./pages/RapportsBI";
+import Reports from "./pages/Reports";
 import AuditBlockchain from "./pages/AuditBlockchain";
 import Parametres from "./pages/Parametres";
 import ProfilUtilisateur from "./pages/ProfilUtilisateur";
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/ordres-de-travail" element={<ProtectedRoute><OrdresDeTravail /></ProtectedRoute>} />
             <Route path="/ordres-de-travail/creer" element={<ProtectedRoute><CreerOrdreDeTravail /></ProtectedRoute>} />
             <Route path="/rapports-bi" element={<ProtectedRoute allowedRoles={["admin"]}><RapportsBI /></ProtectedRoute>} />
+            <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
             <Route path="/audit" element={<ProtectedRoute allowedRoles={["admin"]}><AuditBlockchain /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             <Route path="/parametres" element={<ProtectedRoute allowedRoles={["admin"]}><Parametres /></ProtectedRoute>} />
