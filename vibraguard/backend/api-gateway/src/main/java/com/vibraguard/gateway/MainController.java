@@ -325,12 +325,16 @@ public class MainController {
     public Mono<ResponseEntity<Alert>> getAlertById(@PathVariable("id") String id, Principal principal) {
         return Mono.fromCallable(() -> alertRepository.findById(id))
                 .subscribeOn(Schedulers.boundedElastic())
-                .map(opt -> opt.map(alert -> {
+                .map(opt -> {
+                    if (opt.isEmpty()) {
+                        return ResponseEntity.notFound().<Alert>build();
+                    }
+                    Alert alert = opt.get();
                     if (!isAllowedAlert(principal, alert)) {
-                        return ResponseEntity.<Alert>status(HttpStatus.FORBIDDEN).build();
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).<Alert>build();
                     }
                     return ResponseEntity.ok(alert);
-                }).orElse(ResponseEntity.<Alert>notFound().build()));
+                });
     }
 
     @PutMapping("/ml/alerts/{id}")
