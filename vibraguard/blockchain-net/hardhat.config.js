@@ -9,6 +9,10 @@ module.exports = {
     },
     localhost: {
       url: "http://127.0.0.1:8545"
+    },
+    server: {
+      url: "http://vibraguard.mywire.org:30008/blockchain-rpc",
+      chainId: 31337
     }
   }
 };
