@@ -914,11 +914,11 @@ public class MainController {
     }
 
     @DeleteMapping("/reports/{id}")
-    public Mono<ResponseEntity<?>> deleteReport(@PathVariable String id, Principal principal) {
+    public Mono<ResponseEntity<Void>> deleteReport(@PathVariable String id, Principal principal) {
         return Mono.fromCallable(() -> {
             Optional<Report> report = reportRepository.findById(id);
             if (report.isEmpty()) {
-                return ResponseEntity.notFound().build();
+                return ResponseEntity.notFound().<Void>build();
             }
 
             Report r = report.get();
@@ -926,12 +926,12 @@ public class MainController {
             if (!isAdmin(principal)) {
                 Optional<User> user = currentUser(principal);
                 if (user.isEmpty() || !user.get().getEmail().equals(r.getCreatedByEmail())) {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).<Void>build();
                 }
             }
 
             reportRepository.deleteById(id);
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok().<Void>build();
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
