@@ -38,7 +38,7 @@ export default function Reports() {
       const token = localStorage.getItem("token");
       const response = await fetch("/api/v1/reports", {
         headers: {
-          "Authorization": token ? `Bearer ${token}` : "",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
         }
       });
       if (response.ok) {
@@ -109,7 +109,7 @@ export default function Reports() {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": token ? `Bearer ${token}` : "",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
         body: JSON.stringify({
           ...formData,
@@ -138,7 +138,7 @@ export default function Reports() {
       const token = localStorage.getItem("token");
       const response = await fetch(`/api/v1/reports/${reportId}/download`, {
         headers: {
-          "Authorization": token ? `Bearer ${token}` : "",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
         }
       });
       if (response.ok) {
@@ -174,7 +174,7 @@ export default function Reports() {
       const response = await fetch(`/api/v1/reports/${reportId}`, {
         method: "DELETE",
         headers: {
-          "Authorization": token ? `Bearer ${token}` : "",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
         }
       });
 
