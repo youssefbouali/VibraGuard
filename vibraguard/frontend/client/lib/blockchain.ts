@@ -53,6 +53,10 @@ async function getContractData() {
 
   let contractData = { address: DEFAULT_ADDRESS, abi: DEFAULT_ABI };
 
+  const envAddress = typeof import.meta !== 'undefined' && typeof import.meta.env !== 'undefined' && import.meta.env.VITE_WORKORDER_REGISTRY_ADDRESS
+    ? String(import.meta.env.VITE_WORKORDER_REGISTRY_ADDRESS).trim()
+    : "";
+
   async function addressHasCode(address: string) {
     try {
       const code = await provider.getCode(address);
@@ -63,8 +67,19 @@ async function getContractData() {
     }
   }
 
-  // Try localStorage first if available
-  if (typeof window !== 'undefined') {
+  // Try env override first if available
+  if (envAddress) {
+    console.log("📥 Found contract address in VITE_WORKORDER_REGISTRY_ADDRESS:", envAddress);
+    if (await addressHasCode(envAddress)) {
+      contractData.address = envAddress;
+      console.log("✅ Env contract address is valid");
+    } else {
+      console.warn("⚠️ Env contract address has no code:", envAddress);
+    }
+  }
+
+  // Try localStorage next if available
+  if (contractData.address === DEFAULT_ADDRESS && typeof window !== 'undefined') {
     try {
       const storedAddress = localStorage.getItem('workOrderRegistryAddress');
       if (storedAddress) {
