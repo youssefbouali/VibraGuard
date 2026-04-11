@@ -48,47 +48,89 @@ async function getContractData() {
     return contractDataCache;
   }
 
+  const providerUrl = typeof window !== 'undefined' ? `${window.location.origin}/blockchain-rpc` : "http://127.0.0.1:8545";
+  const provider = new ethers.JsonRpcProvider(providerUrl);
+
   let contractData = { address: DEFAULT_ADDRESS, abi: DEFAULT_ABI };
-  
-  // Try to load from WorkOrderRegistry.json
-  try {
-    const dynamicData = await import("./WorkOrderRegistry.json");
-    if (dynamicData.address) {
-      contractData = dynamicData as any;
-      console.log("✅ Loaded contract address from WorkOrderRegistry.json:", dynamicData.address);
-    }
-  } catch (e) {
-    console.log("⚠️ WorkOrderRegistry.json not found, attempting discovery...");
-    
-    // Try to discover the actual deployed address
+
+  async function addressHasCode(address: string) {
     try {
-      const providerUrl = typeof window !== 'undefined' ? `${window.location.origin}/blockchain-rpc` : "http://127.0.0.1:8545";
-      const provider = new ethers.JsonRpcProvider(providerUrl);
+      const code = await provider.getCode(address);
+      return code && code !== "0x";
+    } catch (e) {
+      console.warn("⚠️ Failed to read code for address", address, e);
+      return false;
+    }
+  }
+
+  // Try localStorage first if available
+  if (typeof window !== 'undefined') {
+    try {
+      const storedAddress = localStorage.getItem('workOrderRegistryAddress');
+      if (storedAddress) {
+        console.log("📥 Found contract address in localStorage:", storedAddress);
+        if (await addressHasCode(storedAddress)) {
+          contractData.address = storedAddress;
+          console.log("✅ localStorage address is valid");
+        } else {
+          console.warn("⚠️ localStorage address has no contract code:", storedAddress);
+        }
+      }
+    } catch (e) {
+      console.warn("⚠️ Could not read contract address from localStorage", e);
+    }
+  }
+
+  // Try to load from WorkOrderRegistry.json if localStorage did not yield a valid contract
+  if (contractData.address === DEFAULT_ADDRESS || contractData.address === null) {
+    try {
+      const dynamicData = await import("./WorkOrderRegistry.json");
+      if (dynamicData.address) {
+        console.log("🔍 Loaded contract address from WorkOrderRegistry.json:", dynamicData.address);
+        if (await addressHasCode(dynamicData.address)) {
+          contractData = dynamicData as any;
+          console.log("✅ JSON contract address is valid");
+        } else {
+          console.warn("⚠️ JSON contract address has no code:", dynamicData.address);
+        }
+      }
+    } catch (e) {
+      console.log("⚠️ WorkOrderRegistry.json not found or invalid, attempting discovery...");
+    }
+  }
+
+  // If address still invalid, try discovery on known deployment addresses
+  if (!(await addressHasCode(contractData.address))) {
+    try {
       const discoveredAddress = await discoverContractAddress(provider);
-      
       if (discoveredAddress) {
         contractData.address = discoveredAddress;
+        console.log("✅ Discovered valid deployed contract address:", discoveredAddress);
       } else {
-        console.warn("⚠️ Using default fallback address:", DEFAULT_ADDRESS);
+        console.warn("⚠️ No deployed contract found at known addresses. Using fallback address:", DEFAULT_ADDRESS);
       }
     } catch (discoveryError) {
-      console.warn("⚠️ Discovery failed, using default address:", DEFAULT_ADDRESS, discoveryError);
+      console.warn("⚠️ Discovery failed, using fallback address:", DEFAULT_ADDRESS, discoveryError);
     }
   }
 
   // Cache it for consistent use across the session
   contractDataCache = contractData;
-  
+
   // Also save to localStorage for persistence across page reloads
   if (typeof window !== 'undefined') {
     try {
-      localStorage.setItem('workOrderRegistryAddress', contractData.address);
-      console.log("💾 Saved contract address to localStorage:", contractData.address);
+      if (await addressHasCode(contractData.address)) {
+        localStorage.setItem('workOrderRegistryAddress', contractData.address);
+        console.log("💾 Saved contract address to localStorage:", contractData.address);
+      } else {
+        console.warn("⚠️ Not saving invalid contract address to localStorage:", contractData.address);
+      }
     } catch (e) {
       console.warn("Could not save to localStorage:", e);
     }
   }
-  
+
   return contractData;
 }
 
@@ -98,6 +140,11 @@ export async function submitWorkOrderToBlockchain(order: any) {
 
     const providerUrl = typeof window !== 'undefined' ? `${window.location.origin}/blockchain-rpc` : "http://127.0.0.1:8545";
     const provider = new ethers.JsonRpcProvider(providerUrl);
+
+    const addressCode = await provider.getCode(contractData.address);
+    if (!addressCode || addressCode === "0x") {
+      throw new Error(`No deployed contract found at ${contractData.address}. Please deploy WorkOrderRegistry or update WorkOrderRegistry.json.`);
+    }
     
     // Use Hardhat account #0 private key (well-known test key, safe for local blockchain only)
     const HARDHAT_PRIVATE_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
@@ -122,6 +169,10 @@ export async function submitWorkOrderToBlockchain(order: any) {
     console.log("   TX Hash:", receipt.hash);
     console.log("   Block:", receipt.blockNumber);
     console.log("   Contract Address:", contractData.address);
+    console.log("   Receipt To:", receipt.to);
+    console.log("   Receipt From:", receipt.from);
+    console.log("   Receipt Logs Count:", receipt.logs?.length || 0);
+    console.log("   Receipt Logs:", receipt.logs);
     
     // Confirm the address is cached for future use
     if (typeof window !== 'undefined') {
@@ -156,6 +207,12 @@ export async function fetchWorkOrderEvents() {
       console.log("✅ Connected to chain ID:", chainId.chainId);
     } catch (e) {
       console.error("❌ Could not connect to provider:", e);
+      return [];
+    }
+
+    const addressCode = await provider.getCode(contractData.address);
+    if (!addressCode || addressCode === "0x") {
+      console.error(`❌ No deployed contract found at ${contractData.address}. Audit data cannot be retrieved.`);
       return [];
     }
 
