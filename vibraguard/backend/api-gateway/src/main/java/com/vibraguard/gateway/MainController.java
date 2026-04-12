@@ -51,7 +51,7 @@ public class MainController {
     private ReportRepository reportRepository;
     @Autowired
     private IpfsService ipfsService;
-    
+
     @Autowired
     private VibrationStreamService vibrationStreamService;
 
@@ -76,7 +76,8 @@ public class MainController {
 
     private boolean isTechnician(Principal principal) {
         return currentUser(principal)
-                .map(u -> u.getRole() != null && (u.getRole().toLowerCase().contains("technicien") || u.getRole().toLowerCase().contains("technician")))
+                .map(u -> u.getRole() != null && (u.getRole().toLowerCase().contains("technicien")
+                        || u.getRole().toLowerCase().contains("technician")))
                 .orElse(false);
     }
 
@@ -122,7 +123,8 @@ public class MainController {
         Alert newAlert = new Alert();
         newAlert.setId("ALR-" + UUID.randomUUID().toString().substring(0, 8));
         newAlert.setTitle("Nouvel ordre de travail");
-        newAlert.setMessage("Un nouvel ordre a été assigné à vous : " + workOrder.getTitle() + " sur " + workOrder.getAsset() + ".");
+        newAlert.setMessage("Un nouvel ordre a été assigné à vous : " + workOrder.getTitle() + " sur "
+                + workOrder.getAsset() + ".");
         newAlert.setLevel("Attention");
         newAlert.setStatus("Nouveau");
         newAlert.setPriority("Important");
@@ -148,19 +150,32 @@ public class MainController {
     public Mono<Motor> updateMotor(@PathVariable("id") String id, @RequestBody Motor motor) {
         return Mono.fromCallable(() -> {
             return motorRepository.findById(id).map(existing -> {
-                if (motor.getType() != null) existing.setType(motor.getType());
-                if (motor.getEtatLabel() != null) existing.setEtatLabel(motor.getEtatLabel());
-                if (motor.getEtatColor() != null) existing.setEtatColor(motor.getEtatColor());
-                if (motor.getEtatPct() != 0) existing.setEtatPct(motor.getEtatPct());
-                if (motor.getVibration() != null) existing.setVibration(motor.getVibration());
-                if (motor.getVibrationColor() != null) existing.setVibrationColor(motor.getVibrationColor());
-                if (motor.getTrendIcon() != null) existing.setTrendIcon(motor.getTrendIcon());
-                if (motor.getRul() != 0) existing.setRul(motor.getRul());
-                if (motor.getRulTrend() != null) existing.setRulTrend(motor.getRulTrend());
-                if (motor.getPower() != null) existing.setPower(motor.getPower());
-                if (motor.getSpeed() != null) existing.setSpeed(motor.getSpeed());
-                if (motor.getLocalisation() != null) existing.setLocalisation(motor.getLocalisation());
-                if (motor.getSite() != null) existing.setSite(motor.getSite());
+                if (motor.getType() != null)
+                    existing.setType(motor.getType());
+                if (motor.getEtatLabel() != null)
+                    existing.setEtatLabel(motor.getEtatLabel());
+                if (motor.getEtatColor() != null)
+                    existing.setEtatColor(motor.getEtatColor());
+                if (motor.getEtatPct() != 0)
+                    existing.setEtatPct(motor.getEtatPct());
+                if (motor.getVibration() != null)
+                    existing.setVibration(motor.getVibration());
+                if (motor.getVibrationColor() != null)
+                    existing.setVibrationColor(motor.getVibrationColor());
+                if (motor.getTrendIcon() != null)
+                    existing.setTrendIcon(motor.getTrendIcon());
+                if (motor.getRul() != 0)
+                    existing.setRul(motor.getRul());
+                if (motor.getRulTrend() != null)
+                    existing.setRulTrend(motor.getRulTrend());
+                if (motor.getPower() != null)
+                    existing.setPower(motor.getPower());
+                if (motor.getSpeed() != null)
+                    existing.setSpeed(motor.getSpeed());
+                if (motor.getLocalisation() != null)
+                    existing.setLocalisation(motor.getLocalisation());
+                if (motor.getSite() != null)
+                    existing.setSite(motor.getSite());
                 return motorRepository.save(existing);
             }).orElseGet(() -> {
                 motor.setId(id);
@@ -181,7 +196,7 @@ public class MainController {
         return Flux.defer(() -> {
             List<Motor> motors = motorRepository.findAll();
             List<Alert> allAlerts = alertRepository.findAll();
-            
+
             List<Map<String, Object>> result = motors.stream().map(m -> {
                 Map<String, Object> map = new HashMap<>();
                 map.put("id", m.getId());
@@ -189,7 +204,7 @@ public class MainController {
                 map.put("zone", m.getSite() != null ? m.getSite() : "Site Indéfini");
                 map.put("type", m.getType() != null ? m.getType() : "Inconnu");
                 map.put("puissance", m.getPower() != null ? m.getPower() : "N/A");
-                
+
                 // Map fields exactly as the frontend expects
                 map.put("etatLabel", m.getEtatLabel() != null ? m.getEtatLabel() : "Normal");
                 map.put("etatColor", m.getEtatColor() != null ? m.getEtatColor() : "#10B981");
@@ -197,37 +212,42 @@ public class MainController {
                 map.put("vibration", m.getVibration() != null ? m.getVibration() : "0.0 mm/s");
                 map.put("vibrationColor", m.getVibrationColor() != null ? m.getVibrationColor() : "#10B981");
                 map.put("trendIcon", m.getTrendIcon() != null ? m.getTrendIcon() : "flat");
-                
+
                 // Keep these for potential analytics usage
                 map.put("etatSante", map.get("etatLabel"));
-                
+
                 double vibVal = 0.0;
                 try {
                     String vStr = m.getVibration();
                     if (vStr != null && !vStr.isEmpty()) {
                         String numeric = vStr.split(" ")[0].replaceAll("[^0-9.]", "");
-                        if (!numeric.isEmpty()) vibVal = Double.parseDouble(numeric);
+                        if (!numeric.isEmpty())
+                            vibVal = Double.parseDouble(numeric);
                     }
-                } catch (Exception e) {}
+                } catch (Exception e) {
+                }
                 map.put("vibrationRMS", vibVal);
-                
+
                 // Find latest alert for this motor
                 Optional<Alert> lastAlert = allAlerts.stream()
-                    .filter(a -> {
-                        String motorIdClean = m.getId().split(" \\(")[0].trim().toLowerCase();
-                        if (a.getMotorId() != null) {
-                            String alertMotorClean = a.getMotorId().split(" \\(")[0].trim().toLowerCase();
-                            if (alertMotorClean.equals(motorIdClean)) return true;
-                        }
-                        if (a.getMessage() != null && a.getMessage().toLowerCase().contains(motorIdClean)) return true;
-                        return false;
-                    })
-                    .sorted((a1, a2) -> {
-                        if (a1.getTime() == null || a2.getTime() == null) return 0;
-                        return a2.getTime().compareTo(a1.getTime());
-                    })
-                    .findFirst();
-                
+                        .filter(a -> {
+                            String motorIdClean = m.getId().split(" \\(")[0].trim().toLowerCase();
+                            if (a.getMotorId() != null) {
+                                String alertMotorClean = a.getMotorId().split(" \\(")[0].trim().toLowerCase();
+                                if (alertMotorClean.equals(motorIdClean))
+                                    return true;
+                            }
+                            if (a.getMessage() != null && a.getMessage().toLowerCase().contains(motorIdClean))
+                                return true;
+                            return false;
+                        })
+                        .sorted((a1, a2) -> {
+                            if (a1.getTime() == null || a2.getTime() == null)
+                                return 0;
+                            return a2.getTime().compareTo(a1.getTime());
+                        })
+                        .findFirst();
+
                 if (lastAlert.isPresent()) {
                     map.put("derniereAlerte", lastAlert.get().getTime());
                     map.put("alerteRef", "#" + lastAlert.get().getId());
@@ -235,10 +255,10 @@ public class MainController {
                     map.put("derniereAlerte", "Aucune");
                     map.put("alerteRef", null);
                 }
-                
+
                 return map;
             }).collect(Collectors.toList());
-            
+
             return Flux.fromIterable(result);
         }).subscribeOn(Schedulers.boundedElastic());
     }
@@ -262,24 +282,27 @@ public class MainController {
             Map<String, Object> kpis = new HashMap<>();
             long totalMotors = motorRepository.count();
             List<Motor> allMotors = motorRepository.findAll();
-            long criticalMotors = allMotors.stream().filter(m -> m.getEtatLabel().contains("Critique") || m.getEtatLabel().contains("Alerte")).count();
-            
+            long criticalMotors = allMotors.stream()
+                    .filter(m -> m.getEtatLabel().contains("Critique") || m.getEtatLabel().contains("Alerte")).count();
+
             String today = new java.text.SimpleDateFormat("yyyy-MM-dd").format(new Date());
             long totalAlerts = alertRepository.count();
-            long alertsToday = alertRepository.findAll().stream().filter(a -> a.getTime() != null && a.getTime().startsWith(today)).count();
-            
+            long alertsToday = alertRepository.findAll().stream()
+                    .filter(a -> a.getTime() != null && a.getTime().startsWith(today)).count();
+
             double uptime = 100.0 - (criticalMotors * 2.0);
-            if (uptime < 0) uptime = 0;
+            if (uptime < 0)
+                uptime = 0;
 
             kpis.put("totalMotors", totalMotors);
             kpis.put("totalMotorsTrend", "Actualisé");
-            
+
             kpis.put("criticalMotors", criticalMotors);
             kpis.put("criticalMotorsTrend", "+" + alertsToday + " alertes");
-            
+
             kpis.put("alerts", totalAlerts);
             kpis.put("alertsTrend", "+" + alertsToday + " aujourd'hui");
-            
+
             kpis.put("uptime", Math.round(uptime * 10.0) / 10.0 + "%");
             kpis.put("uptimeTrend", "Stable");
             kpis.put("uptimeTrendUp", true);
@@ -292,18 +315,18 @@ public class MainController {
         return Mono.fromCallable(() -> {
             String q = query.toLowerCase();
             Map<String, Object> results = new HashMap<>();
-            
+
             List<Motor> foundMotors = motorRepository.findAll().stream()
-                .filter(m -> m.getId().toLowerCase().contains(q) || 
+                    .filter(m -> m.getId().toLowerCase().contains(q) ||
                             (m.getType() != null && m.getType().toLowerCase().contains(q)))
-                .limit(5)
-                .toList();
-                
+                    .limit(5)
+                    .toList();
+
             List<Alert> foundAlerts = alertRepository.findAll().stream()
-                .filter(a -> a.getMessage().toLowerCase().contains(q) || 
+                    .filter(a -> a.getMessage().toLowerCase().contains(q) ||
                             a.getId().toLowerCase().contains(q))
-                .limit(5)
-                .toList();
+                    .limit(5)
+                    .toList();
 
             results.put("motors", foundMotors);
             results.put("alerts", foundAlerts);
@@ -359,7 +382,8 @@ public class MainController {
     }
 
     @PutMapping("/ml/alerts/{id}")
-    public Mono<ResponseEntity<Alert>> updateAlert(@PathVariable("id") String id, @RequestBody Alert alert, Principal principal) {
+    public Mono<ResponseEntity<Alert>> updateAlert(@PathVariable("id") String id, @RequestBody Alert alert,
+            Principal principal) {
         return Mono.fromCallable(() -> alertRepository.findById(id))
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(opt -> {
@@ -374,11 +398,16 @@ public class MainController {
                     existing.setMessage(alert.getMessage());
                     existing.setLevel(alert.getLevel());
                     existing.setPriority(alert.getPriority());
-                    if(alert.getVelociteRms() != null) existing.setVelociteRms(alert.getVelociteRms());
-                    if(alert.getAccelerationPeak() != null) existing.setAccelerationPeak(alert.getAccelerationPeak());
-                    if(alert.getTemperature() != null) existing.setTemperature(alert.getTemperature());
-                    if(alert.getScoreConfianceIA() != null) existing.setScoreConfianceIA(alert.getScoreConfianceIA());
-                    if(alert.getDepassementSeuil() != null) existing.setDepassementSeuil(alert.getDepassementSeuil());
+                    if (alert.getVelociteRms() != null)
+                        existing.setVelociteRms(alert.getVelociteRms());
+                    if (alert.getAccelerationPeak() != null)
+                        existing.setAccelerationPeak(alert.getAccelerationPeak());
+                    if (alert.getTemperature() != null)
+                        existing.setTemperature(alert.getTemperature());
+                    if (alert.getScoreConfianceIA() != null)
+                        existing.setScoreConfianceIA(alert.getScoreConfianceIA());
+                    if (alert.getDepassementSeuil() != null)
+                        existing.setDepassementSeuil(alert.getDepassementSeuil());
                     return Mono.just(ResponseEntity.ok(alertRepository.save(existing)));
                 });
     }
@@ -417,9 +446,9 @@ public class MainController {
     public Mono<Map<String, Object>> markAllAlertsAsRead(Principal principal) {
         return Mono.fromCallable(() -> {
             List<Alert> unread = alertRepository.findAll().stream()
-                .filter(a -> !"Read".equalsIgnoreCase(a.getStatus()))
-                .filter(a -> isAllowedAlert(principal, a))
-                .collect(java.util.stream.Collectors.toList());
+                    .filter(a -> !"Read".equalsIgnoreCase(a.getStatus()))
+                    .filter(a -> isAllowedAlert(principal, a))
+                    .collect(java.util.stream.Collectors.toList());
             unread.forEach(a -> a.setStatus("Read"));
             alertRepository.saveAll(unread);
             Map<String, Object> result = new HashMap<>();
@@ -442,7 +471,8 @@ public class MainController {
             if (current.isPresent() && isTechnician(principal)) {
                 String currentName = current.get().getFullName();
                 List<WorkOrder> filtered = allWorkOrders.stream()
-                        .filter(wo -> currentName != null && wo.getAssignedTo() != null && currentName.trim().equalsIgnoreCase(wo.getAssignedTo().trim()))
+                        .filter(wo -> currentName != null && wo.getAssignedTo() != null
+                                && currentName.trim().equalsIgnoreCase(wo.getAssignedTo().trim()))
                         .collect(Collectors.toList());
                 return Flux.fromIterable(filtered);
             }
@@ -462,7 +492,8 @@ public class MainController {
                     if (!isAdmin(principal) && isTechnician(principal)) {
                         User current = currentUser(principal).orElse(null);
                         String assignedTo = opt.get().getAssignedTo();
-                        if (current == null || current.getFullName() == null || assignedTo == null || !current.getFullName().trim().equalsIgnoreCase(assignedTo.trim())) {
+                        if (current == null || current.getFullName() == null || assignedTo == null
+                                || !current.getFullName().trim().equalsIgnoreCase(assignedTo.trim())) {
                             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
                         }
                     }
@@ -489,7 +520,8 @@ public class MainController {
     }
 
     @PutMapping("/iot/work-orders/{id}")
-    public Mono<WorkOrder> updateWorkOrder(@PathVariable("id") String id, @RequestBody WorkOrder workOrder, Principal principal) {
+    public Mono<WorkOrder> updateWorkOrder(@PathVariable("id") String id, @RequestBody WorkOrder workOrder,
+            Principal principal) {
         return Mono.fromCallable(() -> {
             return workOrderRepository.findById(id).map(existing -> {
                 existing.setTitle(workOrder.getTitle());
@@ -540,8 +572,6 @@ public class MainController {
                 });
     }
 
-
-
     @GetMapping("/iot/technicians/{id}")
     public Mono<ResponseEntity<User>> getTechnicianById(@PathVariable("id") String id) {
         return Mono.fromCallable(() -> userRepository.findById(Long.parseLong(id)))
@@ -555,11 +585,16 @@ public class MainController {
             Optional<User> existing = userRepository.findById(Long.parseLong(id));
             if (existing.isPresent()) {
                 User u = existing.get();
-                if (technician.getFullName() != null) u.setFullName(technician.getFullName());
-                if (technician.getEmail() != null) u.setEmail(technician.getEmail());
-                if (technician.getRole() != null) u.setRole(technician.getRole());
-                if (technician.getDepartment() != null) u.setDepartment(technician.getDepartment());
-                if (technician.getStatus() != null) u.setStatus(technician.getStatus());
+                if (technician.getFullName() != null)
+                    u.setFullName(technician.getFullName());
+                if (technician.getEmail() != null)
+                    u.setEmail(technician.getEmail());
+                if (technician.getRole() != null)
+                    u.setRole(technician.getRole());
+                if (technician.getDepartment() != null)
+                    u.setDepartment(technician.getDepartment());
+                if (technician.getStatus() != null)
+                    u.setStatus(technician.getStatus());
                 return ResponseEntity.ok(userRepository.save(u));
             }
             return ResponseEntity.notFound().<User>build();
@@ -615,59 +650,71 @@ public class MainController {
     public Mono<Map<String, Object>> getBIKPIs() {
         return Mono.fromCallable(() -> {
             Map<String, Object> kpis = new HashMap<>();
-            
+
             List<WorkOrder> workOrders = workOrderRepository.findAll();
             List<Alert> allAlerts = alertRepository.findAll();
             List<Motor> allMotors = motorRepository.findAll();
             long totalMotors = allMotors.size();
-            
+
             // 1. Calculations for CURRENT data
             double totalOperatingTime = totalMotors * 720.0;
             long failures = allAlerts.stream()
-                .filter(a -> "Critique".equalsIgnoreCase(a.getLevel()) || "Danger".equalsIgnoreCase(a.getLevel()))
-                .count();
-            
+                    .filter(a -> "Critique".equalsIgnoreCase(a.getLevel()) || "Danger".equalsIgnoreCase(a.getLevel()))
+                    .count();
+
             double mtbf = failures > 0 ? totalOperatingTime / failures : totalOperatingTime;
-            
+
             double totalRepairTime = workOrders.stream()
-                .filter(wo -> "Terminé".equalsIgnoreCase(wo.getStatus()) || "Clos".equalsIgnoreCase(wo.getStatus()))
-                .mapToDouble(wo -> {
-                    if ("Urgent".equalsIgnoreCase(wo.getPriority())) return 2.0;
-                    if ("Haute".equalsIgnoreCase(wo.getPriority())) return 6.0;
-                    return 12.0;
-                }).sum();
-            
+                    .filter(wo -> "Terminé".equalsIgnoreCase(wo.getStatus()) || "Clos".equalsIgnoreCase(wo.getStatus()))
+                    .mapToDouble(wo -> {
+                        if ("Urgent".equalsIgnoreCase(wo.getPriority()))
+                            return 2.0;
+                        if ("Haute".equalsIgnoreCase(wo.getPriority()))
+                            return 6.0;
+                        return 12.0;
+                    }).sum();
+
             long completedWOs = workOrders.stream()
-                .filter(wo -> "Terminé".equalsIgnoreCase(wo.getStatus()) || "Clos".equalsIgnoreCase(wo.getStatus()))
-                .count();
-            
+                    .filter(wo -> "Terminé".equalsIgnoreCase(wo.getStatus()) || "Clos".equalsIgnoreCase(wo.getStatus()))
+                    .count();
+
             double mttr = completedWOs > 0 ? totalRepairTime / completedWOs : 0.0;
             double availability = (mtbf + mttr) > 0 ? (mtbf / (mtbf + mttr)) * 100.0 : 100.0;
-            if (failures == 0 && completedWOs == 0) availability = 99.9;
+            if (failures == 0 && completedWOs == 0)
+                availability = 99.9;
 
             // 2. Trend Calculations (Comparing last 7 days vs previous 7 days)
             java.time.LocalDateTime now = java.time.LocalDateTime.now();
-            java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            
+            java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter
+                    .ofPattern("yyyy-MM-dd HH:mm:ss");
+
             long failuresLast7 = allAlerts.stream()
-                .filter(a -> a.getTime() != null && ("Critique".equalsIgnoreCase(a.getLevel()) || "Danger".equalsIgnoreCase(a.getLevel())))
-                .filter(a -> {
-                    try { return java.time.LocalDateTime.parse(a.getTime(), fmt).isAfter(now.minusDays(7)); } catch(Exception e) { return false; }
-                }).count();
-            
+                    .filter(a -> a.getTime() != null
+                            && ("Critique".equalsIgnoreCase(a.getLevel()) || "Danger".equalsIgnoreCase(a.getLevel())))
+                    .filter(a -> {
+                        try {
+                            return java.time.LocalDateTime.parse(a.getTime(), fmt).isAfter(now.minusDays(7));
+                        } catch (Exception e) {
+                            return false;
+                        }
+                    }).count();
+
             long failuresPrev7 = allAlerts.stream()
-                .filter(a -> a.getTime() != null && ("Critique".equalsIgnoreCase(a.getLevel()) || "Danger".equalsIgnoreCase(a.getLevel())))
-                .filter(a -> {
-                    try {
-                        java.time.LocalDateTime dt = java.time.LocalDateTime.parse(a.getTime(), fmt);
-                        return dt.isAfter(now.minusDays(14)) && dt.isBefore(now.minusDays(7));
-                    } catch(Exception e) { return false; }
-                }).count();
+                    .filter(a -> a.getTime() != null
+                            && ("Critique".equalsIgnoreCase(a.getLevel()) || "Danger".equalsIgnoreCase(a.getLevel())))
+                    .filter(a -> {
+                        try {
+                            java.time.LocalDateTime dt = java.time.LocalDateTime.parse(a.getTime(), fmt);
+                            return dt.isAfter(now.minusDays(14)) && dt.isBefore(now.minusDays(7));
+                        } catch (Exception e) {
+                            return false;
+                        }
+                    }).count();
 
             String mtbfTrend = "Stable";
             boolean mtbfUp = true;
             if (failuresPrev7 > 0) {
-                double diff = (double)(failuresPrev7 - failuresLast7) / failuresPrev7 * 100.0;
+                double diff = (double) (failuresPrev7 - failuresLast7) / failuresPrev7 * 100.0;
                 mtbfTrend = String.format("%+.1f%%", diff);
                 mtbfUp = diff >= 0;
             } else if (failuresLast7 > 0) {
@@ -676,77 +723,81 @@ public class MainController {
             }
 
             String mttrTrend = String.format("%.1fh", mttr);
-            if (completedWOs == 0) mttrTrend = "Stable";
+            if (completedWOs == 0)
+                mttrTrend = "Stable";
 
             double totalCostFromWOs = workOrders.stream().mapToDouble(WorkOrder::getCost).sum();
             if (totalCostFromWOs == 0 && !workOrders.isEmpty()) {
                 totalCostFromWOs = workOrders.size() * 4500.0;
             }
- 
+
             kpis.put("mtbf", Math.round(mtbf));
             kpis.put("mtbfTrend", mtbfTrend);
             kpis.put("mtbfUp", mtbfUp);
-            
+
             kpis.put("mttr", Math.round(mttr * 10.0) / 10.0);
             kpis.put("mttrTrend", mttrTrend);
             kpis.put("mttrUp", false);
-            
+
             kpis.put("availability", Math.round(availability * 10.0) / 10.0);
-            kpis.put("availabilityTrend", availability > 99.0 ? "Optimal" : (availability > 95.0 ? "Normal" : "Critique"));
+            kpis.put("availabilityTrend",
+                    availability > 99.0 ? "Optimal" : (availability > 95.0 ? "Normal" : "Critique"));
             kpis.put("availabilityUp", true);
-            
+
             kpis.put("maintenanceCost", totalCostFromWOs);
             kpis.put("maintenanceCostTrend", "Réel (MAD)");
             kpis.put("maintenanceCostUp", false);
-            
+
             long distinctSites = allMotors.stream()
-                .map(Motor::getSite)
-                .filter(Objects::nonNull)
-                .distinct()
-                .count();
+                    .map(Motor::getSite)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .count();
 
             kpis.put("sitesConnected", distinctSites);
             kpis.put("activeAlerts", allAlerts.size());
             return kpis;
         }).subscribeOn(Schedulers.boundedElastic());
     }
- 
+
     @GetMapping("/bi/interventions")
     public Flux<Intervention> getInterventions() {
         return Mono.fromCallable(() -> {
             List<WorkOrder> wos = workOrderRepository.findAll();
             List<Motor> motors = motorRepository.findAll();
-            
+
             if (wos.isEmpty()) {
                 return List.of(
-                   new Intervention("Préventif", 0, "#007A3D"),
-                   new Intervention("Correctif", 0, "#D93F3F")
-                );
+                        new Intervention("Préventif", 0, "#007A3D"),
+                        new Intervention("Correctif", 0, "#D93F3F"));
             }
-            
+
             long p = 0;
             long c = 0;
-            
+
             for (WorkOrder w : wos) {
                 if ("Préventif".equalsIgnoreCase(w.getType())) {
                     p++;
                 } else if ("Correctif".equalsIgnoreCase(w.getType())) {
                     c++;
                 } else {
-                    // Dynamic heuristic: If asset name (id) matches a motor in critical state, it's corrective
+                    // Dynamic heuristic: If asset name (id) matches a motor in critical state, it's
+                    // corrective
                     boolean isCritical = motors.stream()
-                        .filter(m -> m.getId().contains(w.getAsset()) || w.getAsset().contains(m.getId()))
-                        .anyMatch(m -> m.getEtatLabel() != null && (m.getEtatLabel().contains("Critique") || m.getEtatLabel().contains("Danger")));
-                    
-                    if (isCritical) c++;
-                    else p++;
+                            .filter(m -> m.getId().contains(w.getAsset()) || w.getAsset().contains(m.getId()))
+                            .anyMatch(m -> m.getEtatLabel() != null
+                                    && (m.getEtatLabel().contains("Critique") || m.getEtatLabel().contains("Danger")));
+
+                    if (isCritical)
+                        c++;
+                    else
+                        p++;
                 }
             }
-            
+
             return List.of(
-               new Intervention("Préventif", (int)p, "#007A3D"),
-               new Intervention("Correctif", (int)c, "#D93F3F")
-            );
+                    new Intervention("Préventif", (int) p, "#007A3D"),
+                    new Intervention("Correctif", (int) c, "#D93F3F"));
         }).flatMapMany(Flux::fromIterable).subscribeOn(Schedulers.boundedElastic());
     }
 
@@ -762,15 +813,18 @@ public class MainController {
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
-
     @PostMapping("/bi/kpis/upsert")
     public Mono<KpiValue> upsertKPI(@RequestBody KpiValue kpi) {
         return Mono.fromCallable(() -> {
             return kpiValueRepository.findById(kpi.getId()).map(existing -> {
-                if (kpi.getNumericValue() != null) existing.setNumericValue(kpi.getNumericValue());
-                if (kpi.getStringValue() != null) existing.setStringValue(kpi.getStringValue());
-                if (kpi.getTrend() != null) existing.setTrend(kpi.getTrend());
-                if (kpi.getTrendUp() != null) existing.setTrendUp(kpi.getTrendUp());
+                if (kpi.getNumericValue() != null)
+                    existing.setNumericValue(kpi.getNumericValue());
+                if (kpi.getStringValue() != null)
+                    existing.setStringValue(kpi.getStringValue());
+                if (kpi.getTrend() != null)
+                    existing.setTrend(kpi.getTrend());
+                if (kpi.getTrendUp() != null)
+                    existing.setTrendUp(kpi.getTrendUp());
                 return kpiValueRepository.save(existing);
             }).orElseGet(() -> kpiValueRepository.save(kpi));
         }).subscribeOn(Schedulers.boundedElastic());
@@ -833,16 +887,22 @@ public class MainController {
 
             String type = request.getOrDefault("type", "pdf"); // pdf or excel
             String frequency = request.getOrDefault("frequency", "quotidien");
-            byte[] fileContent = request.getOrDefault("fileContent", "").getBytes();
-
-            if (fileContent.length == 0) {
+            String base64Content = request.getOrDefault("fileContent", "");
+            if (base64Content.isEmpty()) {
                 throw new RuntimeException("File content is empty");
             }
+
+            // Clean up the base64 string from data URL prefix
+            if (base64Content.contains("base64,")) {
+                base64Content = base64Content.substring(base64Content.indexOf("base64,") + 7);
+            }
+
+            byte[] fileContentBytes = java.util.Base64.getDecoder().decode(base64Content);
 
             try {
                 // Upload file to IPFS
                 String fileName = "report-" + System.currentTimeMillis() + "." + type;
-                String ipfsHash = ipfsService.uploadFile(fileContent, fileName);
+                String ipfsHash = ipfsService.uploadFile(fileContentBytes, fileName);
 
                 // Create report record
                 Report report = new Report();
@@ -904,8 +964,10 @@ public class MainController {
                 reportRepository.save(r);
 
                 return ResponseEntity.ok()
-                        .header("Content-Disposition", "attachment; filename=\"" + r.getTitle() + "." + r.getType() + "\"")
-                        .header("Content-Type", r.getType().equals("pdf") ? "application/pdf" : "application/vnd.ms-excel")
+                        .header("Content-Disposition",
+                                "attachment; filename=\"" + r.getTitle() + "." + r.getType() + "\"")
+                        .header("Content-Type",
+                                r.getType().equals("pdf") ? "application/pdf" : "application/vnd.ms-excel")
                         .body(content);
             } catch (Exception e) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).<byte[]>build();
