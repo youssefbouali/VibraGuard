@@ -11,9 +11,6 @@
 
     <modules>
         <module>api-gateway</module>
-        <module>iot-service</module>
-        <module>ml-service</module>
-        <module>blockchain-service</module>
     </modules>
 
     <properties>
