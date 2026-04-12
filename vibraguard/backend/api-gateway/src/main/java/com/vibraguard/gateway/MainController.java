@@ -983,7 +983,7 @@ public class MainController {
                 e.printStackTrace();
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .header("X-Error-Reason", e.getMessage())
-                        .build();
+                        .<byte[]>build();
             }
         }).subscribeOn(Schedulers.boundedElastic());
     }
