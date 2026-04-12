@@ -20,5 +20,4 @@ spring:
 # IPFS Configuration
 ipfs:
   api:
-    url: ${IPFS_API_URL:http://localhost:5001}
-
+    url: ${IPFS_API_URL:http://ipfs:5001}
