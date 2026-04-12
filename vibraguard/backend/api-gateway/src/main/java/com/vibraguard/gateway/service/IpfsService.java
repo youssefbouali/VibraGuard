@@ -66,7 +66,7 @@ public class IpfsService {
         String downloadUrl = ipfsApiUrl + "/api/v0/cat?arg=" + ipfsHash;
         
         HttpURLConnection conn = (HttpURLConnection) new URL(downloadUrl).openConnection();
-        conn.setRequestMethod("GET");
+        conn.setRequestMethod("POST");
         
         int responseCode = conn.getResponseCode();
         if (responseCode != 200) {

@@ -138,8 +138,28 @@ export default function Reports() {
 
   const handleCopyLink = (reportId: string) => {
     const link = `${window.location.origin}/reports/share/${reportId}`;
-    navigator.clipboard.writeText(link);
-    toast.success("Lien copié");
+    
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(link)
+        .then(() => toast.success("Lien copié"))
+        .catch(() => toast.error("Échec de la copie"));
+    } else {
+      // Fallback for non-HTTPS environments
+      const textArea = document.createElement("textarea");
+      textArea.value = link;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy') ? toast.success("Lien copié") : toast.error("Échec de la copie");
+      } catch (error) {
+        toast.error("Échec de la copie");
+      }
+      document.body.removeChild(textArea);
+    }
   };
 
   const handleDelete = async (reportId: string) => {

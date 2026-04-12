@@ -992,7 +992,12 @@ public class MainController {
                 }
             }
 
-            reportRepository.deleteById(id);
+            try {
+                reportRepository.deleteById(id);
+            } catch (Exception e) {
+                System.out.println("Error deleting report: " + e.getMessage());
+                throw new RuntimeException("DB Deletion failed: " + e.getMessage());
+            }
             return ResponseEntity.ok().<Void>build();
         }).subscribeOn(Schedulers.boundedElastic());
     }
