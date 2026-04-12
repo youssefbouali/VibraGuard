@@ -41,7 +41,6 @@ public class SecurityConfig {
                 .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/api/v1/auth/**", "/login", "/register", "/forgot-password").permitAll()
-                        .pathMatchers("/api/v1/reports/generate").permitAll()
                         .pathMatchers("/api/v1/bi/**").hasRole("ADMIN")
                         .pathMatchers("/api/v1/blockchain/audit").hasRole("ADMIN")
                         .pathMatchers("/api/v1/iot/technicians/**").hasRole("ADMIN")
