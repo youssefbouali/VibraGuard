@@ -936,7 +936,8 @@ public class MainController {
 
             Report r = report.get();
             // Check access: admins can see all, others only their own
-            if (!isAdmin(principal)) {
+            // For public share links (principal == null), we allow access since this is explicitly for sharing
+            if (principal != null && !isAdmin(principal)) {
                 Optional<User> user = currentUser(principal);
                 if (user.isEmpty() || !user.get().getEmail().equals(r.getCreatedByEmail())) {
                     return ResponseEntity.status(HttpStatus.FORBIDDEN).<Report>build();
@@ -957,6 +958,14 @@ public class MainController {
 
             try {
                 Report r = report.get();
+                // Check access for download as well
+                if (principal != null && !isAdmin(principal)) {
+                    Optional<User> user = currentUser(principal);
+                    if (user.isEmpty() || !user.get().getEmail().equals(r.getCreatedByEmail())) {
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).<byte[]>build();
+                    }
+                }
+                
                 byte[] content = ipfsService.downloadFile(r.getIpfsHash());
 
                 // Increment download count
@@ -970,7 +979,11 @@ public class MainController {
                                 r.getType().equals("pdf") ? "application/pdf" : "application/vnd.ms-excel")
                         .body(content);
             } catch (Exception e) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).<byte[]>build();
+                System.err.println("Download Error for Report " + id + ": " + e.getMessage());
+                e.printStackTrace();
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .header("X-Error-Reason", e.getMessage())
+                        .build();
             }
         }).subscribeOn(Schedulers.boundedElastic());
     }

@@ -65,16 +65,30 @@ public class IpfsService {
     public byte[] downloadFile(String ipfsHash) throws Exception {
         String downloadUrl = ipfsApiUrl + "/api/v0/cat?arg=" + ipfsHash;
         
-        HttpURLConnection conn = (HttpURLConnection) new URL(downloadUrl).openConnection();
-        conn.setRequestMethod("POST");
-        
-        int responseCode = conn.getResponseCode();
-        if (responseCode != 200) {
-            throw new Exception("IPFS download failed with status: " + responseCode);
-        }
-        
-        try (InputStream is = conn.getInputStream()) {
-            return is.readAllBytes();
+        try {
+            HttpURLConnection conn = (HttpURLConnection) new URL(downloadUrl).openConnection();
+            conn.setRequestMethod("POST");
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(15000);
+            
+            int responseCode = conn.getResponseCode();
+            if (responseCode != 200) {
+                String errorMsg = "";
+                try (InputStream es = conn.getErrorStream()) {
+                    if (es != null) {
+                        errorMsg = new String(es.readAllBytes());
+                    }
+                } catch (Exception ignore) {}
+                System.err.println("IPFS Download failed. Status: " + responseCode + " Error: " + errorMsg);
+                throw new Exception("IPFS download failed (" + responseCode + "): " + errorMsg);
+            }
+            
+            try (InputStream is = conn.getInputStream()) {
+                return is.readAllBytes();
+            }
+        } catch (Exception e) {
+            System.err.println("IPFS Error: " + e.getMessage());
+            throw e;
         }
     }
 

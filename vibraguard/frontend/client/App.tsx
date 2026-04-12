@@ -17,6 +17,7 @@ import OrdresDeTravail from "./pages/OrdresDeTravail";
 import CreerOrdreDeTravail from "./pages/CreerOrdreDeTravail";
 import RapportsBI from "./pages/RapportsBI";
 import Reports from "./pages/Reports";
+import ReportShare from "./pages/ReportShare";
 import AuditBlockchain from "./pages/AuditBlockchain";
 import Parametres from "./pages/Parametres";
 import ProfilUtilisateur from "./pages/ProfilUtilisateur";
@@ -65,6 +66,9 @@ const App = () => (
             <Route path="/parametres/profil" element={<ProtectedRoute allowedRoles={["admin"]}><ProfilUtilisateur /></ProtectedRoute>} />
             <Route path="/parametres/utilisateurs/ajouter" element={<ProtectedRoute allowedRoles={["admin"]}><AjouterUtilisateur /></ProtectedRoute>} />
             <Route path="/parametres/utilisateurs/:id" element={<ProtectedRoute allowedRoles={["admin"]}><UtilisateurDetail /></ProtectedRoute>} />
+
+            {/* Public Shared Report Route */}
+            <Route path="/reports/share/:id" element={<ReportShare />} />
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
