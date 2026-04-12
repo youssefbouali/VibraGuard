@@ -58,4 +58,7 @@ export const api = {
   getTechnicianById: (id: string) => apiRequest<any>("GET", `/api/v1/iot/technicians/${id}`),
   updateTechnician: (id: string, data: any) => apiRequest<any>("PUT", `/api/v1/iot/technicians/${id}`, data),
   createInventoryPart: (data: any) => apiRequest<any>("POST", "/api/v1/iot/inventory-parts", data),
+  getReports: () => apiRequest<any[]>("GET", "/api/v1/reports"),
+  generateReport: (data: any) => apiRequest<any>("POST", "/api/v1/reports/generate", data),
+  deleteReport: (id: string) => apiRequest<any>("DELETE", `/api/v1/reports/${id}`),
 };

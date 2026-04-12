@@ -35,8 +35,8 @@ export default function Reports() {
   const loadReports = async () => {
     try {
       setLoading(true);
-      const data = await apiRequest<Report[]>("GET", "/api/v1/reports");
-      setReports(data);
+      const data = await api.getReports();
+      setReports(data || []);
     } catch (error) {
       console.error(error);
       toast.error("Erreur lors du chargement des rapports");
@@ -94,7 +94,7 @@ export default function Reports() {
         fileContent = XLSX.write(wb, { type: "base64" });
       }
 
-      const newReport = await apiRequest<any>("POST", "/api/v1/reports/generate", {
+      const newReport = await api.generateReport({
         ...formData,
         fileContent,
       });
@@ -146,7 +146,7 @@ export default function Reports() {
     if (!confirm("Êtes-vous sûr de vouloir supprimer ce rapport ?")) return;
 
     try {
-      await apiRequest("DELETE", `/api/v1/reports/${reportId}`);
+      await api.deleteReport(reportId);
       setReports(reports.filter((r) => r.id !== reportId));
       toast.success("Rapport supprimé");
     } catch (error) {
