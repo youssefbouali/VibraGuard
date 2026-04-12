@@ -927,7 +927,7 @@ public class MainController {
     }
 
     @GetMapping("/reports/{id}")
-    public Mono<ResponseEntity<Report>> getReportById(@PathVariable String id, Principal principal) {
+    public Mono<ResponseEntity<Report>> getReportById(@PathVariable("id") String id, Principal principal) {
         return Mono.fromCallable(() -> {
             Optional<Report> report = reportRepository.findById(id);
             if (report.isEmpty()) {
@@ -949,7 +949,7 @@ public class MainController {
     }
 
     @GetMapping("/reports/{id}/download")
-    public Mono<ResponseEntity<byte[]>> downloadReport(@PathVariable String id, Principal principal) {
+    public Mono<ResponseEntity<byte[]>> downloadReport(@PathVariable("id") String id, Principal principal) {
         return Mono.fromCallable(() -> {
             Optional<Report> report = reportRepository.findById(id);
             if (report.isEmpty()) {
@@ -989,7 +989,7 @@ public class MainController {
     }
 
     @DeleteMapping("/reports/{id}")
-    public Mono<ResponseEntity<Void>> deleteReport(@PathVariable String id, Principal principal) {
+    public Mono<ResponseEntity<Void>> deleteReport(@PathVariable("id") String id, Principal principal) {
         return Mono.fromCallable(() -> {
             Optional<Report> report = reportRepository.findById(id);
             if (report.isEmpty()) {
