@@ -59,6 +59,7 @@ export function createServer() {
             proxyReq.setHeader('Content-Type', 'application/json');
             proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
             proxyReq.write(bodyData);
+            proxyReq.end();
           }
         },
         error: (err, _req, res) => {

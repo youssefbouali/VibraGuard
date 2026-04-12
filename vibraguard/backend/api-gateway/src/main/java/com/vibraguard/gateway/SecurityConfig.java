@@ -41,10 +41,11 @@ public class SecurityConfig {
                 .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/api/v1/auth/**", "/login", "/register", "/forgot-password").permitAll()
+                        .pathMatchers("/api/v1/reports/generate").permitAll()
                         .pathMatchers("/api/v1/bi/**").hasRole("ADMIN")
                         .pathMatchers("/api/v1/blockchain/audit").hasRole("ADMIN")
                         .pathMatchers("/api/v1/iot/technicians/**").hasRole("ADMIN")
-                        .pathMatchers("/api/v1/iot/**", "/api/v1/ml/**", "/api/v1/blockchain/**").authenticated()
+                        .pathMatchers("/api/v1/iot/**", "/api/v1/ml/**", "/api/v1/blockchain/**", "/api/v1/reports/**").authenticated()
                         .pathMatchers("/ws/**").permitAll()
                         .anyExchange().authenticated());
         return http.build();
