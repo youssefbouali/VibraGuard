@@ -2,7 +2,7 @@ package com.vibraguard.gateway.controller;
 
 import com.vibraguard.gateway.entity.*;
 import com.vibraguard.gateway.repository.*;
-import com.vibraguard.gateway.service.VibrationStreamService;
+import com.vibraguard.gateway.VibrationStreamService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
