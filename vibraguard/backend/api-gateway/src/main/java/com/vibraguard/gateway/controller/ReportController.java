@@ -84,9 +84,9 @@ public class ReportController {
 
     @GetMapping("/{id}")
     public Mono<ResponseEntity<Report>> getReportById(@PathVariable("id") String id, Principal principal) {
-        return Mono.fromCallable(() -> {
+        return Mono.<ResponseEntity<Report>>fromCallable(() -> {
             Optional<Report> report = reportRepository.findById(id);
-            if (report.isEmpty()) return ResponseEntity.notFound().build();
+            if (report.isEmpty()) return ResponseEntity.notFound().<Report>build();
 
             Report r = report.get();
             if (principal != null && !utils.isAdmin(principal)) {
@@ -101,16 +101,16 @@ public class ReportController {
 
     @GetMapping("/{id}/download")
     public Mono<ResponseEntity<byte[]>> downloadReport(@PathVariable("id") String id, Principal principal) {
-        return Mono.fromCallable(() -> {
+        return Mono.<ResponseEntity<byte[]>>fromCallable(() -> {
             Optional<Report> report = reportRepository.findById(id);
-            if (report.isEmpty()) return ResponseEntity.notFound().build();
+            if (report.isEmpty()) return ResponseEntity.notFound().<byte[]>build();
 
             try {
                 Report r = report.get();
                 if (principal != null && !utils.isAdmin(principal)) {
                     Optional<User> user = utils.currentUser(principal);
                     if (user.isEmpty() || !user.get().getEmail().equals(r.getCreatedByEmail())) {
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).<byte[]>build();
                     }
                 }
                 
@@ -130,15 +130,15 @@ public class ReportController {
 
     @DeleteMapping("/{id}")
     public Mono<ResponseEntity<Void>> deleteReport(@PathVariable("id") String id, Principal principal) {
-        return Mono.fromCallable(() -> {
+        return Mono.<ResponseEntity<Void>>fromCallable(() -> {
             Optional<Report> report = reportRepository.findById(id);
-            if (report.isEmpty()) return ResponseEntity.notFound().build();
+            if (report.isEmpty()) return ResponseEntity.notFound().<Void>build();
 
             Report r = report.get();
             if (!utils.isAdmin(principal)) {
                 Optional<User> user = utils.currentUser(principal);
                 if (user.isEmpty() || !user.get().getEmail().equals(r.getCreatedByEmail())) {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).<Void>build();
                 }
             }
             reportRepository.deleteById(id);
