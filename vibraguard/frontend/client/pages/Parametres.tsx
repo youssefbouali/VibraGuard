@@ -4,15 +4,15 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { UtilisateursTab } from "./parametres/UtilisateursTab";
 import { useAuth } from "@/lib/auth-context";
 
-const TABS = [
-  "Utilisateurs",
-  "Capteurs IoT",
-  "Seuils Alertes",
-  "Modèles ML",
-  "IPFS",
-  "Kafka",
-];
 export default function Parametres() {
+  const TABS = [
+    "Utilisateurs",
+    "Capteurs IoT",
+    "Seuils Alertes",
+    "Modèles ML",
+    "IPFS",
+    "Kafka",
+  ];
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "Utilisateurs";
   const { user } = useAuth();

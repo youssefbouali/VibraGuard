@@ -210,20 +210,13 @@ export function UtilisateursTab() {
       (u.name && u.name.toLowerCase().includes(search.toLowerCase())) ||
       (u.email && u.email.toLowerCase().includes(search.toLowerCase()));
 
-    // Normalize roles for comparison
     const userRole = u.role?.toLowerCase() || "";
     const filterRole = selectedRole.toLowerCase();
-    
-    // Mapping for admin role variations
-    const isAdminMatch = (userRole === "admin" && filterRole === "admin");
-    const isTechnicianMatch = (userRole === "technicien" || userRole === "technician") && filterRole === "technicien";
-    const isEngineerMatch = (userRole === "ingénieur" || userRole === "ingenieur" || userRole === "ingénieur data") && filterRole.includes("ingénieur");
 
     const matchesRole = selectedRole === "Tous les rôles" || 
-      userRole === filterRole || 
-      isAdminMatch || 
-      isTechnicianMatch || 
-      isEngineerMatch;
+      userRole === filterRole ||
+      (userRole === "admin" && filterRole === "admin") ||
+      ((userRole === "technicien" || userRole === "technician") && filterRole === "technicien");
 
     const matchesDept =
       selectedDepartment === "Tous les départements" || 
@@ -436,56 +429,56 @@ export function UtilisateursTab() {
             </div>
           ) : (
             <>
-              {paginatedUsers.map((user, idx) => (
+              {paginatedUsers.map((u, idx) => (
                 <div
-                  key={user.id}
+                  key={u.id}
                   className={`flex flex-col md:grid md:grid-cols-[2fr_1.2fr_1.4fr_1fr_1.3fr_auto] items-start md:items-center gap-3 md:gap-0 px-6 py-4 ${idx < paginatedUsers.length - 1 ? "border-b border-black/[0.08]" : ""
                     } hover:bg-white/[0.02] transition-colors`}
                 >
               {/* User info */}
               <div className="flex items-center gap-4 w-full md:w-auto">
-                <UserAvatar user={user} />
+                <UserAvatar user={u} />
                 <div className="flex flex-col gap-1 min-w-0">
                   <span className="text-sm font-semibold text-[#E8F6F5] leading-tight">
-                    {user.name}
+                    {u.name}
                   </span>
                   <span className="text-[13px] text-[#CFEFF1] leading-tight truncate">
-                    {user.email}
+                    {u.email}
                   </span>
                 </div>
               </div>
-
+ 
               {/* Role */}
               <div className="md:px-0 md:py-0">
-                <RoleBadge role={user.role} />
+                <RoleBadge role={u.role} />
               </div>
-
+ 
               {/* Department */}
               <div className="text-sm text-[#E8F6F5] md:px-0">
-                {user.department}
+                {u.department}
               </div>
-
+ 
               {/* Status */}
               <div>
-                <StatusBadge status={user.status} />
+                <StatusBadge status={u.status} />
               </div>
-
+ 
               {/* Last connection */}
               <div>
-                <LastConnectionCell value={user.lastConnection} />
+                <LastConnectionCell value={u.lastConnection} />
               </div>
-
+ 
               {/* Actions */}
                 <div className="flex items-center gap-2 justify-end">
                   <button
-                    onClick={() => navigate(`/parametres/utilisateurs/${user.id}`)}
+                    onClick={() => navigate(`/parametres/utilisateurs/${u.id}`)}
                     className="flex items-center justify-center w-8 h-8 rounded hover:bg-white/5 transition-colors"
                   >
                     <EditIcon />
                   </button>
-                  {user.id.toString() !== currentUser?.id?.toString() && (
+                  {u.id.toString() !== currentUser?.id?.toString() && (
                     <button 
-                      onClick={() => handleDelete(user.id.toString(), user.name)}
+                      onClick={() => handleDelete(u.id.toString(), u.name)}
                       className="flex items-center justify-center w-8 h-8 rounded hover:bg-[#D93F3F]/10 transition-colors"
                     >
                       <DeleteIcon />
