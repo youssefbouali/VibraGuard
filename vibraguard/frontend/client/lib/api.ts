@@ -35,7 +35,7 @@ export async function apiRequest<T>(
 export const api = {
   getMotors: () => apiRequest<any[]>("GET", "/api/v1/iot/motors"),
   getAlerts: () => apiRequest<any[]>("GET", "/api/v1/ml/alerts"),
-  getKPIs: () => apiRequest<any>("GET", "/api/v1/iot/kpis"),
+  getKPIs: () => apiRequest<any>("GET", "/api/v1/bi/kpis"),
   getWorkOrders: () => apiRequest<any[]>("GET", "/api/v1/iot/work-orders"),
   getAudit: () => apiRequest<any[]>("GET", "/api/v1/blockchain/audit"),
   getMotorById: (id: string) => apiRequest<any>("GET", `/api/v1/iot/motors/${id}`),

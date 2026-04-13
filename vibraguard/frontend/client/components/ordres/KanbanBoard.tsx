@@ -77,18 +77,20 @@ export function KanbanBoard() {
       const originalWO = apiWorkOrders.find((wo: any) => wo.id === taskId);
       
       if (originalWO && originalWO.status !== newBackendStatus) {
-        toast.promise(
+        await toast.promise(
           api.updateWorkOrder(taskId, {
             ...originalWO,
             status: newBackendStatus
           }),
           {
             loading: 'Mise à jour du statut...',
-            success: 'Statut mis à jour !',
+            success: () => {
+              refetch();
+              return 'Statut mis à jour !';
+            },
             error: 'Erreur lors de la mise à jour',
           }
         );
-        refetch();
       }
     } catch (err) {
       console.error("Drop error:", err);

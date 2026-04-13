@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/auth-context";
 
 interface User {
   id: string | number;
@@ -178,6 +179,7 @@ export function UtilisateursTab() {
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
   const [deptDropdownOpen, setDeptDropdownOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const { user: currentUser } = useAuth();
 
   useEffect(() => {
     setLoading(true);
@@ -457,20 +459,22 @@ export function UtilisateursTab() {
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-2 justify-end">
-                <button
-                  onClick={() => navigate(`/parametres/utilisateurs/${user.id}`)}
-                  className="flex items-center justify-center w-8 h-8 rounded hover:bg-white/5 transition-colors"
-                >
-                  <EditIcon />
-                </button>
-                <button 
-                  onClick={() => handleDelete(user.id.toString(), user.name)}
-                  className="flex items-center justify-center w-8 h-8 rounded hover:bg-[#D93F3F]/10 transition-colors"
-                >
-                  <DeleteIcon />
-                </button>
-              </div>
+                <div className="flex items-center gap-2 justify-end">
+                  <button
+                    onClick={() => navigate(`/parametres/utilisateurs/${user.id}`)}
+                    className="flex items-center justify-center w-8 h-8 rounded hover:bg-white/5 transition-colors"
+                  >
+                    <EditIcon />
+                  </button>
+                  {user.id.toString() !== currentUser?.id?.toString() && (
+                    <button 
+                      onClick={() => handleDelete(user.id.toString(), user.name)}
+                      className="flex items-center justify-center w-8 h-8 rounded hover:bg-[#D93F3F]/10 transition-colors"
+                    >
+                      <DeleteIcon />
+                    </button>
+                  )}
+                </div>
               </div>
               ))}
 

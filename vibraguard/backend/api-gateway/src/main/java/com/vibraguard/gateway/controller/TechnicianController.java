@@ -2,12 +2,16 @@ package com.vibraguard.gateway.controller;
 
 import com.vibraguard.gateway.auth.model.User;
 import com.vibraguard.gateway.auth.repository.UserRepository;
+import com.vibraguard.gateway.util.ControllerUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+
+import java.security.Principal;
 
 import java.util.*;
 
@@ -17,6 +21,8 @@ public class TechnicianController {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private ControllerUtils utils;
 
     @GetMapping
     public Flux<Map<String, Object>> getTechnicians() {
@@ -60,8 +66,12 @@ public class TechnicianController {
     }
 
     @DeleteMapping("/{id}")
-    public Mono<ResponseEntity<Void>> deleteTechnician(@PathVariable("id") String id) {
-        return Mono.fromCallable(() -> {
+    public Mono<ResponseEntity<Void>> deleteTechnician(@PathVariable("id") String id, Principal principal) {
+        return Mono.<ResponseEntity<Void>>fromCallable(() -> {
+            Optional<User> current = utils.currentUser(principal);
+            if (current.isPresent() && current.get().getId().toString().equals(id)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).<Void>build();
+            }
             userRepository.deleteById(Long.parseLong(id));
             return ResponseEntity.noContent().<Void>build();
         }).subscribeOn(Schedulers.boundedElastic());

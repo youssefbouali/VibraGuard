@@ -20,7 +20,7 @@ import {
 import { Loader2, Trash2, Edit, MoreHorizontal, Save, X, Plus } from "lucide-react";
 import { useMoteurs } from "@/hooks/use-moteurs";
 
-type HealthStatus = "Critique" | "Attention" | "Normal";
+type HealthStatus = "Critique" | "Alerte" | "Optimal" | "Attention" | "Normal"; // Backward compatibility included
 
 interface Moteur {
   id: string;
@@ -50,7 +50,21 @@ const statusConfig: Record<HealthStatus, { color: string; bg: string; border: st
     dot: "bg-[#F2A900]",
     glow: "shadow-[0_0_8px_0_#F2A900]",
   },
+  Alerte: {
+    color: "text-[#F2A900]",
+    bg: "bg-[rgba(242,169,0,0.10)]",
+    border: "border-[rgba(242,169,0,0.20)]",
+    dot: "bg-[#F2A900]",
+    glow: "shadow-[0_0_8px_0_#F2A900]",
+  },
   Normal: {
+    color: "text-[#007A3D]",
+    bg: "bg-[rgba(0,122,61,0.10)]",
+    border: "border-[rgba(0,122,61,0.20)]",
+    dot: "bg-[#007A3D]",
+    glow: "shadow-[0_0_8px_0_#007A3D]",
+  },
+  Optimal: {
     color: "text-[#007A3D]",
     bg: "bg-[rgba(0,122,61,0.10)]",
     border: "border-[rgba(0,122,61,0.20)]",
@@ -62,7 +76,9 @@ const statusConfig: Record<HealthStatus, { color: string; bg: string; border: st
 const vibrationColor: Record<string, string> = {
   Critique: "text-[#D93F3F]",
   Attention: "text-[#F2A900]",
+  Alerte: "text-[#F2A900]",
   Normal: "text-[#007A3D]",
+  Optimal: "text-[#007A3D]",
 };
 
 // SVG icons
@@ -139,7 +155,9 @@ export default function Moteurs() {
   const filtered = (apiMoteurs || []).filter((m: any) => {
     const matchesSearch = (m.id + m.localisation + m.zone).toLowerCase().includes(search.toLowerCase());
     const matchesZone = selectedZone === "Toutes les zones" || m.zone === selectedZone;
-    const status = m.etatSante || (m.etatColor === "bg-[#007A3D]" ? "Normal" : m.etatColor === "bg-[#F2A900]" ? "Attention" : "Critique");
+    let status = m.etatSante || (m.etatColor === "bg-[#007A3D]" ? "Optimal" : m.etatColor === "bg-[#F2A900]" ? "Alerte" : "Critique");
+    if (status === "Normal") status = "Optimal";
+    if (status === "Attention") status = "Alerte";
     const matchesStatus = selectedStatus === "Tous" || status === selectedStatus;
     return matchesSearch && matchesZone && matchesStatus;
   });
@@ -151,7 +169,7 @@ export default function Moteurs() {
   const paginatedMoteurs = filtered.slice(startIndex, startIndex + perPage);
 
   const zones = ["Toutes les zones", ...new Set((apiMoteurs || []).map((m: any) => m.zone))];
-  const statuses = ["Tous", "Normal", "Attention", "Critique"];
+  const statuses = ["Tous", "Optimal", "Alerte", "Critique"];
 
   return (
     <DashboardLayout breadcrumb="Moteurs">
@@ -213,15 +231,15 @@ export default function Moteurs() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 h-10 px-4 rounded-md border border-black/[0.08] bg-[#0D1316] text-[#E6F0F2] text-sm min-w-[160px]">
-                  <span className="flex-1 text-left">Santé: {selectedStatus === "Normal" ? "Optimal" : selectedStatus === "Attention" ? "Alerte" : selectedStatus}</span>
+                  <span className="flex-1 text-left">Santé: {selectedStatus}</span>
                   <MoreHorizontal className="w-4 h-4 text-[#98A6A8]" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="bg-[#0D1316] border-white/10 text-white min-w-[160px]">
                 {statuses.map(s => (
                   <DropdownMenuItem key={s} onClick={() => { setSelectedStatus(s); setCurrentPage(1); }} className="hover:bg-white/5 cursor-pointer flex items-center gap-2">
-                    {s !== "Tous" && <div className={cn("w-2 h-2 rounded-full", s === "Normal" ? "bg-[#007A3D]" : s === "Attention" ? "bg-[#F2A900]" : "bg-[#D93F3F]")} />}
-                    {s === "Normal" ? "Optimal" : s === "Attention" ? "Alerte" : s}
+                    {s !== "Tous" && <div className={cn("w-2 h-2 rounded-full", (s === "Optimal" || s === "Normal") ? "bg-[#007A3D]" : (s === "Alerte" || s === "Attention") ? "bg-[#F2A900]" : "bg-[#D93F3F]")} />}
+                    {s}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
