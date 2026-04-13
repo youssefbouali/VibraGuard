@@ -65,6 +65,36 @@ export function KanbanBoard() {
   const inprogress = filtered.filter((t) => t.status === "inprogress");
   const done = filtered.filter((t) => t.status === "done");
 
+  const handleDrop = async (taskId: string, newColStatus: string) => {
+    try {
+      const statusMap: Record<string, string> = {
+        todo: "Nouveau",
+        inprogress: "En cours",
+        done: "Terminé"
+      };
+      
+      const newBackendStatus = statusMap[newColStatus];
+      const originalWO = apiWorkOrders.find((wo: any) => wo.id === taskId);
+      
+      if (originalWO && originalWO.status !== newBackendStatus) {
+        toast.promise(
+          api.updateWorkOrder(taskId, {
+            ...originalWO,
+            status: newBackendStatus
+          }),
+          {
+            loading: 'Mise à jour du statut...',
+            success: 'Statut mis à jour !',
+            error: 'Erreur lors de la mise à jour',
+          }
+        );
+        refetch();
+      }
+    } catch (err) {
+      console.error("Drop error:", err);
+    }
+  };
+
   return (
     <div className="flex flex-col flex-1 min-h-0">
       {isLoading && <div className="text-white px-10 py-4">Chargement des ordres de travail...</div>}
@@ -90,6 +120,7 @@ export function KanbanBoard() {
           title="À faire" 
           status="todo" 
           tasks={todo} 
+          onDrop={handleDrop}
           onCardClick={(ot) => {
             setSelectedOT(ot);
             setNewStatus(ot.status === "todo" ? "Nouveau" : ot.status === "inprogress" ? "En cours" : "Terminé");
@@ -100,6 +131,7 @@ export function KanbanBoard() {
           title="En cours" 
           status="inprogress" 
           tasks={inprogress} 
+          onDrop={handleDrop}
           onCardClick={(ot) => {
             setSelectedOT(ot);
             setNewStatus(ot.status === "todo" ? "Nouveau" : ot.status === "inprogress" ? "En cours" : "Terminé");
@@ -110,6 +142,7 @@ export function KanbanBoard() {
           title="Terminé" 
           status="done" 
           tasks={done} 
+          onDrop={handleDrop}
           onCardClick={(ot) => {
             setSelectedOT(ot);
             setNewStatus(ot.status === "todo" ? "Nouveau" : ot.status === "inprogress" ? "En cours" : "Terminé");

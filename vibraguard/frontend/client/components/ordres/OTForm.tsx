@@ -56,7 +56,7 @@ export function OTForm({ onCancel }: OTFormProps) {
   const [partSearch, setPartSearch] = useState("");
   const [cout, setCout] = useState("");
   const [description, setDescription] = useState("");
-  const [typeMaintenance, setTypeMaintenance] = useState("Préventif");
+  const [typeMaintenance, setTypeMaintenance] = useState("Correctif");
   
   const [availableMotors, setAvailableMotors] = useState<Motor[]>([]);
   const [availableTechnicians, setAvailableTechnicians] = useState<Technician[]>([]);
