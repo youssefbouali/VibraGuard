@@ -605,6 +605,14 @@ public class MainController {
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
+    @DeleteMapping("/iot/technicians/{id}")
+    public Mono<ResponseEntity<Void>> deleteTechnician(@PathVariable("id") String id) {
+        return Mono.fromCallable(() -> {
+            userRepository.deleteById(Long.parseLong(id));
+            return ResponseEntity.noContent().<Void>build();
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
+
     @DeleteMapping("/iot/work-orders/{id}")
     public Mono<Void> deleteWorkOrder(@PathVariable("id") String id) {
         return Mono.fromRunnable(() -> workOrderRepository.deleteById(id))

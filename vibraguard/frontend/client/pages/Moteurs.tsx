@@ -95,10 +95,15 @@ const EyeIcon = () => (
 
 function HealthBadge({ status }: { status: HealthStatus }) {
   const cfg = statusConfig[status] || statusConfig["Normal"];
+  const labelMap: Record<string, string> = {
+    "Normal": "Optimal",
+    "Attention": "Alerte",
+    "Critique": "Critique"
+  };
   return (
     <span className={cn("inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[13px] font-medium", cfg.bg, cfg.border, cfg.color)}>
       <span className={cn("w-2 h-2 rounded-full shrink-0", cfg.dot, cfg.glow)} />
-      {status}
+      {labelMap[status] || status}
     </span>
   );
 }
@@ -113,7 +118,9 @@ function ActionBtn({ children }: { children: React.ReactNode }) {
 
 export default function Moteurs() {
   const navigate = useNavigate();
-  const [view, setView] = useState<"liste" | "carte">("liste");
+  const [view, setView] = useState<"liste" | "carte">(
+    typeof window !== 'undefined' && window.innerWidth < 768 ? "carte" : "liste"
+  );
   const [search, setSearch] = useState("");
   const [selectedZone, setSelectedZone] = useState("Toutes les zones");
   const [selectedStatus, setSelectedStatus] = useState("Tous");
@@ -202,11 +209,11 @@ export default function Moteurs() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* État dropdown */}
+            {/* Santé dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 h-10 px-4 rounded-md border border-black/[0.08] bg-[#0D1316] text-[#E6F0F2] text-sm min-w-[160px]">
-                  <span className="flex-1 text-left">État: {selectedStatus}</span>
+                  <span className="flex-1 text-left">Santé: {selectedStatus === "Normal" ? "Optimal" : selectedStatus === "Attention" ? "Alerte" : selectedStatus}</span>
                   <MoreHorizontal className="w-4 h-4 text-[#98A6A8]" />
                 </button>
               </DropdownMenuTrigger>
@@ -214,7 +221,7 @@ export default function Moteurs() {
                 {statuses.map(s => (
                   <DropdownMenuItem key={s} onClick={() => { setSelectedStatus(s); setCurrentPage(1); }} className="hover:bg-white/5 cursor-pointer flex items-center gap-2">
                     {s !== "Tous" && <div className={cn("w-2 h-2 rounded-full", s === "Normal" ? "bg-[#007A3D]" : s === "Attention" ? "bg-[#F2A900]" : "bg-[#D93F3F]")} />}
-                    {s}
+                    {s === "Normal" ? "Optimal" : s === "Attention" ? "Alerte" : s}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>

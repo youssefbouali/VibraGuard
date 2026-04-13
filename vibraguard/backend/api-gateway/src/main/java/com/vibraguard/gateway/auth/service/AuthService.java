@@ -55,6 +55,10 @@ public class AuthService {
             throw new RuntimeException("Invalid password");
         }
 
+        if ("Inactif".equalsIgnoreCase(user.getStatus())) {
+            throw new RuntimeException("Votre compte est inactif. Veuillez contacter l'administrateur.");
+        }
+
         String token = jwtUtil.generateToken(user.getEmail());
         return AuthResponse.builder()
                 .token(token)

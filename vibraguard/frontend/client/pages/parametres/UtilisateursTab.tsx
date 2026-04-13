@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
 
 interface User {
   id: string | number;
@@ -187,6 +188,19 @@ export function UtilisateursTab() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  const handleDelete = async (id: string, name: string) => {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer l'utilisateur ${name} ?`)) {
+      try {
+        await api.deleteTechnician(id);
+        toast.success("Utilisateur supprimé avec succès");
+        setUsers(prev => prev.filter(u => u.id.toString() !== id.toString()));
+      } catch (error) {
+        console.error("Failed to delete user:", error);
+        toast.error("Erreur lors de la suppression");
+      }
+    }
+  };
 
   const filteredUsers = users.filter((u) => {
     const matchesSearch =
@@ -450,7 +464,10 @@ export function UtilisateursTab() {
                 >
                   <EditIcon />
                 </button>
-                <button className="flex items-center justify-center w-8 h-8 rounded hover:bg-[#D93F3F]/10 transition-colors">
+                <button 
+                  onClick={() => handleDelete(user.id.toString(), user.name)}
+                  className="flex items-center justify-center w-8 h-8 rounded hover:bg-[#D93F3F]/10 transition-colors"
+                >
                   <DeleteIcon />
                 </button>
               </div>

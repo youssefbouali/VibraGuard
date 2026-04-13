@@ -61,4 +61,5 @@ export const api = {
   getReports: () => apiRequest<any[]>("GET", "/api/v1/reports"),
   generateReport: (data: any) => apiRequest<any>("POST", "/api/v1/reports/generate", data),
   deleteReport: (id: string) => apiRequest<any>("DELETE", `/api/v1/reports/${id}`),
+  deleteTechnician: (id: string) => apiRequest<any>("DELETE", `/api/v1/iot/technicians/${id}`),
 };

@@ -60,7 +60,7 @@ export function SanteCard({ motor }: { motor: any }) {
                 border: `1px solid #${motor.etatColor}4D` 
               }}
             >
-              {motor.etatLabel}
+              {motor.etatLabel === "Normal" ? "Optimal" : motor.etatLabel === "Attention" ? "Alerte" : motor.etatLabel}
             </span>
           </div>
         </div>
