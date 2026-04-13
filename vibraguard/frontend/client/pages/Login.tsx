@@ -38,7 +38,7 @@ export default function Login() {
         employeeId: data.employeeId || "",
         phoneNumber: data.phoneNumber || "",
         department: data.department || "Maintenance"
-      });
+      }, rememberMe);
 
       toast.success("Connexion réussie !");
       navigate("/dashboard");
