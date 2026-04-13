@@ -85,6 +85,13 @@ export default function Register() {
       }
 
       const data = await response.json();
+      
+      if (!data.token) {
+        toast.success("Demande envoyée ! Votre compte doit être activé par un administrateur.");
+        navigate("/"); // Redirect to login
+        return;
+      }
+
       login(data.token, { 
         email: data.email, 
         fullName: data.fullName,

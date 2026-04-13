@@ -17,6 +17,7 @@ interface User {
   department: string;
   status: string;
   lastConnection?: string;
+  phoneNumber?: string;
 }
 
 const ROLES = ["Admin", "Ingénieur Data", "Technicien", "Responsable"];
@@ -141,6 +142,7 @@ export default function UtilisateurDetail() {
   const [role, setRole] = useState("Technicien");
   const [department, setDepartment] = useState("Maintenance");
   const [status, setStatus] = useState("Actif");
+  const [phoneNumber, setPhoneNumber] = useState("");
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -153,6 +155,7 @@ export default function UtilisateurDetail() {
         setRole(data.role || "Technicien");
         setDepartment(data.department || "Maintenance");
         setStatus(data.status || "Actif");
+        setPhoneNumber(data.phoneNumber || "");
       } catch (error) {
         console.error("Failed to fetch user:", error);
         toast.error("Échec de chargement de l'utilisateur");
@@ -173,7 +176,8 @@ export default function UtilisateurDetail() {
         email,
         role,
         department,
-        status
+        status,
+        phoneNumber
       });
       toast.success("Utilisateur mis à jour avec succès");
       navigate("/parametres");
@@ -315,13 +319,14 @@ export default function UtilisateurDetail() {
                   <InputField label="Nom Complet" value={name} onChange={setName} />
                   <InputField label="Adresse Email" value={email} onChange={setEmail} type="email" />
                   <SelectDropdown label="Rôle" value={role} options={ROLES} onChange={setRole} />
-                  <SelectDropdown
-                    label="Département"
-                    value={department}
-                    options={DEPARTMENTS}
-                    onChange={setDepartment}
-                  />
-                </div>
+                    <SelectDropdown
+                      label="Département"
+                      value={department}
+                      options={DEPARTMENTS}
+                      onChange={setDepartment}
+                    />
+                    <InputField label="Numéro de Téléphone" value={phoneNumber} onChange={setPhoneNumber} />
+                  </div>
               </div>
             </section>
 

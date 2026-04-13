@@ -418,23 +418,22 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator className="bg-white/5" />
-            {user?.role && (user.role.toLowerCase().includes("admin")) && (
-              <>
-                <DropdownMenuItem
-                  className="focus:bg-white/5 focus:text-white cursor-pointer py-2.5 gap-2"
-                  onClick={() => navigate("/parametres/profil")}
-                >
-                  <User className="w-4 h-4 text-[#4FB3AF]" />
-                  <span>Mon Profil</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="focus:bg-white/5 focus:text-white cursor-pointer py-2.5 gap-2"
-                  onClick={() => navigate("/parametres")}
-                >
-                  <Settings className="w-4 h-4 text-[#4FB3AF]" />
-                  <span>Paramètres</span>
-                </DropdownMenuItem>
-              </>
+            <DropdownMenuItem
+              className="focus:bg-white/5 focus:text-white cursor-pointer py-2.5 gap-2"
+              onClick={() => navigate("/parametres/profil")}
+            >
+              <User className="w-4 h-4 text-[#4FB3AF]" />
+              <span>Mon Profil</span>
+            </DropdownMenuItem>
+            
+            {user?.role && (user.role.toLowerCase().includes("admin") || user.role.toLowerCase().includes("administrateur")) && (
+              <DropdownMenuItem
+                className="focus:bg-white/5 focus:text-white cursor-pointer py-2.5 gap-2"
+                onClick={() => navigate("/parametres")}
+              >
+                <Settings className="w-4 h-4 text-[#4FB3AF]" />
+                <span>Paramètres</span>
+              </DropdownMenuItem>
             )}
             <DropdownMenuSeparator className="bg-white/5" />
             <DropdownMenuItem

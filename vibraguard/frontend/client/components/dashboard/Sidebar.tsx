@@ -106,6 +106,9 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
       const alertCount = alerts.filter(a => (a.type === "ALERT" || !a.type) && a.status !== "Read").length;
       return { ...item, badge: alertCount };
     }
+    if (item.label === "Paramètres" && !isAdmin) {
+      return { ...item, href: "/parametres/profil" };
+    }
     return item;
   });
 
@@ -113,7 +116,7 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
   const isAdmin = user?.role ? user.role.toLowerCase().includes("admin") || user.role.toLowerCase().includes("administrateur") : false;
 
   const filteredNavItems = dynamicNavItems.filter((item) => {
-    if (["Rapports BI", "Audit Blockchain", "Paramètres"].includes(item.label)) {
+    if (["Rapports BI", "Audit Blockchain"].includes(item.label)) {
       return isAdmin;
     }
     return true;

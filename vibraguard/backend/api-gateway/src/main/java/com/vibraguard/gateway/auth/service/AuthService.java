@@ -56,7 +56,7 @@ public class AuthService {
             sendNotificationToEnterpriseAdmins(user);
         }
 
-        String token = jwtUtil.generateToken(user.getEmail());
+        String token = "Inactif".equals(status) ? null : jwtUtil.generateToken(user.getEmail());
         return AuthResponse.builder()
                 .token(token)
                 .email(user.getEmail())
@@ -113,6 +113,7 @@ public class AuthService {
                     .fullName("Youssef Bouali")
                     .password(passwordEncoder.encode("password"))
                     .role("ADMIN")
+                    .enterprise("OCP Group")
                     .employeeId("TECH-4892")
                     .phoneNumber("+212 6 00 11 22 33")
                     .department("Maintenance Prédictive")
@@ -130,7 +131,7 @@ public class AuthService {
 
         List<User> admins = userRepository.findAll().stream()
                 .filter(u -> "ADMIN".equalsIgnoreCase(u.getRole()) 
-                        && newUser.getEnterprise().equalsIgnoreCase(u.getEnterprise()))
+                        && (u.getEnterprise() == null || newUser.getEnterprise().equalsIgnoreCase(u.getEnterprise())))
                 .collect(Collectors.toList());
 
         for (User admin : admins) {

@@ -207,11 +207,28 @@ export function UtilisateursTab() {
   const filteredUsers = users.filter((u) => {
     const matchesSearch =
       search === "" ||
-      u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase());
-    const matchesRole = selectedRole === "Tous les rôles" || u.role === selectedRole;
+      (u.name && u.name.toLowerCase().includes(search.toLowerCase())) ||
+      (u.email && u.email.toLowerCase().includes(search.toLowerCase()));
+
+    // Normalize roles for comparison
+    const userRole = u.role?.toLowerCase() || "";
+    const filterRole = selectedRole.toLowerCase();
+    
+    // Mapping for admin role variations
+    const isAdminMatch = (userRole === "admin" && filterRole === "admin");
+    const isTechnicianMatch = (userRole === "technicien" || userRole === "technician") && filterRole === "technicien";
+    const isEngineerMatch = (userRole === "ingénieur" || userRole === "ingenieur" || userRole === "ingénieur data") && filterRole.includes("ingénieur");
+
+    const matchesRole = selectedRole === "Tous les rôles" || 
+      userRole === filterRole || 
+      isAdminMatch || 
+      isTechnicianMatch || 
+      isEngineerMatch;
+
     const matchesDept =
-      selectedDepartment === "Tous les départements" || u.department === selectedDepartment;
+      selectedDepartment === "Tous les départements" || 
+      (u.department && u.department.toLowerCase() === selectedDepartment.toLowerCase());
+      
     return matchesSearch && matchesRole && matchesDept;
   });
 
