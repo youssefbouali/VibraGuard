@@ -106,4 +106,10 @@ public class MotorController {
         return vibrationStreamService.getVibrationStream()
                 .filter(json -> json.contains("\"motorId\":\"" + id + "\""));
     }
+
+    @GetMapping("/vibrations")
+    public Mono<List<VibrationData>> getAllVibrations() {
+        return Mono.fromCallable(() -> vibrationRepository.findAll())
+                .subscribeOn(Schedulers.boundedElastic());
+    }
 }

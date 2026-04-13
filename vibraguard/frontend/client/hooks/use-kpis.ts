@@ -15,7 +15,7 @@ export interface DashboardKPIs {
 
 export function useKPIs() {
   return useQuery<DashboardKPIs>({
-    queryKey: ["/api/v1/iot/kpis"],
-    queryFn: () => apiRequest("GET", "/api/v1/iot/kpis"),
+    queryKey: ["/api/v1/bi/kpis"],
+    queryFn: () => apiRequest("GET", "/api/v1/bi/kpis"),
   });
 }

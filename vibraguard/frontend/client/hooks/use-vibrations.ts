@@ -23,7 +23,7 @@ export function useVibrations(motorId?: string) {
     queryFn: () =>
       motorId
         ? apiRequest("GET", `/api/v1/iot/motors/${motorId}/vibration`)
-        : apiRequest("GET", "/api/v1/iot/vibrations"),
+        : apiRequest("GET", "/api/v1/iot/motors/vibrations"),
   });
 
   useEffect(() => {
