@@ -16,13 +16,22 @@ print(f"Forwarding to Kafka: {KAFKA_BROKER} topic {KAFKA_TOPIC}")
 
 # Kafka Producer
 producer = None
-try:
-    producer = KafkaProducer(
-        bootstrap_servers=[KAFKA_BROKER],
-        value_serializer=lambda v: json.dumps(v).encode('utf-8')
-    )
-except Exception as e:
-    print(f"Error creating Kafka producer: {e}")
+def get_producer():
+    global producer
+    if producer is None:
+        try:
+            producer = KafkaProducer(
+                bootstrap_servers=[KAFKA_BROKER],
+                value_serializer=lambda v: json.dumps(v).encode('utf-8'),
+                api_version=(3, 4, 1) # Force API version to avoid connection issues
+            )
+            print("✅ Kafka Producer initialized successfully")
+        except Exception as e:
+            print(f"❌ Error creating Kafka producer: {e}")
+    return producer
+
+# Initial attempt
+get_producer()
 
 # MQTT Callbacks
 def on_connect(client, userdata, flags, rc, properties=None):
@@ -35,12 +44,15 @@ def on_message(client, userdata, msg):
     
     try:
         data = json.loads(payload)
-        if producer:
-            producer.send(KAFKA_TOPIC, data)
-            producer.flush()
-            print(f"Sent to Kafka: {data}")
+        prod = get_producer()
+        if prod:
+            prod.send(KAFKA_TOPIC, data)
+            prod.flush()
+            print(f"✅ Sent to Kafka: {data['motor_id']}")
+        else:
+            print("⚠️ Skipping message: Kafka Producer not available")
     except Exception as e:
-        print(f"Error processing message: {e}")
+        print(f"❌ Error processing message: {e}")
 
 # Setup MQTT Client
 client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
