@@ -92,7 +92,7 @@ public class ReportController {
             if (principal != null && !utils.isAdmin(principal)) {
                 Optional<User> user = utils.currentUser(principal);
                 if (user.isEmpty() || !user.get().getEmail().equals(r.getCreatedByEmail())) {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).<Report>build();
                 }
             }
             return ResponseEntity.ok(r);
@@ -123,7 +123,7 @@ public class ReportController {
                         .header("Content-Type", r.getType().equals("pdf") ? "application/pdf" : "application/vnd.ms-excel")
                         .body(content);
             } catch (Exception e) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).header("X-Error-Reason", e.getMessage()).build();
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).<byte[]>header("X-Error-Reason", e.getMessage()).build();
             }
         }).subscribeOn(Schedulers.boundedElastic());
     }
@@ -142,7 +142,7 @@ public class ReportController {
                 }
             }
             reportRepository.deleteById(id);
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok().<Void>build();
         }).subscribeOn(Schedulers.boundedElastic());
     }
 }

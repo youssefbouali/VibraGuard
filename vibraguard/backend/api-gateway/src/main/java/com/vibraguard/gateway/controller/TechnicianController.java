@@ -39,7 +39,7 @@ public class TechnicianController {
     public Mono<ResponseEntity<User>> getTechnicianById(@PathVariable("id") String id) {
         return Mono.fromCallable(() -> userRepository.findById(Long.parseLong(id)))
                 .subscribeOn(Schedulers.boundedElastic())
-                .map(opt -> opt.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build()));
+                .map(opt -> opt.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build()));
     }
 
     @PutMapping("/{id}")
@@ -55,7 +55,7 @@ public class TechnicianController {
                 if (technician.getStatus() != null) u.setStatus(technician.getStatus());
                 return ResponseEntity.ok(userRepository.save(u));
             }
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.notFound().<User>build();
         }).subscribeOn(Schedulers.boundedElastic());
     }
 

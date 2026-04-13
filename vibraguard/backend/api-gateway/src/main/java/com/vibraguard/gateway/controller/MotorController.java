@@ -102,7 +102,8 @@ public class MotorController {
     }
 
     @GetMapping("/{id}/vibration")
-    public Flux<VibrationData> getVibration(@PathVariable("id") String id) {
-        return vibrationStreamService.getVibrationData(id);
+    public Flux<String> getVibration(@PathVariable("id") String id) {
+        return vibrationStreamService.getVibrationStream()
+                .filter(json -> json.contains("\"motorId\":\"" + id + "\""));
     }
 }
