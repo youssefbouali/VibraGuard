@@ -5,7 +5,7 @@ import { UtilisateursTab } from "./parametres/UtilisateursTab";
 import { useAuth } from "@/lib/auth-context";
 
 export default function Parametres() {
-  const TABS = [
+  const tabs = [
     "Utilisateurs",
     "Capteurs IoT",
     "Seuils Alertes",
@@ -71,7 +71,7 @@ export default function Parametres() {
         {/* Tabs */}
         <div className="border-b border-black/[0.08] -mb-2">
           <div className="flex gap-6 sm:gap-8 overflow-x-auto scrollbar-none">
-            {TABS.map((tab) => {
+            {tabs.map((tab) => {
               const isActive = tab === activeTab;
               return (
                 <button
