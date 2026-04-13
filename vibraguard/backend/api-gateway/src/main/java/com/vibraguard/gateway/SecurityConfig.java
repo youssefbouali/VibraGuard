@@ -42,6 +42,14 @@ public class SecurityConfig {
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/api/v1/auth/**", "/login", "/register", "/forgot-password").permitAll()
                         .pathMatchers("/api/v1/reports/**").permitAll()
+                        // Internal Spark AI processor routes — only reachable inside the K8s cluster
+                        .pathMatchers(
+                            "/api/v1/iot/motors/vibrations",
+                            "/api/v1/iot/motors/**",
+                            "/api/v1/iot/inventory-parts/decrement/**",
+                            "/api/v1/ml/alerts",
+                            "/api/v1/bi/kpis/upsert"
+                        ).permitAll()
                         .pathMatchers("/api/v1/bi/**").hasRole("ADMIN")
                         .pathMatchers("/api/v1/blockchain/audit").hasRole("ADMIN")
                         .pathMatchers("/api/v1/iot/technicians/**").hasRole("ADMIN")

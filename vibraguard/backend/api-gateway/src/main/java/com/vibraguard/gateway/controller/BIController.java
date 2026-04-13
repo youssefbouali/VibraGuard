@@ -51,15 +51,15 @@ public class BIController {
             double totalCost = allOrders.stream().mapToDouble(WorkOrder::getCost).sum();
 
             // Calculate "pseudo-trends" or logic-based trends
-            String uptimeTrend = (availability >= 98.0) ? "+0.2%" : "-0.5%";
+            String uptimeTrend = (availability >= 100.0) ? "Optimal" : (availability >= 98.0 ? "+0.2%" : "-0.5%");
             boolean uptimeTrendUp = (availability >= 98.0);
             
             // For motors, trend could be based on critical count ratio
             double criticalRatio = totalMotors == 0 ? 0 : (double) criticalMotors / totalMotors;
-            String criticalTrend = criticalRatio > 0.1 ? "+2" : "-1";
+            String criticalTrend = (criticalMotors == 0) ? "Stable" : (criticalRatio > 0.1 ? "+2" : "-1");
             
             // For alerts, trend could be based on new alerts count
-            String alertsTrend = "+" + newAlerts;
+            String alertsTrend = newAlerts > 0 ? "+" + newAlerts : "Aucune";
 
             Map<String, Object> kpis = new HashMap<>();
             kpis.put("totalMotors", totalMotors);

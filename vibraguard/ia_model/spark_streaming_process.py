@@ -97,7 +97,7 @@ def write_to_backend(batch_df, epoch_id):
             "dominantFreq": row['fft_dominant_freq'],
             "maxAmplitude": row['fft_max_amplitude']
         }
-        call_api("iot/vibrations", data=vib_payload)
+        call_api("iot/motors/vibrations", data=vib_payload)
         
         # Check for prediction anomaly
         is_anomaly = prediction_val.strip().upper() in ['1', '1.0', 'TRUE', 'ANOMALOUS', 'ANOMALY']
@@ -145,7 +145,7 @@ def write_to_backend(batch_df, epoch_id):
             call_api("ml/alerts", data=alert_payload)
             
             # 3. Decrease Inventory (Simulate usage of sensor part)
-            call_api("iot/inventory/decrement/PART-02")
+            call_api(f"iot/inventory-parts/decrement/PART-02")
                 
     # 4. Upsert KPIs (aggregates for the batch)
     total_records = len(pandas_df)

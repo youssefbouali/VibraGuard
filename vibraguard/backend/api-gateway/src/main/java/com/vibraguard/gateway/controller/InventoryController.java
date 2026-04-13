@@ -30,4 +30,18 @@ public class InventoryController {
             return inventoryPartRepository.save(part);
         }).subscribeOn(Schedulers.boundedElastic());
     }
+
+    @PostMapping("/decrement/{id}")
+    public Mono<InventoryPart> decrementStock(@PathVariable("id") String id) {
+        return Mono.fromCallable(() ->
+            inventoryPartRepository.findById(id).map(part -> {
+                if (part.getStock() > 0) {
+                    part.setStock(part.getStock() - 1);
+                    part.setStockColor(part.getStock() <= 2 ? "#EF4444" : part.getStock() <= 5 ? "#F59E0B" : "#22C55E");
+                    inventoryPartRepository.save(part);
+                }
+                return part;
+            }).orElse(null)
+        ).subscribeOn(Schedulers.boundedElastic());
+    }
 }

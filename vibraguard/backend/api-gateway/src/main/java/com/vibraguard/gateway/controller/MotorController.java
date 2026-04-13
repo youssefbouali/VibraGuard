@@ -76,20 +76,19 @@ public class MotorController {
             return Flux.fromIterable(motors.stream().map(m -> {
                 Map<String, Object> map = new HashMap<>();
                 map.put("id", m.getId());
-                map.put("zone", m.getSite() != null ? m.getSite() : "Zone Broyage");
-                map.put("localisation", m.getLocalisation() != null ? m.getLocalisation() : "Niveau 1, Secteur B");
-                map.put("type", m.getType() != null ? m.getType() : "Moteur Asynchrone");
-                map.put("puissance", m.getPower() != null ? m.getPower() : "45 kW");
-                map.put("etatSante", m.getEtatLabel() != null ? m.getEtatLabel() : (m.getEtatPct() > 80 ? "Normal" : m.getEtatPct() > 50 ? "Attention" : "Critique"));
-                map.put("vibrationRMS", m.getVibration() != null ? m.getVibration() : 2.4);
+                map.put("type", m.getType() != null ? m.getType() : "Asynchrone");
+                map.put("etatLabel", m.getEtatLabel() != null ? m.getEtatLabel() : (m.getEtatPct() > 80 ? "Normal" : m.getEtatPct() > 50 ? "Attention" : "Critique"));
+                map.put("etatColor", m.getEtatColor() != null ? m.getEtatColor() : (m.getEtatPct() > 80 ? "#007A3D" : m.getEtatPct() > 50 ? "#F2A900" : "#D93F3F"));
+                map.put("etatPct", m.getEtatPct());
+                map.put("vibration", m.getVibration() != null ? m.getVibration() : "2.4 mm/s");
+                map.put("vibrationColor", m.getVibrationColor() != null ? m.getVibrationColor() : "#6EE7B7");
+                map.put("trendIcon", m.getTrendIcon() != null ? m.getTrendIcon().toLowerCase() : "flat");
                 
-                List<Alert> motorAlerts = allAlerts.stream()
-                        .filter(a -> m.getId().equalsIgnoreCase(a.getMotorId()))
-                        .sorted((a, b) -> b.getTime().compareTo(a.getTime()))
-                        .collect(Collectors.toList());
-
-                map.put("derniereAlerte", motorAlerts.isEmpty() ? "Aucune" : motorAlerts.get(0).getMessage());
-                map.put("etatColor", m.getEtatColor() != null ? m.getEtatColor() : (m.getEtatPct() > 80 ? "bg-[#007A3D]" : m.getEtatPct() > 50 ? "bg-[#F2A900]" : "bg-[#D93F3F]"));
+                // Add extra fields for other components if needed
+                map.put("zone", m.getSite() != null ? m.getSite() : "Secteur A");
+                map.put("localisation", m.getLocalisation() != null ? m.getLocalisation() : "Niveau 1");
+                map.put("puissance", m.getPower() != null ? m.getPower() : "45 kW");
+                
                 return map;
             }).collect(Collectors.toList()));
         }).subscribeOn(Schedulers.boundedElastic());
@@ -111,5 +110,15 @@ public class MotorController {
     public Mono<List<VibrationData>> getAllVibrations() {
         return Mono.fromCallable(() -> vibrationRepository.findAll())
                 .subscribeOn(Schedulers.boundedElastic());
+    }
+
+    @PostMapping("/vibrations")
+    public Mono<VibrationData> saveVibration(@RequestBody VibrationData vib) {
+        return Mono.fromCallable(() -> {
+            if (vib.getTime() == null) {
+                vib.setTime(java.time.LocalDateTime.now().toString());
+            }
+            return vibrationRepository.save(vib);
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 }
