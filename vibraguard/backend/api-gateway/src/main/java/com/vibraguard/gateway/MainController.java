@@ -132,6 +132,7 @@ public class MainController {
         newAlert.setTime(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
         newAlert.setMotorId(workOrder.getAsset());
         newAlert.setRecipientEmail(technician.getEmail());
+        newAlert.setType("NOTIFICATION");
         alertRepository.save(newAlert);
     }
 
@@ -421,6 +422,9 @@ public class MainController {
             if (alert.getTime() == null) {
                 alert.setTime(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
             }
+            if (alert.getType() == null) {
+                alert.setType("ALERT");
+            }
             return alertRepository.save(alert);
         }).subscribeOn(Schedulers.boundedElastic());
     }
@@ -657,7 +661,7 @@ public class MainController {
             long totalMotors = allMotors.size();
 
             // 1. Calculations for CURRENT data
-            double totalOperatingTime = totalMotors * 720.0;
+            double totalOperatingTime = totalMotors * 720.0; // Base mensuelle (30j * 24h)
             long failures = allAlerts.stream()
                     .filter(a -> "Critique".equalsIgnoreCase(a.getLevel()) || "Danger".equalsIgnoreCase(a.getLevel()))
                     .count();
@@ -680,8 +684,10 @@ public class MainController {
 
             double mttr = completedWOs > 0 ? totalRepairTime / completedWOs : 0.0;
             double availability = (mtbf + mttr) > 0 ? (mtbf / (mtbf + mttr)) * 100.0 : 100.0;
+            
+            // Si aucune panne et aucun travail de réparation, la disponibilité est de 100%
             if (failures == 0 && completedWOs == 0)
-                availability = 99.9;
+                availability = 100.0;
 
             // 2. Trend Calculations (Comparing last 7 days vs previous 7 days)
             java.time.LocalDateTime now = java.time.LocalDateTime.now();
@@ -726,10 +732,8 @@ public class MainController {
             if (completedWOs == 0)
                 mttrTrend = "Stable";
 
+            // Somme réelle des coûts des ordres de travail (plus de valeur par défaut de 4500)
             double totalCostFromWOs = workOrders.stream().mapToDouble(WorkOrder::getCost).sum();
-            if (totalCostFromWOs == 0 && !workOrders.isEmpty()) {
-                totalCostFromWOs = workOrders.size() * 4500.0;
-            }
 
             kpis.put("mtbf", Math.round(mtbf));
             kpis.put("mtbfTrend", mtbfTrend);

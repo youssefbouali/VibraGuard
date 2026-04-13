@@ -11,6 +11,7 @@ export interface Alerte {
   priority: string;
   motorId: string;
   title: string;
+  type?: string; // ALERT or NOTIFICATION
   velociteRms?: number;
   accelerationPeak?: number;
   temperature?: number;

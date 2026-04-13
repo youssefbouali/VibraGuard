@@ -97,6 +97,7 @@ export default function Alertes() {
       temperature: a.temperature,
       scoreConfianceIA: a.scoreConfianceIA,
       depassementSeuil: a.depassementSeuil,
+      type: a.type, // ALERT or NOTIFICATION
     };
   });
 
@@ -106,6 +107,7 @@ export default function Alertes() {
   const itemsPerPage = 10;
 
   const filteredAlertes = mappedAlerts.filter((a) => {
+    if (a.type !== "ALERT") return false;
     if (severiteFilter !== "Toutes" && a.severite !== severiteFilter) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();

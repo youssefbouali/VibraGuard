@@ -15,7 +15,8 @@ export function DernieresAlertes({ alerts = [] }: { alerts?: any[] }) {
     );
   };
 
-  const displayAlerts = alerts.length > 0 ? alerts : [
+  const filteredAlerts = alerts.filter(a => a.type === "ALERT" || !a.type);
+  const displayAlerts = filteredAlerts.length > 0 ? filteredAlerts : [
     { id: "fake-1", message: "Aucune alerte récente", level: "Info", time: "-", color: "#C9EDEB" }
   ];
 

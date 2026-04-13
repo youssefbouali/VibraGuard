@@ -103,7 +103,8 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
 
   const dynamicNavItems = navItems.map(item => {
     if (item.label === "Alertes") {
-      return { ...item, badge: alerts.length };
+      const alertCount = alerts.filter(a => (a.type === "ALERT" || !a.type) && a.status !== "Read").length;
+      return { ...item, badge: alertCount };
     }
     return item;
   });

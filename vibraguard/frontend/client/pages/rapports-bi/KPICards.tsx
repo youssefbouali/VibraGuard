@@ -70,7 +70,7 @@ export function KPICards({ tab, date }: { tab: string; date: string }) {
     <div className="flex flex-wrap gap-4 px-6 lg:px-12">
       <KPICard
         title={`MTBF (${tab})`}
-        value={String(kpis?.mtbf ?? "0")}
+        value={getSimValue(kpis?.mtbf ?? "0")}
         unit="h"
         trend={kpis?.mtbfTrend ?? "Stable"}
         trendUp={kpis?.mtbfUp ?? true}

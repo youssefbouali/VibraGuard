@@ -26,6 +26,7 @@ public class Alert {
     private String motorId;
     private String title;
     private String recipientEmail;
+    private String type; // ALERT or NOTIFICATION
     private Double velociteRms;
     private Double accelerationPeak;
     private Double temperature;
