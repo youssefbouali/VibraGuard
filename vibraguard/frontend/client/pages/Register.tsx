@@ -13,6 +13,7 @@ export default function Register() {
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [enterprise, setEnterprise] = useState("OCP Group");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -55,12 +56,25 @@ export default function Register() {
     setIsLoading(true);
 
     try {
+      const roleMap: Record<string, string> = {
+        "Technicien": "TECHNICIEN",
+        "Ingénieur": "INGENIEUR",
+        "Manager": "MANAGER",
+        "Administrateur": "ADMIN"
+      };
+
       const response = await fetch("/api/v1/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password, fullName, role }),
+        body: JSON.stringify({ 
+          email, 
+          password, 
+          fullName, 
+          role: roleMap[role] || "TECHNICIEN",
+          enterprise 
+        }),
       });
 
       if (!response.ok) {
@@ -314,9 +328,11 @@ export default function Register() {
                 <InputWrapper>
                   <input
                     type="text"
-                    defaultValue="OCP Group"
+                    value={enterprise}
+                    onChange={(e) => setEnterprise(e.target.value)}
                     className="flex-1 bg-transparent text-white text-[15px] font-normal outline-none min-w-0"
                     placeholder="Votre entreprise"
+                    required
                   />
                 </InputWrapper>
               </FormField>

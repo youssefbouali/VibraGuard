@@ -9,4 +9,6 @@ public class RegisterRequest {
     private String fullName;
     private String phoneNumber;
     private String department;
+    private String enterprise;
+    private String role;
 }
