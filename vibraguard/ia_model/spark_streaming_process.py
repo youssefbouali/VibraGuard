@@ -25,7 +25,6 @@ scaler = joblib.load(SCALER_PATH)
 
 FEATURE_COLUMNS = [
     'rpm', 'vib_rms', 'vib_peak', 'vib_kurtosis', 
-    'fft_dominant_freq', 'fft_max_amplitude', 'fft_total_power', 
     'current_rms', 'current_thd', 'temperature'
 ]
 
@@ -88,14 +87,12 @@ def write_to_backend(batch_df, epoch_id):
         
         print(f"📡 Motor {motor} - Prediction: {prediction_val} (Confidence: {confidence_val}%)")
         
-        # 1. Update Vibration Data (FFT metrics)
+        # 1. Update Vibration Data
         vib_payload = {
             "motorId": motor,
             "x": v_rms,
             "y": v_peak,
-            "z": v_kurt,
-            "dominantFreq": row['fft_dominant_freq'],
-            "maxAmplitude": row['fft_max_amplitude']
+            "z": v_kurt
         }
         call_api("iot/motors/vibrations", data=vib_payload)
         
@@ -111,16 +108,10 @@ def write_to_backend(batch_df, epoch_id):
         else:
             label, color = "Attention", "F59E0B"
         
-        base_rul = 60.0
-        stress = (v_rms * 3.0) + (max(0.0, temp - 70.0) * 0.5)
-        rul = int(max(2.0, base_rul - stress))
-
         motor_update = {
             "etatPct": int(health_score),
             "etatLabel": f"{int(health_score)}% {label}",
             "etatColor": f"#{color}",
-            "rul": rul,
-            "rulTrend": f"-{int(v_rms/2) + 1} jours depuis hier",
             "power": row.power if hasattr(row, 'power') and row.power else "450 kW",
             "speed": row.speed if hasattr(row, 'speed') and row.speed else "1480 RPM"
         }
@@ -173,9 +164,6 @@ schema = StructType([
     StructField("vib_rms", DoubleType()),
     StructField("vib_peak", DoubleType()),
     StructField("vib_kurtosis", DoubleType()),
-    StructField("fft_dominant_freq", DoubleType()),
-    StructField("fft_max_amplitude", DoubleType()),
-    StructField("fft_total_power", DoubleType()),
     StructField("current_rms", DoubleType()),
     StructField("current_thd", DoubleType()),
     StructField("temperature", DoubleType()),

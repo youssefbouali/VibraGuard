@@ -30,7 +30,6 @@ export function MoteurDetailHeader({ motor }: { motor: any }) {
         ['Vitesse Nominale', motor.speed || 'N/A'],
         ['Puissance', motor.power || 'N/A'],
         ['Localisation', motor.localisation || ''],
-        ['RUL (Durée de vie restante)', `${motor.rul || 85}%`],
       ],
       theme: 'striped',
       headStyles: { fillStyle: 'fill', fillColor: [0, 122, 61] }

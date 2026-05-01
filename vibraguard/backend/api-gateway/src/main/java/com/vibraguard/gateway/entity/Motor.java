@@ -23,8 +23,6 @@ public class Motor {
     private String vibration;
     private String vibrationColor;
     private String trendIcon;
-    private int rul;
-    private String rulTrend;
     private String power;
     private String speed;
     private String localisation;

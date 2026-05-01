@@ -69,24 +69,6 @@ export function SanteCard({ motor }: { motor: any }) {
       {/* Divider */}
       <div className="w-full h-px bg-black/[0.08]" />
 
-      {/* RUL prediction */}
-      <div className="flex flex-col items-center gap-1.5 pt-6">
-        <span className="text-[13px] font-semibold text-[#C9EDEB] tracking-[0.5px] uppercase">
-          Prédiction RUL
-        </span>
-        <span className="text-[64px] font-bold text-[#EAF6F5] leading-none py-2">{motor.rul || '--'}</span>
-        <span className="text-[18px] font-medium text-[#C9EDEB]">Jours restants</span>
-        <div className="flex items-center gap-1.5 mt-1">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <g clipPath="url(#rul-trend-clip)">
-              <path d="M9.33337 9.91675H12.8334V6.41675" stroke="#D93F3F" strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M12.8333 9.91658L7.87496 4.95825L4.95829 7.87492L1.16663 4.08325" stroke="#D93F3F" strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round"/>
-            </g>
-            <defs><clipPath id="rul-trend-clip"><rect width="14" height="14" fill="white"/></clipPath></defs>
-          </svg>
-          <span className="text-[14px] font-medium text-[#D93F3F]">{motor.rulTrend || 'Aucun changement'}</span>
-        </div>
-      </div>
     </div>
   );
 }

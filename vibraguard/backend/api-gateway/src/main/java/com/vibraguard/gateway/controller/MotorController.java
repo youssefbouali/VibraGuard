@@ -46,8 +46,6 @@ public class MotorController {
                 if (motor.getVibration() != null) existing.setVibration(motor.getVibration());
                 if (motor.getVibrationColor() != null) existing.setVibrationColor(motor.getVibrationColor());
                 if (motor.getTrendIcon() != null) existing.setTrendIcon(motor.getTrendIcon());
-                if (motor.getRul() != 0) existing.setRul(motor.getRul());
-                if (motor.getRulTrend() != null) existing.setRulTrend(motor.getRulTrend());
                 if (motor.getPower() != null) existing.setPower(motor.getPower());
                 if (motor.getSpeed() != null) existing.setSpeed(motor.getSpeed());
                 if (motor.getLocalisation() != null) existing.setLocalisation(motor.getLocalisation());

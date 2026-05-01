@@ -7,7 +7,7 @@ import random
 # Configuration
 np.random.seed(42)
 SAMPLING_RATE = 1000  # Hz pour vibration
-NUM_SAMPLES = 200  # Nombre d'échantillons à générer
+NUM_SAMPLES = 1000  # Nombre d'échantillons à générer
 NORMAL_RATIO = 0.70  # 70% de données normales
 ANOMALY_TYPES = ['DESALIGNEMENT', 'DESEQUILIBRE', 'DEFAUT_ROULEMENT', 'SURCHARGE_ELECTRIQUE', 'SURCHAUFFE']
 
@@ -34,21 +34,21 @@ def generate_vibration_signal(duration=1.0, rpm=1470, anomaly_type=None, samplin
         signal_vib += 2.0 * np.sin(2 * np.pi * f_rotation * t)  # 1x RPM
         signal_vib += 0.3 * np.sin(2 * np.pi * 2 * f_rotation * t)  # 2x RPM
         signal_vib += 0.15 * np.sin(2 * np.pi * 3 * f_rotation * t)  # 3x RPM
-        # Bruit blanc faible
-        signal_vib += np.random.normal(0, 0.2, len(t))
+        # Bruit blanc augmenté pour le réalisme
+        signal_vib += np.random.normal(0, 0.5, len(t))
         
     elif anomaly_type == 'DESEQUILIBRE':
         # Déséquilibre : amplitude élevée à 1x RPM
         signal_vib += 5.5 * np.sin(2 * np.pi * f_rotation * t)  # 1x RPM très fort
         signal_vib += 0.4 * np.sin(2 * np.pi * 2 * f_rotation * t)
-        signal_vib += np.random.normal(0, 0.3, len(t))
+        signal_vib += np.random.normal(0, 0.8, len(t))
         
     elif anomaly_type == 'DESALIGNEMENT':
         # Désalignement : forte composante à 2x RPM et 3x RPM
         signal_vib += 2.5 * np.sin(2 * np.pi * f_rotation * t)
         signal_vib += 4.0 * np.sin(2 * np.pi * 2 * f_rotation * t)  # 2x RPM dominant
         signal_vib += 2.5 * np.sin(2 * np.pi * 3 * f_rotation * t)  # 3x RPM
-        signal_vib += np.random.normal(0, 0.4, len(t))
+        signal_vib += np.random.normal(0, 1.0, len(t))
         
     elif anomaly_type == 'DEFAUT_ROULEMENT':
         # Défaut roulement : impulsions périodiques + hautes fréquences
@@ -84,27 +84,6 @@ def calculate_rms(signal_data):
     """Calcule la valeur RMS d'un signal"""
     return np.sqrt(np.mean(signal_data ** 2))
 
-def calculate_fft_features(signal_data, sampling_rate):
-    """
-    Calcule les caractéristiques FFT
-    Retourne: fréquence dominante, amplitude max, puissance totale
-    """
-    # FFT
-    fft_vals = np.fft.rfft(signal_data)
-    fft_freq = np.fft.rfftfreq(len(signal_data), 1/sampling_rate)
-    fft_power = np.abs(fft_vals) ** 2
-    
-    # Fréquence dominante
-    dominant_freq_idx = np.argmax(fft_power[1:]) + 1  # Ignore DC
-    dominant_freq = fft_freq[dominant_freq_idx]
-    
-    # Amplitude max du spectre
-    max_amplitude = np.max(np.abs(fft_vals[1:]))
-    
-    # Puissance totale du spectre
-    total_power = np.sum(fft_power)
-    
-    return dominant_freq, max_amplitude, total_power
 
 def calculate_kurtosis(signal_data):
     """Calcule le kurtosis (mesure de l'aplatissement de la distribution)"""
@@ -183,20 +162,20 @@ def generate_temperature(base_temp=55, anomaly_type=None):
     Génère une température avec variations réalistes
     """
     if anomaly_type is None or anomaly_type == 'NORMAL':
-        # Température normale avec petite variation
-        temp = base_temp + np.random.normal(0, 2)
+        # Température normale avec plus de bruit
+        temp = base_temp + np.random.normal(0, 4)
         
     elif anomaly_type == 'SURCHAUFFE':
-        # Surchauffe
-        temp = base_temp + np.random.uniform(20, 35)
+        # Surchauffe avec overlap possible
+        temp = base_temp + np.random.uniform(10, 35)
         
     elif anomaly_type == 'SURCHARGE_ELECTRIQUE':
         # Température élevée due à surcharge
-        temp = base_temp + np.random.uniform(12, 22)
+        temp = base_temp + np.random.uniform(5, 25)
         
     else:
         # Autres anomalies : température légèrement élevée
-        temp = base_temp + np.random.uniform(5, 12)
+        temp = base_temp + np.random.uniform(0, 15)
     
     return temp
 
@@ -214,7 +193,7 @@ def generate_dataset(num_samples=200):
     anomalies_per_type = num_anomalies // len(ANOMALY_TYPES)
     
     sample_id = 1
-    timestamp = datetime.now()
+    timestamp = datetime(2026, 2, 5)
     
     print(f"Génération de {num_samples} échantillons...")
     print(f"  - Normal: {num_normal}")
@@ -229,7 +208,6 @@ def generate_dataset(num_samples=200):
         t_vib, signal_vib = generate_vibration_signal(duration=1.0, rpm=rpm, anomaly_type='NORMAL')
         vib_rms = calculate_rms(signal_vib)
         vib_peak = np.max(np.abs(signal_vib))
-        dominant_freq, max_fft_amp, total_power = calculate_fft_features(signal_vib, SAMPLING_RATE)
         kurtosis = calculate_kurtosis(signal_vib)
         
         # Signal de courant
@@ -241,16 +219,13 @@ def generate_dataset(num_samples=200):
         temperature = generate_temperature(base_temp=NOMINAL_TEMP, anomaly_type='NORMAL')
         
         data.append({
-            'timestamp': timestamp + timedelta(seconds=i*10),
+            'timestamp': int((timestamp + timedelta(seconds=i*10)).timestamp()),
             'sample_id': sample_id,
             'moteur_id': f'MOT_{random.randint(1, 10):03d}',
             'rpm': rpm,
             'vib_rms': vib_rms,
             'vib_peak': vib_peak,
             'vib_kurtosis': kurtosis,
-            'fft_dominant_freq': dominant_freq,
-            'fft_max_amplitude': max_fft_amp,
-            'fft_total_power': total_power,
             'current_rms': current_rms,
             'current_thd': current_thd,
             'temperature': temperature,
@@ -274,7 +249,6 @@ def generate_dataset(num_samples=200):
             t_vib, signal_vib = generate_vibration_signal(duration=1.0, rpm=rpm, anomaly_type=anomaly_type)
             vib_rms = calculate_rms(signal_vib)
             vib_peak = np.max(np.abs(signal_vib))
-            dominant_freq, max_fft_amp, total_power = calculate_fft_features(signal_vib, SAMPLING_RATE)
             kurtosis = calculate_kurtosis(signal_vib)
             
             # Signal de courant
@@ -289,16 +263,13 @@ def generate_dataset(num_samples=200):
             temperature = generate_temperature(base_temp=NOMINAL_TEMP, anomaly_type=anomaly_type)
             
             data.append({
-                'timestamp': timestamp + timedelta(seconds=(num_normal + i)*10),
+                'timestamp': int((timestamp + timedelta(seconds=(num_normal + i)*10)).timestamp()),
                 'sample_id': sample_id,
                 'moteur_id': f'MOT_{random.randint(1, 10):03d}',
                 'rpm': rpm,
                 'vib_rms': vib_rms,
                 'vib_peak': vib_peak,
                 'vib_kurtosis': kurtosis,
-                'fft_dominant_freq': dominant_freq,
-                'fft_max_amplitude': max_fft_amp,
-                'fft_total_power': total_power,
                 'current_rms': current_rms,
                 'current_thd': current_thd,
                 'temperature': temperature,
@@ -309,6 +280,24 @@ def generate_dataset(num_samples=200):
     
     # Créer le DataFrame et mélanger
     df = pd.DataFrame(data)
+    
+    # --- INJECTION DE DONNÉES "SALES" POUR LE NETTOYAGE ---
+    # 1. Injection de valeurs manquantes (NaN) - environ 3% par colonne numérique
+    cols_to_dirty = ['rpm', 'vib_rms', 'vib_peak', 'current_rms', 'temperature']
+    for col in cols_to_dirty:
+        mask = np.random.random(len(df)) < 0.03
+        df.loc[mask, col] = np.nan
+        
+    # 2. Injection d'outliers extrêmes (erreurs de capteur) - environ 1%
+    for col in ['vib_rms', 'temperature']:
+        mask = np.random.random(len(df)) < 0.01
+        df.loc[mask, col] = df[col] * 10 # Valeur aberrante
+
+    # 3. Injection d'erreurs d'étiquetage (Mislabeled data) - environ 3%
+    # Cela empêchera d'avoir une précision de 100%
+    flip_mask = np.random.random(len(df)) < 0.03
+    df.loc[flip_mask, 'label'] = df.loc[flip_mask, 'label'].apply(lambda x: 'ANOMALY' if x == 'NORMAL' else 'NORMAL')
+        
     df = df.sample(frac=1).reset_index(drop=True)  # Mélanger les données
     
     return df
@@ -335,7 +324,7 @@ print(f"\n\nStatistiques descriptives des features:")
 print(df_train.describe())
 
 # Sauvegarde
-csv_filename = '/home/claude/sensor_data_training.csv'
+csv_filename = 'sensor_data_training.csv'
 df_train.to_csv(csv_filename, index=False)
 print(f"\n✅ Dataset sauvegardé: {csv_filename}")
 

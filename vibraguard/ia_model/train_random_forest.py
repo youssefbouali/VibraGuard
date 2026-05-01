@@ -29,9 +29,6 @@ feature_columns = [
     'vib_rms',
     'vib_peak',
     'vib_kurtosis',
-    'fft_dominant_freq',
-    'fft_max_amplitude',
-    'fft_total_power',
     'current_rms',
     'current_thd',
     'temperature'
@@ -44,6 +41,20 @@ y = df['label']
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
+
+# --- NETTOYAGE DES DONNÉES ---
+print("Nettoyage des données (Imputation et Outliers)...")
+from sklearn.impute import SimpleImputer
+
+# 1. Gestion des valeurs manquantes (Imputation par la moyenne)
+imputer = SimpleImputer(strategy='mean')
+X_train = pd.DataFrame(imputer.fit_transform(X_train), columns=feature_columns)
+X_test = pd.DataFrame(imputer.transform(X_test), columns=feature_columns)
+
+# 2. Gestion des outliers (Clipping aux percentiles 1% et 99%)
+# On limite les valeurs extrêmes pour stabiliser l'apprentissage
+X_train = X_train.clip(lower=X_train.quantile(0.01), upper=X_train.quantile(0.99), axis=1)
+X_test = X_test.clip(lower=X_train.quantile(0.01), upper=X_train.quantile(0.99), axis=1)
 
 # Normalisation des features
 scaler = StandardScaler()
