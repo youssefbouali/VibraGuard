@@ -12,7 +12,7 @@ export function VibrationChart() {
             <path d="M2.25 2.25V15.75H15.75" stroke="#0EA5E9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M14.25 6.75L10.5 10.5L7.5 7.5L5.25 9.75" stroke="#0EA5E9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <span className="text-white text-base font-semibold">Vibrations Temps Réel (Multi-Axes)</span>
+          <span className="text-white text-base font-semibold">Vibrations Temps Réel</span>
         </div>
         <button className="text-[#0EA5E9] text-[13px] font-medium hover:underline">Ouvrir analyse</button>
       </div>
@@ -60,44 +60,12 @@ export function VibrationChart() {
               </>
             ) : null}
 
-            {/* Axe Y – dynamic path */}
-            {vibrations.length > 1 ? (
-              <>
-                <path
-                  d={`M ${40.35} ${296.5 - (vibrations[0].y * 11.8)} ${vibrations.slice(1).map((v, i) => `L ${40.35 + (i+1)*(565/(vibrations.length-1))} ${296.5 - (v.y * 11.8)}`).join(' ')} L 606 296.5 L 40.35 296.5 Z`}
-                  fill="url(#grad-y)"
-                />
-                <path
-                  d={`M ${40.35} ${296.5 - (vibrations[0].y * 11.8)} ${vibrations.slice(1).map((v, i) => `L ${40.35 + (i+1)*(565/(vibrations.length-1))} ${296.5 - (v.y * 11.8)}`).join(' ')}`}
-                  stroke="#10B981"
-                  strokeWidth="2.5"
-                  strokeLinejoin="round"
-                  fill="none"
-                />
-              </>
-            ) : null}
-
-            {/* Axe Z (dashed anomalie) – dynamic path */}
-            {vibrations.length > 1 ? (
-              <path
-                d={`M ${40.35} ${296.5 - (vibrations[0].z * 11.8)} ${vibrations.slice(1).map((v, i) => `L ${40.35 + (i+1)*(565/(vibrations.length-1))} ${296.5 - (v.z * 11.8)}`).join(' ')}`}
-                stroke="#A855F7"
-                strokeWidth="2.5"
-                strokeDasharray="5"
-                strokeLinejoin="round"
-                fill="none"
-              />
-            ) : null}
           </g>
 
           <defs>
             <linearGradient id="grad-x" x1="40.35" y1="24.87" x2="40.35" y2="296.51" gradientUnits="userSpaceOnUse">
               <stop stopColor="#0EA5E9" stopOpacity="0.3"/>
               <stop offset="1" stopColor="#0EA5E9" stopOpacity="0"/>
-            </linearGradient>
-            <linearGradient id="grad-y" x1="40.35" y1="125.19" x2="40.35" y2="296.51" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#10B981" stopOpacity="0.3"/>
-              <stop offset="1" stopColor="#10B981" stopOpacity="0"/>
             </linearGradient>
             <clipPath id="vib-clip">
               <rect width="605.19" height="355.81" fill="white"/>
@@ -110,15 +78,7 @@ export function VibrationChart() {
       <div className="flex items-center justify-center gap-4 pt-4">
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-sm bg-[#0EA5E9]" />
-          <span className="text-[#94A3B8] text-xs">Axe X</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-sm bg-[#10B981]" />
-          <span className="text-[#94A3B8] text-xs">Axe Y</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-sm bg-[#A855F7]" />
-          <span className="text-[#94A3B8] text-xs">Axe Z (Anomalie)</span>
+          <span className="text-[#94A3B8] text-xs">Vibration (mm/s)</span>
         </div>
       </div>
     </div>
