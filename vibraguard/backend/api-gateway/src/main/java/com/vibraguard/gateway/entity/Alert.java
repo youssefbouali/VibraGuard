@@ -32,4 +32,5 @@ public class Alert {
     private Double temperature;
     private Double scoreConfianceIA;
     private Double depassementSeuil;
+    private String anomalyType;
 }

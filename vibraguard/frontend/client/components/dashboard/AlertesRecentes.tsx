@@ -62,7 +62,7 @@ export function AlertesRecentes() {
       title: a.title || cleanMotorId || "Alerte",
       motorId: cleanMotorId,
       time: a.time,
-      description: a.message || (a as any).description || "",
+      description: (a.anomalyType && a.anomalyType !== "NONE") ? `${a.anomalyType} - ${a.message}` : (a.message || (a as any).description || ""),
       iconType: a.priority === "high" ? "critical" : a.priority === "medium" ? "warning" : "temp"
     };
   });

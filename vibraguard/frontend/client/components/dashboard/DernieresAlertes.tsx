@@ -56,7 +56,7 @@ export function DernieresAlertes({ alerts = [] }: { alerts?: any[] }) {
             {/* Text */}
             <div className="flex flex-col gap-1.5 flex-1 min-w-0">
               <span className="text-[15px] font-semibold text-[#EAF6F5] leading-tight">
-                {alert.message}
+                {alert.anomalyType && alert.anomalyType !== "NONE" ? `${alert.anomalyType} - ${alert.message}` : alert.message}
               </span>
               <span className="text-[13px] text-[#C9EDEB] leading-tight">
                 {alert.time} • {alert.level}

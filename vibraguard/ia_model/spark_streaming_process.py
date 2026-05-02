@@ -35,14 +35,12 @@ def predict_anomaly(*features):
         features_array = np.array(features).reshape(1, -1)
         scaled_features = scaler.transform(features_array)
         
-        prediction = model.predict(scaled_features)[0]
-        # Get probability (assuming index 1 is anomalous)
+        prediction_type = str(model.predict(scaled_features)[0])
         probas = model.predict_proba(scaled_features)[0]
-        confidence = probas[1] if len(probas) > 1 else probas[0]
-        if prediction == 0:
-            confidence = probas[0] # confidence in normal
-            
-        return f"{prediction},{confidence * 100:.2f}"
+        confidence = float(np.max(probas))
+        
+        label = "0" if prediction_type == "NONE" else "1"
+        return f"{label},{prediction_type},{confidence * 100:.2f}"
     except Exception as e:
         return f"Error,{str(e)}"
 
@@ -83,9 +81,10 @@ def write_to_backend(batch_df, epoch_id):
         raw_pred = str(row['prediction'])
         parts = raw_pred.split(',')
         prediction_val = parts[0]
-        confidence_val = float(parts[1]) if len(parts) > 1 and parts[1].replace('.','',1).isdigit() else 94.5 
+        anomaly_type_val = parts[1] if len(parts) > 1 else "NONE"
+        confidence_val = float(parts[2]) if len(parts) > 2 and parts[2].replace('.','',1).isdigit() else 94.5 
         
-        print(f"📡 Motor {motor} - Prediction: {prediction_val} (Confidence: {confidence_val}%)")
+        print(f"📡 Motor {motor} - Prediction: {prediction_val} (Type: {anomaly_type_val}, Confidence: {confidence_val}%)")
         
         # 1. Update Vibration Data
         vib_payload = {
@@ -131,7 +130,8 @@ def write_to_backend(batch_df, epoch_id):
                 "accelerationPeak": v_peak,
                 "temperature": temp,
                 "scoreConfianceIA": confidence_val,
-                "depassementSeuil": v_rms * 0.15
+                "depassementSeuil": v_rms * 0.15,
+                "anomalyType": anomaly_type_val
             }
             call_api("ml/alerts", data=alert_payload)
             

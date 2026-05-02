@@ -35,7 +35,7 @@ feature_columns = [
 ]
 
 X = df[feature_columns]
-y = df['label']
+y = df['anomaly_type']
 
 # Separation train/test
 X_train, X_test, y_train, y_test = train_test_split(
@@ -103,10 +103,10 @@ plt.savefig('feature_importance.png', dpi=150, bbox_inches='tight')
 
 # Matrice de confusion
 cm = confusion_matrix(y_test, y_pred)
-plt.figure(figsize=(8, 6))
+plt.figure(figsize=(10, 8))
 sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
-            xticklabels=['ANOMALY', 'NORMAL'],
-            yticklabels=['ANOMALY', 'NORMAL'])
+            xticklabels=rf_model.classes_,
+            yticklabels=rf_model.classes_)
 plt.ylabel('True Class')
 plt.xlabel('Predicted Class')
 plt.title('Confusion Matrix')

@@ -87,7 +87,7 @@ export default function Alertes() {
     return {
       id: a.id,
       moteur: cleanMotorId,
-      typeDefaut: a.message,
+      typeDefaut: (a.anomalyType && a.anomalyType !== "NONE") ? a.anomalyType : a.message,
       severite: severite,
       confiance: a.scoreConfianceIA ?? (a.priority === "high" ? 96 : 85),
       dateHeure: a.time,

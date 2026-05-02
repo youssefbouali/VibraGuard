@@ -17,6 +17,7 @@ export interface Alerte {
   temperature?: number;
   scoreConfianceIA?: number;
   depassementSeuil?: number;
+  anomalyType?: string;
 }
 
 export function useAlerts() {
