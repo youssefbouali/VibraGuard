@@ -116,7 +116,9 @@ public class MotorController {
             if (vib.getTime() == null) {
                 vib.setTime(java.time.LocalDateTime.now().toString());
             }
-            return vibrationRepository.save(vib);
+            VibrationData saved = vibrationRepository.save(vib);
+            vibrationStreamService.emit(saved);
+            return saved;
         }).subscribeOn(Schedulers.boundedElastic());
     }
 }
