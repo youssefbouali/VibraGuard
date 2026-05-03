@@ -97,7 +97,7 @@ def write_to_backend(batch_df, epoch_id):
             "vibKurtosis": v_kurt,
             "temperature": temp,
             "currentRms": float(row['current_rms']),
-            "isAnomalous": is_anomaly
+            "anomalous": is_anomaly
         }
         call_api("iot/motors/vibrations", data=vib_payload)
         
