@@ -11,7 +11,7 @@ export function TendanceVibratoire({ vibrations = [] }: { vibrations?: any[] }) 
 
   const METRICS = [
     { key: "vibRms", label: "RMS", color: "#0EA5E9", unit: "mm/s", scale: chartH / 15 },
-    { key: "vibPeak", label: "Peak", color: "#F43F5E", unit: "g", scale: chartH / 30 },
+    { key: "vibPeak", label: "Peak", color: "#F43F5E", unit: "mm/s", scale: chartH / 30 },
     { key: "vibKurtosis", label: "Kurtosis", color: "#10B981", unit: "", scale: chartH / 10 },
     { key: "temperature", label: "Temp", color: "#F59E0B", unit: "°C", scale: chartH / 100 },
     { key: "currentRms", label: "Current", color: "#8B5CF6", unit: "A", scale: chartH / 50 }
@@ -52,10 +52,21 @@ export function TendanceVibratoire({ vibrations = [] }: { vibrations?: any[] }) 
       <div className="relative w-full">
         <div className="relative w-full overflow-visible">
           <svg viewBox={`0 0 ${chartW + 80} ${chartH + 40}`} className="w-full" preserveAspectRatio="none">
-            {/* Grid lines */}
-            {[0, 0.25, 0.5, 0.75, 1].map((frac) => (
-              <line key={frac} x1="0" y1={frac * chartH} x2={chartW} y2={frac * chartH} stroke="rgba(255,255,255,0.08)" strokeWidth="1.6" strokeDasharray="6.4" />
-            ))}
+            {/* Grid lines and Y-axis labels */}
+            {[0, 0.25, 0.5, 0.75, 1].map((frac) => {
+              const y = frac * chartH;
+              // Simple inverse calculation for labels (approximate based on current scale)
+              const maxVal = chartH / currentMetric.scale;
+              const val = ((1 - frac) * maxVal).toFixed(1);
+              return (
+                <g key={frac}>
+                  <line x1="0" y1={y} x2={chartW} y2={y} stroke="rgba(255,255,255,0.08)" strokeWidth="1.6" strokeDasharray="6.4" />
+                  <text x="-10" y={y + 4} fill="#64748B" fontSize="10" textAnchor="end">
+                    {val} {currentMetric.unit}
+                  </text>
+                </g>
+              );
+            })}
 
             {/* Render selected metric line */}
             {(() => {

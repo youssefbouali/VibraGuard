@@ -28,7 +28,7 @@ export function VibrationChart() {
 
   const METRICS = [
     { value: "vibRms", label: "Vibration RMS", color: "#0EA5E9", unit: "mm/s", scale: 11.8 },
-    { value: "vibPeak", label: "Vibration Peak", color: "#F43F5E", unit: "g", scale: 5.9 },
+    { value: "vibPeak", label: "Vibration Peak", color: "#F43F5E", unit: "mm/s", scale: 5.9 },
     { value: "vibKurtosis", label: "Kurtosis", color: "#10B981", unit: "", scale: 20 },
     { value: "temperature", label: "Température", color: "#F59E0B", unit: "°C", scale: 2 },
     { value: "currentRms", label: "Courant RMS", color: "#8B5CF6", unit: "A", scale: 10 },

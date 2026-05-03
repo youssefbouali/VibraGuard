@@ -47,9 +47,9 @@ public class BIController {
             long totalAlerts = allAlerts.size();
             long newAlerts = allAlerts.stream().filter(a -> "Nouveau".equalsIgnoreCase(a.getStatus())).count();
 
-            List<VibrationData> allVibs = vibrationRepository.findAll();
-            long totalVibs = allVibs.size();
-            long anomalousVibs = allVibs.stream().filter(VibrationData::isAnomalous).count();
+            List<VibrationData> recentVibs = vibrationRepository.findTop1000ByOrderByIdDesc();
+            long totalVibs = recentVibs.size();
+            long anomalousVibs = recentVibs.stream().filter(VibrationData::isAnomalous).count();
             
             double availability = (totalVibs == 0) ? 100.0 : ((double) (totalVibs - anomalousVibs) / totalVibs) * 100.0;
 
