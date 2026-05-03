@@ -103,8 +103,24 @@ public class MotorController {
 
     @GetMapping("/{id}")
     public Mono<Motor> getMotorById(@PathVariable("id") String id) {
-        return Mono.fromCallable(() -> motorRepository.findById(id).orElseThrow())
-                .subscribeOn(Schedulers.boundedElastic());
+        return Mono.fromCallable(() -> {
+            Motor m = motorRepository.findById(id).orElseThrow();
+            List<VibrationData> motorVibs = vibrationRepository.findByMotorId(id);
+            long totalVibs = motorVibs.size();
+            long anomalousVibs = motorVibs.stream().filter(VibrationData::isAnomalous).count();
+            
+            int healthPct = (totalVibs == 0) ? 100 : (int) (((double) (totalVibs - anomalousVibs) / totalVibs) * 100);
+            String label = healthPct > 80 ? "Normal" : healthPct > 50 ? "Attention" : "Critique";
+            String color = healthPct > 80 ? "#10B981" : healthPct > 50 ? "#F59E0B" : "#EF4444";
+            
+            m.setEtatPct(healthPct);
+            m.setEtatLabel(healthPct + "% " + label);
+            m.setEtatColor(color);
+            if (m.getVibration() == null || m.getVibration().isEmpty() || m.getVibration().equals("0.00")) {
+                m.setVibration(motorVibs.isEmpty() ? "0.00" : String.format("%.2f", motorVibs.get(motorVibs.size()-1).getVibRms()));
+            }
+            return m;
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     @GetMapping("/{id}/vibration")

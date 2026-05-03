@@ -100,10 +100,10 @@ export function KPICards({ tab, date }: { tab: string; date: string }) {
 
       <KPICard
         title="Disponibilité"
-        value={String(kpis?.availability ?? "0")}
+        value={String(kpis?.uptime ?? "0").replace('%', '')}
         unit="%"
-        trend={kpis?.availabilityTrend ?? "N/A"}
-        trendUp={true}
+        trend={kpis?.uptimeTrend ?? "N/A"}
+        trendUp={kpis?.uptimeTrendUp ?? true}
         iconBg="rgba(230, 240, 242, 0.05)"
         icon={
            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
@@ -114,7 +114,7 @@ export function KPICards({ tab, date }: { tab: string; date: string }) {
 
       <KPICard
         title={`Coût ${date}`}
-        value={getSimValue(kpis?.maintenanceCost ?? "0")}
+        value={getSimValue(kpis?.totalCost ?? "0")}
         unit="MAD"
         trend={kpis?.maintenanceCostTrend ?? "Stable"}
         trendUp={false}

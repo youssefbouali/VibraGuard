@@ -105,6 +105,18 @@ export function TendanceVibratoire({ vibrations = [] }: { vibrations?: any[] }) 
           </svg>
         </div>
       </div>
+      {/* Legend / Last Value */}
+      <div className="flex items-center justify-center pt-6 border-t border-white/5 mt-4">
+        <div className="flex items-center gap-2.5">
+          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: currentMetric.color, boxShadow: `0 0 8px ${currentMetric.color}40` }} />
+          <span className="text-[#94A3B8] text-[13px] font-medium">
+            Dernière valeur {currentMetric.label} : 
+            <span className="text-[#EAF6F5] ml-1.5 font-bold">
+              {safeVibrations.length > 0 ? (safeVibrations[safeVibrations.length-1] as any)[selectedMetric]?.toFixed(2) : '0.00'} {currentMetric.unit}
+            </span>
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
