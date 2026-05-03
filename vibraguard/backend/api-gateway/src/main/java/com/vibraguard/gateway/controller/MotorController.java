@@ -74,17 +74,24 @@ public class MotorController {
             List<Alert> allAlerts = alertRepository.findAll();
 
             return Flux.fromIterable(motors.stream().map(m -> {
+                List<VibrationData> motorVibs = vibrationRepository.findByMotorId(m.getId());
+                long totalVibs = motorVibs.size();
+                long anomalousVibs = motorVibs.stream().filter(VibrationData::isAnomalous).count();
+                
+                int healthPct = (totalVibs == 0) ? 100 : (int) (((double) (totalVibs - anomalousVibs) / totalVibs) * 100);
+                String label = healthPct > 80 ? "Normal" : healthPct > 50 ? "Attention" : "Critique";
+                String color = healthPct > 80 ? "#10B981" : healthPct > 50 ? "#F59E0B" : "#EF4444";
+
                 Map<String, Object> map = new HashMap<>();
                 map.put("id", m.getId());
                 map.put("type", m.getType() != null ? m.getType() : "Asynchrone");
-                map.put("etatLabel", m.getEtatLabel() != null ? m.getEtatLabel() : (m.getEtatPct() > 80 ? "Normal" : m.getEtatPct() > 50 ? "Attention" : "Critique"));
-                map.put("etatColor", m.getEtatColor() != null ? m.getEtatColor() : (m.getEtatPct() > 80 ? "#007A3D" : m.getEtatPct() > 50 ? "#F2A900" : "#D93F3F"));
-                map.put("etatPct", m.getEtatPct());
-                map.put("vibration", m.getVibration() != null ? m.getVibration() : "2.4 mm/s");
-                map.put("vibrationColor", m.getVibrationColor() != null ? m.getVibrationColor() : "#6EE7B7");
+                map.put("etatLabel", healthPct + "% " + label);
+                map.put("etatColor", color);
+                map.put("etatPct", healthPct);
+                map.put("vibration", m.getVibration() != null ? m.getVibration() : "0.00");
+                map.put("vibrationColor", color);
                 map.put("trendIcon", m.getTrendIcon() != null ? m.getTrendIcon().toLowerCase() : "flat");
                 
-                // Add extra fields for other components if needed
                 map.put("zone", m.getSite() != null ? m.getSite() : "Secteur A");
                 map.put("localisation", m.getLocalisation() != null ? m.getLocalisation() : "Niveau 1");
                 map.put("puissance", m.getPower() != null ? m.getPower() : "45 kW");

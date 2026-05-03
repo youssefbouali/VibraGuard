@@ -40,7 +40,11 @@ export function useMoteurs() {
           if (!oldData) return oldData;
           return oldData.map(m => 
             m.id === data.motorId 
-              ? { ...m, vibrationRMS: Math.round(data.vibRms * 100) / 100 } 
+              ? { 
+                  ...m, 
+                  vibrationRMS: Math.round(data.vibRms * 100) / 100,
+                  vibration: (data.vibRms).toFixed(2)
+                } 
               : m
           );
         });
@@ -57,12 +61,20 @@ export function useMoteurs() {
         queryClient.setQueryData<Moteur[]>(queryKey, (oldData) => {
           if (!oldData) return oldData;
           return oldData.map(m => {
-            if (m.id === data.motorId || data.message?.includes(m.id)) {
+            // Match by motorId or if message contains motorId
+            if (m.id === data.motorId || (data.message && data.message.includes(m.id))) {
+              const newHealth = data.priority === "high" ? 45 : 65;
+              const newLabel = data.priority === "high" ? "Critique" : "Alerte";
+              const newColor = data.priority === "high" ? "#EF4444" : "#F59E0B";
+              
               return { 
                 ...m, 
                 derniereAlerte: data.time,
-                derniereAlerteType: data.anomalyType || data.type,
-                etatSante: data.priority === "high" ? "Critique" : "Alerte"
+                derniereAlerteType: data.anomalyType || "Anomalie",
+                etatSante: newLabel,
+                etatLabel: `${newHealth}% ${newLabel}`,
+                etatPct: newHealth,
+                etatColor: newColor
               };
             }
             return m;

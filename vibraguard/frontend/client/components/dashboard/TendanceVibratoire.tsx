@@ -51,7 +51,7 @@ export function TendanceVibratoire({ vibrations = [] }: { vibrations?: any[] }) 
       {/* Chart */}
       <div className="relative w-full">
         <div className="relative w-full overflow-visible">
-          <svg viewBox={`0 0 ${chartW + 80} ${chartH + 40}`} className="w-full" preserveAspectRatio="none">
+          <svg viewBox={`-60 0 ${chartW + 80} ${chartH + 40}`} className="w-full" preserveAspectRatio="none">
             {/* Grid lines and Y-axis labels */}
             {[0, 0.25, 0.5, 0.75, 1].map((frac) => {
               const y = frac * chartH;
@@ -61,7 +61,7 @@ export function TendanceVibratoire({ vibrations = [] }: { vibrations?: any[] }) 
               return (
                 <g key={frac}>
                   <line x1="0" y1={y} x2={chartW} y2={y} stroke="rgba(255,255,255,0.08)" strokeWidth="1.6" strokeDasharray="6.4" />
-                  <text x="5" y={y - 6} fill="#64748B" fontSize="9" textAnchor="start">
+                  <text x="-10" y={y + 4} fill="#64748B" fontSize="10" textAnchor="end">
                     {val} {currentMetric.unit}
                   </text>
                 </g>
