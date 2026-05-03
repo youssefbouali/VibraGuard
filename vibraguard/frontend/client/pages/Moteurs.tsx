@@ -135,9 +135,7 @@ function ActionBtn({ children }: { children: React.ReactNode }) {
 
 export default function Moteurs() {
   const navigate = useNavigate();
-  const [view, setView] = useState<"liste" | "carte">(
-    typeof window !== 'undefined' && window.innerWidth < 768 ? "carte" : "liste"
-  );
+  const [view, setView] = useState<"liste" | "carte">("carte");
   const [search, setSearch] = useState("");
   const [selectedZone, setSelectedZone] = useState("Toutes les zones");
   const [selectedStatus, setSelectedStatus] = useState("Tous");
