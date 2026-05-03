@@ -1,3 +1,5 @@
+import { formatTime } from "@/lib/utils";
+
 export function TendanceVibratoire({ vibrations = [] }: { vibrations?: any[] }) {
   const chartW = 640;
   const chartH = 200;
@@ -154,9 +156,8 @@ export function TendanceVibratoire({ vibrations = [] }: { vibrations?: any[] }) 
 
                 const x = i === days.length - 1 ? chartW - 10 : (i / (days.length - 1)) * chartW;
                 
-                // Format: remove date part, keep only HH:mm:ss
-                // Input expected: "2026-04-05 20:25:12"
-                const timeLabel = day && day.includes(" ") ? day.split(" ")[1] : day;
+                // Format: use formatTime utility
+                const timeLabel = formatTime(day);
 
                 return (
                   <text

@@ -4,14 +4,11 @@ import { useKPIs } from "@/hooks/use-kpis";
 interface KPICardProps {
   title: string;
   value: string;
-  trend: string;
-  trendUp: boolean;
-  trendColor: string;
   icon: React.ReactNode;
   iconBg: string;
 }
 
-function KPICard({ title, value, trend, trendUp, trendColor, icon, iconBg }: KPICardProps) {
+function KPICard({ title, value, icon, iconBg }: KPICardProps) {
   return (
     <div className="relative rounded-xl sm:rounded-2xl border border-white/[0.08] bg-[rgba(17,26,36,0.50)] backdrop-blur-xl p-4 sm:p-5 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.30)] overflow-hidden min-h-[140px] sm:min-h-[156px] flex flex-col justify-between">
       {/* Header row */}
@@ -23,23 +20,7 @@ function KPICard({ title, value, trend, trendUp, trendColor, icon, iconBg }: KPI
       </div>
 
       {/* Value */}
-      <div className="text-white text-2xl sm:text-[28px] font-bold leading-[1.2]">{value}</div>
-
-      {/* Trend */}
-      <div className="flex items-center gap-1.5 flex-wrap">
-        {trendUp ? (
-          <svg width="12" height="12" viewBox="0 0 14 14" fill="none" className="sm:w-[14px] sm:h-[14px]">
-            <path d="M9.33337 4.08331H12.8334V7.58331" stroke={trendColor} strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M12.8333 4.08331L7.87496 9.04165L4.95829 6.12498L1.16663 9.91665" stroke={trendColor} strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        ) : (
-          <svg width="12" height="12" viewBox="0 0 14 14" fill="none" className="sm:w-[14px] sm:h-[14px]">
-            <path d="M9.33325 9.91669H12.8333V6.41669" stroke={trendColor} strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M12.8332 9.91665L7.87484 4.95831L4.95817 7.87498L1.1665 4.08331" stroke={trendColor} strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        )}
-        <span className="text-[12px] sm:text-[13px] font-medium leading-tight" style={{ color: trendColor }}>{trend}</span>
-      </div>
+      <div className="text-white text-2xl sm:text-[28px] font-bold leading-[1.2] pb-2">{value}</div>
     </div>
   );
 }
@@ -54,9 +35,6 @@ export function KPICards() {
       <KPICard
         title="Moteurs Totaux"
         value={String(kpis?.totalMotors ?? "")}
-        trend={kpis?.totalMotorsTrend ?? ""}
-        trendUp={true}
-        trendColor="#10B981"
         iconBg="bg-[rgba(14,165,233,0.10)]"
         icon={
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -71,9 +49,6 @@ export function KPICards() {
       <KPICard
         title="Moteurs Critiques"
         value={String(kpis?.criticalMotors ?? "")}
-        trend={kpis?.criticalMotorsTrend ?? ""}
-        trendUp={true}
-        trendColor="#EF4444"
         iconBg="bg-[rgba(239,68,68,0.10)]"
         icon={
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -84,9 +59,6 @@ export function KPICards() {
       <KPICard
         title="Disponibilité"
         value={String(kpis?.uptime ?? "")}
-        trend={kpis?.uptimeTrend ?? ""}
-        trendUp={kpis?.uptimeTrendUp !== undefined ? kpis.uptimeTrendUp : true}
-        trendColor="#10B981"
         iconBg="bg-[rgba(16,185,129,0.10)]"
         icon={
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -100,9 +72,6 @@ export function KPICards() {
       <KPICard
         title="Alertes Totales"
         value={String(kpis?.alerts ?? "")}
-        trend={kpis?.alertsTrend ?? ""}
-        trendUp={true}
-        trendColor="#EF4444"
         iconBg="bg-[rgba(239,68,68,0.10)]"
         icon={
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">

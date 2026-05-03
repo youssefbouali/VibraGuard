@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { cn } from "@/lib/utils";
+import { cn, formatTime } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import {
@@ -305,7 +305,7 @@ export default function Moteurs() {
                       <span className={cn("font-bold text-lg", vibrationColor[status])}>{m.vibrationRMS}</span>
                       <span className="text-[#98A6A8] text-xs">mm/s</span>
                     </div>
-                    <div className="px-6 py-4 text-sm text-[#98A6A8]">{m.derniereAlerte || "N/A"}</div>
+                    <div className="px-6 py-4 text-sm text-[#98A6A8]">{m.derniereAlerte ? formatTime(m.derniereAlerte) : "N/A"}</div>
                     <div className="px-6 py-4 flex items-center justify-end gap-2 pr-10">
                        <ActionBtn><VibrationIcon /></ActionBtn>
                        <DropdownMenu>
