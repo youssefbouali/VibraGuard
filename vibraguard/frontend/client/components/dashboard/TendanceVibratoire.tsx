@@ -61,7 +61,7 @@ export function TendanceVibratoire({ vibrations = [] }: { vibrations?: any[] }) 
               return (
                 <g key={frac}>
                   <line x1="0" y1={y} x2={chartW} y2={y} stroke="rgba(255,255,255,0.08)" strokeWidth="1.6" strokeDasharray="6.4" />
-                  <text x="-10" y={y + 4} fill="#64748B" fontSize="10" textAnchor="end">
+                  <text x="5" y={y - 6} fill="#64748B" fontSize="9" textAnchor="start">
                     {val} {currentMetric.unit}
                   </text>
                 </g>
