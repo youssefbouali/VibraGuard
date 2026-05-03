@@ -22,7 +22,11 @@ public class VibrationData {
     private String motorId;
     @jakarta.persistence.Column(name = "VIBRATION_TIME")
     private String time;
-    private double x;
-    private double y;
-    private double z;
+    
+    private double vibRms;
+    private double vibPeak;
+    private double vibKurtosis;
+    private double temperature;
+    private double currentRms;
+    private boolean isAnomalous;
 }

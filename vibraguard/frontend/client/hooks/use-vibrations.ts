@@ -6,9 +6,12 @@ export interface VibrationData {
   id?: string;
   motorId?: string;
   time: string;
-  x: number;
-  y: number;
-  z: number;
+  vibRms: number;
+  vibPeak: number;
+  vibKurtosis: number;
+  temperature: number;
+  currentRms: number;
+  isAnomalous: boolean;
 }
 
 export function useVibrations(motorId?: string) {

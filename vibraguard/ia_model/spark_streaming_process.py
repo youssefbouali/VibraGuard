@@ -86,17 +86,20 @@ def write_to_backend(batch_df, epoch_id):
         
         print(f"📡 Motor {motor} - Prediction: {prediction_val} (Type: {anomaly_type_val}, Confidence: {confidence_val}%)")
         
+        # Check for prediction anomaly
+        is_anomaly = prediction_val.strip().upper() in ['1', '1.0', 'TRUE', 'ANOMALOUS', 'ANOMALY']
+        
         # 1. Update Vibration Data
         vib_payload = {
             "motorId": motor,
-            "x": v_rms,
-            "y": v_peak,
-            "z": v_kurt
+            "vibRms": v_rms,
+            "vibPeak": v_peak,
+            "vibKurtosis": v_kurt,
+            "temperature": temp,
+            "currentRms": float(row['current_rms']),
+            "isAnomalous": is_anomaly
         }
         call_api("iot/motors/vibrations", data=vib_payload)
-        
-        # Check for prediction anomaly
-        is_anomaly = prediction_val.strip().upper() in ['1', '1.0', 'TRUE', 'ANOMALOUS', 'ANOMALY']
         
         # Calculate Health and RUL (Dynamic)
         health_score = max(5.0, min(95.0, 100.0 - (v_rms * 7.5)))
