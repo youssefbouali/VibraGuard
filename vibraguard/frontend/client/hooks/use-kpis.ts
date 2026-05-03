@@ -33,17 +33,8 @@ export function useKPIs() {
     socket.onmessage = (event) => {
       try {
         const newAlerte = JSON.parse(event.data);
-        queryClient.setQueryData<DashboardKPIs>(queryKey, (oldKPIs) => {
-          if (!oldKPIs) return oldKPIs;
-          
-          const isCritical = newAlerte.priority === "high" || newAlerte.level === "Critique";
-          
-          return {
-            ...oldKPIs,
-            alerts: (oldKPIs.alerts || 0) + 1,
-            criticalMotors: isCritical ? (oldKPIs.criticalMotors || 0) + 1 : oldKPIs.criticalMotors
-          };
-        });
+        // Instead of blind incrementing, invalidate the query to get fresh, accurate data from backend
+        queryClient.invalidateQueries({ queryKey });
       } catch (err) {
         console.error("KPI Alert WS error:", err);
       }

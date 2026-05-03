@@ -23,7 +23,7 @@ MQTT_PASS = None   # e.g., "my_password"
 # ==========================================
 def generate_sensor_data():
     """Generates synthetic sensor data."""
-    is_anomaly = random.random() < 1.0  # 20% chance to generate an anomaly
+    is_anomaly = random.random() < 0.5  # 20% chance to generate an anomaly
     
     if is_anomaly:
         data = {

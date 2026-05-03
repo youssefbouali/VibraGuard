@@ -103,12 +103,17 @@ def write_to_backend(batch_df, epoch_id):
         
         # Calculate Health and RUL (Dynamic)
         health_score = max(5.0, min(95.0, 100.0 - (v_rms * 7.5)))
-        if health_score < 30.0:
+        
+        # If AI detects anomaly, force state to Alerte or Critique
+        if is_anomaly:
+            if health_score > 60.0: health_score = 55.0 # Force drop
+            label, color = "Critique", "EF4444"
+        elif health_score < 30.0:
             label, color = "Critique", "EF4444"
         elif health_score < 70.0:
             label, color = "Alerte", "F59E0B"
         else:
-            label, color = "Attention", "F59E0B"
+            label, color = "Normal", "10B981"
         
         motor_update = {
             "etatPct": int(health_score),

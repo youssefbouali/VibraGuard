@@ -45,8 +45,8 @@ public class BIController {
             long totalAlerts = allAlerts.size();
             long newAlerts = allAlerts.stream().filter(a -> "Nouveau".equalsIgnoreCase(a.getStatus())).count();
 
-            double availability = (totalMotors == 0) ? 100.0 : ((double) (totalMotors - criticalMotors) / totalMotors) * 100.0;
-            if (availability < 100 && criticalMotors == 0) availability = 100.0;
+            double totalHealth = allMotors.stream().mapToDouble(Motor::getEtatPct).sum();
+            double availability = (totalMotors == 0) ? 100.0 : (totalHealth / totalMotors);
 
             double totalCost = allOrders.stream().mapToDouble(WorkOrder::getCost).sum();
 

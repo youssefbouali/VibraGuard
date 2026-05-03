@@ -14,8 +14,19 @@ const COLORS = ["#0EA5E9", "#F43F5E", "#10B981", "#F59E0B", "#8B5CF6", "#EC4899"
 
 export function VibrationChart() {
   const [selectedMotorId, setSelectedMotorId] = useState<string>("all");
+  const [selectedMetric, setSelectedMetric] = useState<string>("vibRms");
   const { data: vibrations = [], isLoading } = useVibrations(selectedMotorId === "all" ? undefined : selectedMotorId);
   const { data: moteurs = [] } = useMoteurs();
+
+  const METRICS = [
+    { value: "vibRms", label: "Vibration RMS", color: "#0EA5E9", unit: "mm/s", scale: 11.8 },
+    { value: "vibPeak", label: "Vibration Peak", color: "#F43F5E", unit: "g", scale: 5.9 },
+    { value: "vibKurtosis", label: "Kurtosis", color: "#10B981", unit: "", scale: 20 },
+    { value: "temperature", label: "Température", color: "#F59E0B", unit: "°C", scale: 2 },
+    { value: "currentRms", label: "Courant RMS", color: "#8B5CF6", unit: "A", scale: 10 },
+  ];
+
+  const currentMetric = METRICS.find(m => m.value === selectedMetric) || METRICS[0];
 
   const groupedVibrations = useMemo(() => {
     if (selectedMotorId !== "all") {
@@ -43,15 +54,26 @@ export function VibrationChart() {
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path d="M2.25 2.25V15.75H15.75" stroke="#0EA5E9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M14.25 6.75L10.5 10.5L7.5 7.5L5.25 9.75" stroke="#0EA5E9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M2.25 2.25V15.75H15.75" stroke={currentMetric.color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M14.25 6.75L10.5 10.5L7.5 7.5L5.25 9.75" stroke={currentMetric.color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           <span className="text-white text-base font-semibold">Vibrations Temps Réel</span>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <Select value={selectedMetric} onValueChange={setSelectedMetric}>
+            <SelectTrigger className="w-[130px] h-8 bg-white/5 border-white/10 text-white text-[11px]">
+              <SelectValue placeholder="Métrique" />
+            </SelectTrigger>
+            <SelectContent className="bg-[#111A24] border-white/10 text-white">
+              {METRICS.map(m => (
+                <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <Select value={selectedMotorId} onValueChange={setSelectedMotorId}>
-            <SelectTrigger className="w-[180px] h-8 bg-white/5 border-white/10 text-white text-xs">
+            <SelectTrigger className="w-[150px] h-8 bg-white/5 border-white/10 text-white text-[11px]">
               <SelectValue placeholder="Sélectionner moteur" />
             </SelectTrigger>
             <SelectContent className="bg-[#111A24] border-white/10 text-white">
@@ -63,7 +85,6 @@ export function VibrationChart() {
               ))}
             </SelectContent>
           </Select>
-          <button className="text-[#0EA5E9] text-[13px] font-medium hover:underline">Détails</button>
         </div>
       </div>
 
@@ -84,9 +105,9 @@ export function VibrationChart() {
             <line x1="40.35" y1="296.5" x2="606" y2="296.5" stroke="white" strokeOpacity="0.05" strokeWidth="1.2"/>
 
             {/* Y-axis labels */}
-            <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="12" x="0" y="64">20 mm/s</text>
-            <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="12" x="0" y="183">10 mm/s</text>
-            <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="12" x="0" y="302">0 mm/s</text>
+            <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="12" x="0" y="64">Max</text>
+            <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="12" x="0" y="183">Med</text>
+            <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="12" x="0" y="302">0</text>
 
             {/* X-axis labels */}
             <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="10" x="40" y="334">{vibrations.length > 0 ? formatTime(vibrations[0].time) : ""}</text>
@@ -98,66 +119,56 @@ export function VibrationChart() {
               Object.entries(groupedVibrations).map(([mId, data], index) => {
                 if (data.length < 2) return null;
                 const color = COLORS[index % COLORS.length];
-                const gradId = `grad-${mId}`;
                 const points = data.map((v, i) => {
                   const x = 40.35 + (i * (565 / (data.length - 1)));
-                  const y = 296.5 - (v.vibRms * 11.8); // Primary metric
+                  let val = (v as any)[selectedMetric] || 0;
+                  if (selectedMetric === "temperature") val = (val - 50) / 2;
+                  const y = 296.5 - (val * currentMetric.scale);
                   return `${x} ${y}`;
                 });
                 const pathD = `M ${points.join(' L ')}`;
                 return (
                   <g key={mId}>
-                    <defs>
-                      <linearGradient id={gradId} x1="40.35" y1="24.87" x2="40.35" y2="296.51" gradientUnits="userSpaceOnUse">
-                        <stop stopColor={color} stopOpacity="0.2"/>
-                        <stop offset="1" stopColor={color} stopOpacity="0"/>
-                      </linearGradient>
-                    </defs>
-                    <path d={`${pathD} L 606 296.5 L 40.35 296.5 Z`} fill={`url(#${gradId})`} />
                     <path d={pathD} stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" fill="none" />
-                    {/* Anomalous dots */}
                     {data.map((v, i) => {
                       if (!v.isAnomalous) return null;
                       const x = 40.35 + (i * (565 / (data.length - 1)));
-                      const y = 296.5 - (v.vibRms * 11.8);
+                      let val = (v as any)[selectedMetric] || 0;
+                      if (selectedMetric === "temperature") val = (val - 50) / 2;
+                      const y = 296.5 - (val * currentMetric.scale);
                       return <circle key={`${mId}-${i}`} cx={x} cy={y} r="3" fill="#EF4444" className="animate-pulse" />;
                     })}
                   </g>
                 );
               })
             ) : (
-              // Single motor view: Show all 5 metrics
+              // Single motor view: Show selected metric
               vibrations.length >= 2 && (
-                <>
-                  {[
-                    { key: "vibRms", color: "#0EA5E9", label: "RMS", scale: 11.8 },
-                    { key: "vibPeak", color: "#F43F5E", label: "Peak", scale: 5.9 }, // Scaled differently for peak
-                    { key: "vibKurtosis", color: "#10B981", label: "Kurtosis", scale: 20 },
-                    { key: "temperature", color: "#F59E0B", label: "Temp", scale: 2 },
-                    { key: "currentRms", color: "#8B5CF6", label: "Current", scale: 10 }
-                  ].map((metric) => {
+                <g>
+                  {(() => {
                     const points = vibrations.map((v, i) => {
                       const x = 40.35 + (i * (565 / (vibrations.length - 1)));
-                      // Simple scaling logic for demo
-                      let val = (v as any)[metric.key] || 0;
-                      if (metric.key === "temperature") val = (val - 50) / 2; // Offset for temp
-                      const y = 296.5 - (val * metric.scale);
+                      let val = (v as any)[selectedMetric] || 0;
+                      if (selectedMetric === "temperature") val = (val - 50) / 2;
+                      const y = 296.5 - (val * currentMetric.scale);
                       return `${x} ${y}`;
                     });
                     const pathD = `M ${points.join(' L ')}`;
                     return (
-                      <g key={metric.key}>
-                        <path d={pathD} stroke={metric.color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" fill="none" />
+                      <>
+                        <path d={pathD} stroke={currentMetric.color} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" fill="none" />
                         {vibrations.map((v, i) => {
-                          if (!v.isAnomalous || metric.key !== "vibRms") return null;
+                          if (!v.isAnomalous) return null;
                           const x = 40.35 + (i * (565 / (vibrations.length - 1)));
-                          const y = 296.5 - (v.vibRms * 11.8);
-                          return <circle key={`${metric.key}-${i}`} cx={x} cy={y} r="3" fill="#EF4444" className="animate-pulse" />;
+                          let val = (v as any)[selectedMetric] || 0;
+                          if (selectedMetric === "temperature") val = (val - 50) / 2;
+                          const y = 296.5 - (val * currentMetric.scale);
+                          return <circle key={`single-${i}`} cx={x} cy={y} r="3.5" fill="#EF4444" className="animate-pulse" />;
                         })}
-                      </g>
+                      </>
                     );
-                  })}
-                </>
+                  })()}
+                </g>
               )
             )}
           </g>
@@ -182,15 +193,10 @@ export function VibrationChart() {
             </div>
           ))
         ) : (
-          <>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#0EA5E9]" /><span className="text-[#94A3B8] text-[10px]">RMS (mm/s)</span></div>
-              <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#F43F5E]" /><span className="text-[#94A3B8] text-[10px]">Peak</span></div>
-              <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#10B981]" /><span className="text-[#94A3B8] text-[10px]">Kurtosis</span></div>
-              <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#F59E0B]" /><span className="text-[#94A3B8] text-[10px]">Temp (°C)</span></div>
-              <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#8B5CF6]" /><span className="text-[#94A3B8] text-[10px]">Current (A)</span></div>
-            </div>
-          </>
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: currentMetric.color }} />
+            <span className="text-[#94A3B8] text-xs font-semibold">{currentMetric.label} ({currentMetric.unit})</span>
+          </div>
         )}
       </div>
     </div>
