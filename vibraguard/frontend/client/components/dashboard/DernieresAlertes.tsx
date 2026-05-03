@@ -1,3 +1,5 @@
+import { formatTime } from "@/lib/utils";
+
 export function DernieresAlertes({ alerts = [] }: { alerts?: any[] }) {
   const getIcon = (level: string, color: string) => {
     const stroke = color.startsWith("#") ? color : `#${color}`;
@@ -59,7 +61,7 @@ export function DernieresAlertes({ alerts = [] }: { alerts?: any[] }) {
                 {alert.anomalyType && alert.anomalyType !== "NONE" ? `${alert.anomalyType} - ${alert.message}` : alert.message}
               </span>
               <span className="text-[13px] text-[#C9EDEB] leading-tight">
-                {alert.time} • {alert.level}
+                {formatTime(alert.time)} • {alert.level}
               </span>
             </div>
           </div>

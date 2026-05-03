@@ -1,7 +1,41 @@
+import { useState, useMemo } from "react";
 import { useVibrations } from "@/hooks/use-vibrations";
+import { useMoteurs } from "@/hooks/use-moteurs";
+import { formatTime } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const COLORS = ["#0EA5E9", "#F43F5E", "#10B981", "#F59E0B", "#8B5CF6", "#EC4899", "#84CC16", "#06B6D4"];
 
 export function VibrationChart() {
-  const { data: vibrations = [], isLoading } = useVibrations();
+  const [selectedMotorId, setSelectedMotorId] = useState<string>("all");
+  const { data: vibrations = [], isLoading } = useVibrations(selectedMotorId === "all" ? undefined : selectedMotorId);
+  const { data: moteurs = [] } = useMoteurs();
+
+  const groupedVibrations = useMemo(() => {
+    if (selectedMotorId !== "all") {
+      return { [selectedMotorId]: vibrations };
+    }
+    
+    return vibrations.reduce((acc, v) => {
+      const mId = v.motorId || 'unknown';
+      if (!acc[mId]) acc[mId] = [];
+      acc[mId].push(v);
+      return acc;
+    }, {} as Record<string, typeof vibrations>);
+  }, [vibrations, selectedMotorId]);
+
+  const motorNames = useMemo(() => {
+    return moteurs.reduce((acc, m) => {
+      acc[m.id] = m.type + " " + m.id.substring(0, 4);
+      return acc;
+    }, {} as Record<string, string>);
+  }, [moteurs]);
 
   return (
     <div className="flex flex-col h-full rounded-2xl border border-white/[0.08] bg-[rgba(17,26,36,0.50)] backdrop-blur-xl p-6 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.30)]">
@@ -14,7 +48,23 @@ export function VibrationChart() {
           </svg>
           <span className="text-white text-base font-semibold">Vibrations Temps Réel</span>
         </div>
-        <button className="text-[#0EA5E9] text-[13px] font-medium hover:underline">Ouvrir analyse</button>
+        
+        <div className="flex items-center gap-3">
+          <Select value={selectedMotorId} onValueChange={setSelectedMotorId}>
+            <SelectTrigger className="w-[180px] h-8 bg-white/5 border-white/10 text-white text-xs">
+              <SelectValue placeholder="Sélectionner moteur" />
+            </SelectTrigger>
+            <SelectContent className="bg-[#111A24] border-white/10 text-white">
+              <SelectItem value="all">Tous les moteurs</SelectItem>
+              {moteurs.map((m) => (
+                <SelectItem key={m.id} value={m.id}>
+                  {m.type} ({m.id.substring(0, 5)})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <button className="text-[#0EA5E9] text-[13px] font-medium hover:underline">Détails</button>
+        </div>
       </div>
 
       {/* Chart */}
@@ -39,26 +89,49 @@ export function VibrationChart() {
             <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="12" x="0" y="302">0 mm/s</text>
 
             {/* X-axis labels */}
-            <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="12" x="72" y="334">{vibrations.length > 0 ? vibrations[0].time.split(' ').pop() : ""}</text>
-            <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="12" x="274" y="334">{vibrations.length > 2 ? vibrations[Math.floor(vibrations.length/2)].time.split(' ').pop() : ""}</text>
-            <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="12" x="476" y="334">{vibrations.length > 1 ? vibrations[vibrations.length-1].time.split(' ').pop() : ""}</text>
+            <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="10" x="40" y="334">{vibrations.length > 0 ? formatTime(vibrations[0].time) : ""}</text>
+            <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="10" x="274" y="334">{vibrations.length > 2 ? formatTime(vibrations[Math.floor(vibrations.length/2)].time) : ""}</text>
+            <text fill="#64748B" fontFamily="Inter, sans-serif" fontSize="10" x="520" y="334">{vibrations.length > 1 ? formatTime(vibrations[vibrations.length-1].time) : ""}</text>
 
-            {/* Axe X – dynamic path */}
-            {vibrations.length > 1 ? (
-              <>
-                <path
-                  d={`M ${40.35} ${296.5 - (vibrations[0].x * 11.8)} ${vibrations.slice(1).map((v, i) => `L ${40.35 + (i+1)*(565/(vibrations.length-1))} ${296.5 - (v.x * 11.8)}`).join(' ')} L 606 296.5 L 40.35 296.5 Z`}
-                  fill="url(#grad-x)"
-                />
-                <path
-                  d={`M ${40.35} ${296.5 - (vibrations[0].x * 11.8)} ${vibrations.slice(1).map((v, i) => `L ${40.35 + (i+1)*(565/(vibrations.length-1))} ${296.5 - (v.x * 11.8)}`).join(' ')}`}
-                  stroke="#0EA5E9"
-                  strokeWidth="2.5"
-                  strokeLinejoin="round"
-                  fill="none"
-                />
-              </>
-            ) : null}
+            {/* Dynamic paths for each motor */}
+            {Object.entries(groupedVibrations).map(([mId, data], index) => {
+              if (data.length < 2) return null;
+              const color = COLORS[index % COLORS.length];
+              const gradId = `grad-${mId}`;
+              
+              // Calculate points
+              // To align different motors, we use their relative index in the total vibrations if "all" is selected,
+              // but that's complex. For now, let's just plot each motor's data across the full width.
+              const points = data.map((v, i) => {
+                const x = 40.35 + (i * (565 / (data.length - 1)));
+                const y = 296.5 - (v.x * 11.8);
+                return `${x} ${y}`;
+              });
+
+              const pathD = `M ${points.join(' L ')}`;
+              const areaD = `${pathD} L 606 296.5 L 40.35 296.5 Z`;
+
+              return (
+                <g key={mId}>
+                  <defs>
+                    <linearGradient id={gradId} x1="40.35" y1="24.87" x2="40.35" y2="296.51" gradientUnits="userSpaceOnUse">
+                      <stop stopColor={color} stopOpacity="0.2"/>
+                      <stop offset="1" stopColor={color} stopOpacity="0"/>
+                    </linearGradient>
+                  </defs>
+                  <path d={areaD} fill={`url(#${gradId})`} />
+                  <path
+                    d={pathD}
+                    stroke={color}
+                    strokeWidth="2"
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                    fill="none"
+                    className="transition-all duration-300"
+                  />
+                </g>
+              );
+            })}
 
           </g>
 
@@ -75,11 +148,22 @@ export function VibrationChart() {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center justify-center gap-4 pt-4">
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-sm bg-[#0EA5E9]" />
-          <span className="text-[#94A3B8] text-xs">Vibration (mm/s)</span>
-        </div>
+      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 pt-4 border-t border-white/5">
+        {selectedMotorId === "all" ? (
+          Object.keys(groupedVibrations).map((mId, index) => (
+            <div key={mId} className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+              <span className="text-[#94A3B8] text-[10px] font-medium whitespace-nowrap">
+                {motorNames[mId] || `Moteur ${mId.substring(0, 4)}`}
+              </span>
+            </div>
+          ))
+        ) : (
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-sm bg-[#0EA5E9]" />
+            <span className="text-[#94A3B8] text-xs">Vibration Axe X (mm/s)</span>
+          </div>
+        )}
       </div>
     </div>
   );

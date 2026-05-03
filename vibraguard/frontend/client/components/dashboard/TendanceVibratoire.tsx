@@ -6,10 +6,12 @@ export function TendanceVibratoire({ vibrations = [] }: { vibrations?: any[] }) 
   // Map vibrations to points
   // x: spread across chartW
   // y: 0 at top (maxVib), chartH at bottom (0)
-  const points = vibrations.length > 0 
-    ? vibrations.map((v, i) => [
-        (i / (vibrations.length - 1)) * chartW,
-        chartH - (v.x / maxVib) * chartH
+  const safeVibrations = Array.isArray(vibrations) ? vibrations : [];
+  
+  const points = safeVibrations.length > 0 
+    ? safeVibrations.map((v, i) => [
+        safeVibrations.length > 1 ? (i / (safeVibrations.length - 1)) * chartW : chartW / 2,
+        chartH - ((v.x || 0) / maxVib) * chartH
       ])
     : [];
 
@@ -28,7 +30,7 @@ export function TendanceVibratoire({ vibrations = [] }: { vibrations?: any[] }) 
   // Critical line Y (12 mm/s)
   const criticalY = chartH - (12 / maxVib) * chartH;
 
-  const days = vibrations.map(v => v.time);
+  const days = safeVibrations.map(v => v.time);
 
   return (
     <div className="flex flex-col rounded-lg border border-black/[0.08] bg-[#0B1518] p-6">

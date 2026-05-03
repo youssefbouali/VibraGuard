@@ -38,9 +38,10 @@ export function useVibrations(motorId?: string) {
         const newData: VibrationData = JSON.parse(event.data);
         // If filtering by motorId, only append matching data
         if (motorId && newData.motorId && newData.motorId !== motorId) return;
-        queryClient.setQueryData<VibrationData[]>(queryKey, (oldData = []) => {
-          const updated = [...oldData, newData];
-          if (updated.length > 40) return updated.slice(updated.length - 40);
+        queryClient.setQueryData<VibrationData[]>(queryKey, (oldData) => {
+          const safeOldData = Array.isArray(oldData) ? oldData : [];
+          const updated = [...safeOldData, newData];
+          if (updated.length > 200) return updated.slice(updated.length - 200);
           return updated;
         });
       } catch (err) {

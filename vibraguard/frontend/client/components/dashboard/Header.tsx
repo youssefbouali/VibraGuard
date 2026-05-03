@@ -3,6 +3,8 @@ import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { X, Bell, Check, Clock, AlertCircle, Info, LogOut, User, Settings } from "lucide-react";
+import { formatTime } from "@/lib/utils";
+import { useAlerts } from "@/hooks/use-alerts";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -29,15 +31,7 @@ interface HeaderProps {
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
 
-interface Alert {
-  id: string;
-  message: string;
-  level: string;
-  time: string;
-  color: string;
-  priority: string;
-  status: string;
-}
+// Alert interface removed to avoid conflict with use-alerts.ts
 
 export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenuClick }: HeaderProps) {
   const { user, logout } = useAuth();
@@ -45,8 +39,9 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any>(null);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [loading, setLoading] = useState(true);
+  
+  const { data: alerts = [], isLoading: loading } = useAlerts();
+  
   const searchInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
@@ -73,21 +68,6 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
       setSearchResults(null);
     }
   }, [searchQuery]);
-
-  useEffect(() => {
-    const fetchAlerts = async () => {
-      try {
-        const data = await api.getAlerts();
-        setAlerts(data);
-      } catch (error) {
-        console.error("Failed to fetch alerts:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAlerts();
-  }, []);
 
   const getAlertIcon = (level: string) => {
     switch (level) {
@@ -142,16 +122,11 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
   }, [isSearchVisible]);
 
   const handleMarkAllAsRead = async () => {
-    // Optimistic update
-    const previousAlerts = [...alerts];
-    setAlerts(prev => prev.map(a => ({ ...a, status: "Read" })));
-    
     try {
       await api.markAllAlertsAsRead();
       toast.success("Toutes les notifications ont été marquées comme lues");
     } catch (error) {
       console.error("Failed to mark all notifications as read:", error);
-      setAlerts(previousAlerts); // Rollback
       toast.error("Erreur lors de la mise à jour");
     }
   };
@@ -159,16 +134,11 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
   const handleMarkAsRead = async (id: string, currentStatus: string) => {
     if (currentStatus === "Read") return;
     
-    // Optimistic update
-    const previousAlerts = [...alerts];
-    setAlerts(prev => prev.map(a => a.id === id ? { ...a, status: "Read" } : a));
-
     try {
       await api.markAlertAsRead(id);
       toast.success("Notification marquée comme lue");
     } catch (error) {
       console.error("Failed to mark notification as read:", error);
-      setAlerts(previousAlerts); // Rollback
     }
   };
 
@@ -289,7 +259,7 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
                                 <AlertCircle className="w-4 h-4 text-red-400" />
                                 <div className="flex flex-col">
                                   <span className="text-sm font-medium text-[#E6F0F2] truncate max-w-[280px]">{a.message}</span>
-                                  <span className="text-xs text-[#98A6A8]">{a.time} • {a.level}</span>
+                                  <span className="text-xs text-[#98A6A8]">{formatTime(a.time)} • {a.level}</span>
                                 </div>
                               </button>
                             ))}
@@ -369,7 +339,7 @@ export function Header({ breadcrumb = "Tableau de bord", breadcrumbItems, onMenu
                           </p>
                           <span className="text-[#98A6A8] text-xs flex items-center gap-1">
                             <Clock className="w-3.5 h-3.5" />
-                            {alert.time}
+                            {formatTime(alert.time)}
                           </span>
                         </div>
                         {alert.status !== "Read" && (

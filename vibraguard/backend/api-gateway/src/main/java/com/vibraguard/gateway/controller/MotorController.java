@@ -99,9 +99,9 @@ public class MotorController {
     }
 
     @GetMapping("/{id}/vibration")
-    public Flux<String> getVibration(@PathVariable("id") String id) {
-        return vibrationStreamService.getVibrationStream()
-                .filter(json -> json.contains("\"motorId\":\"" + id + "\""));
+    public Mono<List<VibrationData>> getVibration(@PathVariable("id") String id) {
+        return Mono.fromCallable(() -> vibrationRepository.findByMotorId(id))
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     @GetMapping("/vibrations")

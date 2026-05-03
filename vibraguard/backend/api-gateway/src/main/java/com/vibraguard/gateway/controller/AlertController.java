@@ -1,5 +1,6 @@
 package com.vibraguard.gateway.controller;
 
+import com.vibraguard.gateway.AlertStreamService;
 import com.vibraguard.gateway.entity.*;
 import com.vibraguard.gateway.repository.*;
 import com.vibraguard.gateway.auth.model.User;
@@ -20,6 +21,8 @@ public class AlertController {
 
     @Autowired
     private AlertRepository alertRepository;
+    @Autowired
+    private AlertStreamService alertStreamService;
     @Autowired
     private ControllerUtils utils;
 
@@ -47,7 +50,9 @@ public class AlertController {
             if (alert.getType() == null) {
                 alert.setType("ALERT");
             }
-            return alertRepository.save(alert);
+            Alert saved = alertRepository.save(alert);
+            alertStreamService.emit(saved);
+            return saved;
         }).subscribeOn(Schedulers.boundedElastic());
     }
 

@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useAlerts } from "@/hooks/use-alerts";
+import { formatTime } from "@/lib/utils";
 
 interface AlertData {
   id: string;
@@ -107,7 +108,7 @@ export function AlertesRecentes() {
             <div className="flex flex-col gap-1 flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-[#E2E8F0] text-sm font-semibold truncate hover:text-[#0EA5E9] transition-colors">{alerte.title}</span>
-                <span className="text-[#64748B] text-xs whitespace-nowrap shrink-0">{alerte.time}</span>
+                <span className="text-[#64748B] text-xs whitespace-nowrap shrink-0">{formatTime(alerte.time)}</span>
               </div>
               <p className="text-[#94A3B8] text-[13px] leading-snug">{alerte.description}</p>
             </div>

@@ -5,6 +5,7 @@ import { AlertDetail } from "@/components/alertes/AlertDetail";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { formatTime } from "@/lib/utils";
 
 const ALERTES_DATA: Alerte[] = [
   {
@@ -90,7 +91,7 @@ export default function Alertes() {
       typeDefaut: (a.anomalyType && a.anomalyType !== "NONE") ? a.anomalyType : a.message,
       severite: severite,
       confiance: a.scoreConfianceIA ?? (a.priority === "high" ? 96 : 85),
-      dateHeure: a.time,
+      dateHeure: formatTime(a.time),
       statut: a.status || "Nouveau",
       velociteRms: a.velociteRms,
       accelerationPeak: a.accelerationPeak,
