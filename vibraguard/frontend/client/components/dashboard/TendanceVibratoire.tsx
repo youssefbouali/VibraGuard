@@ -10,11 +10,11 @@ export function TendanceVibratoire({ vibrations = [] }: { vibrations?: any[] }) 
   const days = safeVibrations.map(v => v.time);
 
   const METRICS = [
-    { key: "vibRms", label: "RMS", color: "#0EA5E9", scale: chartH / 15 },
-    { key: "vibPeak", label: "Peak", color: "#F43F5E", scale: chartH / 30 },
-    { key: "vibKurtosis", label: "Kurtosis", color: "#10B981", scale: chartH / 10 },
-    { key: "temperature", label: "Temp", color: "#F59E0B", scale: chartH / 100 },
-    { key: "currentRms", label: "Current", color: "#8B5CF6", scale: chartH / 50 }
+    { key: "vibRms", label: "RMS", color: "#0EA5E9", unit: "mm/s", scale: chartH / 15 },
+    { key: "vibPeak", label: "Peak", color: "#F43F5E", unit: "g", scale: chartH / 30 },
+    { key: "vibKurtosis", label: "Kurtosis", color: "#10B981", unit: "", scale: chartH / 10 },
+    { key: "temperature", label: "Temp", color: "#F59E0B", unit: "°C", scale: chartH / 100 },
+    { key: "currentRms", label: "Current", color: "#8B5CF6", unit: "A", scale: chartH / 50 }
   ];
 
   const currentMetric = METRICS.find(m => m.key === selectedMetric) || METRICS[0];
@@ -27,7 +27,7 @@ export function TendanceVibratoire({ vibrations = [] }: { vibrations?: any[] }) 
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M14.6666 8.00004H13.0133C12.4145 7.99876 11.8883 8.39682 11.7266 8.97337L10.1599 14.5467C10.1392 14.6178 10.074 14.6667 9.99992 14.6667C9.92584 14.6667 9.86066 14.6178 9.83992 14.5467L6.15992 1.45337C6.13918 1.38226 6.07399 1.33337 5.99992 1.33337C5.92584 1.33337 5.86066 1.38226 5.83992 1.45337L4.27325 7.02671C4.11225 7.60088 3.58957 7.99833 2.99325 8.00004H1.33325" stroke={currentMetric.color} strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <span className="text-[16px] font-semibold text-[#EAF6F5]">Analyses de Tendance</span>
+          <span className="text-[16px] font-semibold text-[#EAF6F5]">Analyse {currentMetric.label} ({currentMetric.unit})</span>
         </div>
 
         {/* Metric Selector Tabs */}

@@ -11,6 +11,7 @@ export interface Moteur {
   etatSante: string;
   vibrationRMS: number;
   derniereAlerte: string;
+  derniereAlerteType?: string;
   alerteRef?: string;
   // Legacy fields if still used
   etatLabel?: string;
@@ -39,7 +40,7 @@ export function useMoteurs() {
           if (!oldData) return oldData;
           return oldData.map(m => 
             m.id === data.motorId 
-              ? { ...m, vibrationRMS: Math.round(data.x * 100) / 100 } 
+              ? { ...m, vibrationRMS: Math.round(data.vibRms * 100) / 100 } 
               : m
           );
         });
@@ -60,6 +61,7 @@ export function useMoteurs() {
               return { 
                 ...m, 
                 derniereAlerte: data.time,
+                derniereAlerteType: data.anomalyType || data.type,
                 etatSante: data.priority === "high" ? "Critique" : "Alerte"
               };
             }

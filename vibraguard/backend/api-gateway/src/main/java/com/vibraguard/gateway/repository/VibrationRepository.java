@@ -8,4 +8,6 @@ import java.util.List;
 @Repository
 public interface VibrationRepository extends JpaRepository<VibrationData, Long> {
     List<VibrationData> findByMotorId(String motorId);
+    @org.springframework.transaction.annotation.Transactional
+    void deleteByMotorId(String motorId);
 }

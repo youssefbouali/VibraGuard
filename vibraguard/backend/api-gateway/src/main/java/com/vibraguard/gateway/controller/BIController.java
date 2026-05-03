@@ -29,6 +29,8 @@ public class BIController {
     private KpiValueRepository kpiValueRepository;
     @Autowired
     private MotorRepository motorRepository;
+    @Autowired
+    private VibrationRepository vibrationRepository;
 
     @GetMapping("/kpis")
     public Mono<Map<String, Object>> getBIKPIs() {
@@ -45,8 +47,11 @@ public class BIController {
             long totalAlerts = allAlerts.size();
             long newAlerts = allAlerts.stream().filter(a -> "Nouveau".equalsIgnoreCase(a.getStatus())).count();
 
-            double totalHealth = allMotors.stream().mapToDouble(Motor::getEtatPct).sum();
-            double availability = (totalMotors == 0) ? 100.0 : (totalHealth / totalMotors);
+            List<VibrationData> allVibs = vibrationRepository.findAll();
+            long totalVibs = allVibs.size();
+            long anomalousVibs = allVibs.stream().filter(VibrationData::isAnomalous).count();
+            
+            double availability = (totalVibs == 0) ? 100.0 : ((double) (totalVibs - anomalousVibs) / totalVibs) * 100.0;
 
             double totalCost = allOrders.stream().mapToDouble(WorkOrder::getCost).sum();
 

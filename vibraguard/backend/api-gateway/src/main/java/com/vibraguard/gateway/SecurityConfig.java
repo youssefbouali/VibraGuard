@@ -42,6 +42,7 @@ public class SecurityConfig {
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/api/v1/auth/**", "/login", "/register", "/forgot-password").permitAll()
                         .pathMatchers("/api/v1/reports/**").permitAll()
+                        .pathMatchers(org.springframework.http.HttpMethod.DELETE, "/api/v1/iot/motors/**").hasRole("ADMIN")
                         // Internal Spark AI processor routes — only reachable inside the K8s cluster
                         .pathMatchers(
                             "/api/v1/iot/motors/vibrations",

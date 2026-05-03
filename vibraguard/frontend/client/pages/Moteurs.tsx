@@ -31,6 +31,7 @@ interface Moteur {
   etatSante: HealthStatus;
   vibrationRMS: number;
   derniereAlerte: string;
+  derniereAlerteType?: string;
   alerteRef?: string;
   etatColor?: string;
 }
@@ -302,10 +303,19 @@ export default function Moteurs() {
                       <span className="text-[#98A6A8] text-xs">{m.puissance}</span>
                     </div>
                     <div className="px-6 py-4 flex items-center gap-1">
-                      <span className={cn("font-bold text-lg", vibrationColor[status])}>{m.vibrationRMS}</span>
+                      <span className={cn("font-bold text-lg", vibrationColor[status])}>
+                        {typeof m.vibrationRMS === 'number' ? m.vibrationRMS.toFixed(2) : "0.00"}
+                      </span>
                       <span className="text-[#98A6A8] text-xs">mm/s</span>
                     </div>
-                    <div className="px-6 py-4 text-sm text-[#98A6A8]">{m.derniereAlerte ? formatTime(m.derniereAlerte) : "N/A"}</div>
+                    <div className="px-6 py-4 text-sm font-medium">
+                      <div className="flex flex-col">
+                        <span className={cn("text-xs uppercase", (m.derniereAlerteType && m.derniereAlerteType !== 'Sain') ? "text-[#EF4444]" : "text-[#10B981]")}>
+                          {m.derniereAlerteType || "Aucun"}
+                        </span>
+                        <span className="text-[#64748B] text-[10px]">{m.derniereAlerte ? formatTime(m.derniereAlerte) : "N/A"}</span>
+                      </div>
+                    </div>
                     <div className="px-6 py-4 flex items-center justify-end gap-2 pr-10">
                        <ActionBtn><VibrationIcon /></ActionBtn>
                        <DropdownMenu>

@@ -22,6 +22,7 @@ public class Motor {
     private int etatPct;
     private String vibration;
     private String vibrationColor;
+    private String derniereAlerteType;
     private String trendIcon;
     private String power;
     private String speed;

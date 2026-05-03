@@ -60,9 +60,11 @@ public class MotorController {
 
     @DeleteMapping("/{id}")
     public Mono<Void> deleteMotor(@PathVariable("id") String id) {
-        return Mono.fromRunnable(() -> motorRepository.deleteById(id))
-                .subscribeOn(Schedulers.boundedElastic())
-                .then();
+        return Mono.fromRunnable(() -> {
+            vibrationRepository.deleteByMotorId(id);
+            alertRepository.deleteByMotorId(id);
+            motorRepository.deleteById(id);
+        }).subscribeOn(Schedulers.boundedElastic()).then();
     }
 
     @GetMapping

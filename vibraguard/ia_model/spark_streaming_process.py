@@ -119,6 +119,8 @@ def write_to_backend(batch_df, epoch_id):
             "etatPct": int(health_score),
             "etatLabel": f"{int(health_score)}% {label}",
             "etatColor": f"#{color}",
+            "derniereAlerteType": anomaly_type_val if is_anomaly else "Sain",
+            "vibration": f"{v_rms:.2f}",
             "power": row.power if hasattr(row, 'power') and row.power else "450 kW",
             "speed": row.speed if hasattr(row, 'speed') and row.speed else "1480 RPM"
         }
