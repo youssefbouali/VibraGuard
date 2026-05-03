@@ -14,7 +14,7 @@ export function TendanceVibratoire({ vibrations = [] }: { vibrations?: any[] }) 
     { key: "vibPeak", label: "Peak", color: "#F43F5E", unit: "mm/s", scale: chartH / 30 },
     { key: "vibKurtosis", label: "Kurtosis", color: "#10B981", unit: "", scale: chartH / 10 },
     { key: "temperature", label: "Temp", color: "#F59E0B", unit: "°C", scale: chartH / 100 },
-    { key: "currentRms", label: "Current", color: "#8B5CF6", unit: "A", scale: chartH / 50 }
+    { key: "currentRms", label: "Current", color: "#8B5CF6", unit: "mm/s", scale: chartH / 50 }
   ];
 
   const currentMetric = METRICS.find(m => m.key === selectedMetric) || METRICS[0];
