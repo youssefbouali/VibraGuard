@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useVibrations } from "@/hooks/use-vibrations";
 import { useMoteurs } from "@/hooks/use-moteurs";
 import { formatTime } from "@/lib/utils";
