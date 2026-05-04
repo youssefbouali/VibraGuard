@@ -127,14 +127,7 @@ else
     echo "✅ IPFS is already deployed."
 fi
 
-# MongoDB
-echo "🍃 Deploying MongoDB..."
-if ! kubectl get deployment mongodb -n $NAMESPACE > /dev/null 2>&1; then
-    kubectl create deployment mongodb --image=mongo:latest -n $NAMESPACE
-    kubectl expose deployment mongodb --type=ClusterIP --port=27017 -n $NAMESPACE || true
-else
-    echo "✅ MongoDB is already deployed."
-fi
+# MongoDB is now handled via declarative manifest in k8s/mongodb.yaml
 
 # 5. Apply Application Manifests
 echo "🚀 Deploying Core Applications..."
