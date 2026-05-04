@@ -25,3 +25,21 @@ spring:
 ipfs:
   api:
     url: ${IPFS_API_URL:http://ipfs:5001}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: ${JAEGER_ENDPOINT:http://jaeger:4318/v1/traces}
