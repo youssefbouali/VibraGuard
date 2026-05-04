@@ -551,6 +551,11 @@ kubectl expose pod oracle-db \
   --port=1521 \
   -n vibraguard
 
+kubectl create secret generic oracle-db-credentials -n vibraguard \
+  --from-literal=username=system \
+  --from-literal=password=MyStrongPassword123 \
+  --dry-run=client -o yaml | kubectl apply -f -
+
 # Mosquitto (MQTT)
 echo "Déploiement de Mosquitto..."
 helm install mosquitto k8s-at-home/mosquitto -n vibraguard

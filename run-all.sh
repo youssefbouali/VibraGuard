@@ -82,6 +82,13 @@ else
     echo "✅ Oracle DB is already running."
 fi
 
+# Ensure Oracle DB Credentials secret exists
+echo "🔑 Creating Oracle DB credentials secret..."
+kubectl create secret generic oracle-db-credentials -n $NAMESPACE \
+    --from-literal=username=system \
+    --from-literal=password=MyStrongPassword123 \
+    --dry-run=client -o yaml | kubectl apply -f -
+
 # Distributed Services
 helm upgrade --install mosquitto k8s-at-home/mosquitto -n $NAMESPACE \
     --set service.main.type=NodePort \
