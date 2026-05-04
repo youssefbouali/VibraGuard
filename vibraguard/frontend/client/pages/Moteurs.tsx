@@ -286,7 +286,10 @@ export default function Moteurs() {
 
             <div className="divide-y divide-black/[0.08]">
               {paginatedMoteurs.map((m: any) => {
-                const status = (m.etatSante as HealthStatus) || (m.etatColor === "bg-[#007A3D]" ? "Normal" : m.etatColor === "bg-[#F2A900]" ? "Attention" : "Critique");
+                const status = (m.etatSante as HealthStatus) || 
+                               (m.etatColor === "#10B981" ? "Normal" : 
+                                m.etatColor === "#F59E0B" ? "Attention" : 
+                                m.etatColor === "#EF4444" ? "Critique" : "Normal");
                 return (
                   <div key={m.id} className="grid grid-cols-[1.5fr_1fr_1.5fr_1fr_1fr_auto] hover:bg-white/[0.02] transition-colors cursor-pointer" onClick={() => navigate(`/moteurs/${m.id}`)}>
                     <div className="px-6 py-4 flex flex-col">
@@ -334,7 +337,10 @@ export default function Moteurs() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {paginatedMoteurs.map((m: any) => {
-              const status = (m.etatSante as HealthStatus) || (m.etatColor === "bg-[#007A3D]" ? "Normal" : m.etatColor === "bg-[#F2A900]" ? "Attention" : "Critique");
+              const status = (m.etatSante as HealthStatus) || 
+                             (m.etatColor === "#10B981" ? "Normal" : 
+                              m.etatColor === "#F59E0B" ? "Attention" : 
+                              m.etatColor === "#EF4444" ? "Critique" : "Normal");
               return (
                 <div key={m.id} onClick={() => navigate(`/moteurs/${m.id}`)} className="bg-[#0B1518] rounded-xl border border-white/5 p-6 hover:border-[#0EA5E9]/30 transition-all cursor-pointer">
                   <div className="flex justify-between items-start mb-4">

@@ -31,6 +31,13 @@ public class MotorController {
             if (motor.getId() == null) {
                 motor.setId("MTR-" + (motorRepository.count() + 10));
             }
+            // Set defaults for new motor
+            if (motor.getEtatPct() == 0) motor.setEtatPct(100);
+            if (motor.getEtatLabel() == null) motor.setEtatLabel("100% Normal");
+            if (motor.getEtatColor() == null) motor.setEtatColor("#10B981");
+            if (motor.getVibration() == null) motor.setVibration("0.00");
+            if (motor.getVibrationColor() == null) motor.setVibrationColor("#10B981");
+            
             return motorRepository.save(motor);
         }).subscribeOn(Schedulers.boundedElastic());
     }
