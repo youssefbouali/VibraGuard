@@ -123,6 +123,8 @@ echo "🔍 Deploying Elasticsearch (Single Node for Dev)..."
 helm upgrade --install elasticsearch elastic/elasticsearch -n $NAMESPACE \
   --set replicas=1 \
   --set minimumMasterNodes=1 \
+  --set xpack.security.enabled=false \
+  --set xpack.security.http.ssl.enabled=false \
   --set resources.requests.cpu=100m \
   --set resources.requests.memory=512Mi
 
@@ -509,4 +511,12 @@ echo "Access points:"
 echo "Frontend: http://$MINIKUBE_IP:30008"
 echo "Backend:  http://$MINIKUBE_IP:30007"
 #echo "IPFS API: http://$MINIKUBE_IP:$(kubectl get svc -n $NAMESPACE ipfs -o jsonpath='{.spec.ports[0].nodePort}')"
+echo "======================================================"
+
+# Safety: Ensure port-forwarding for all observability tools (in case minikube wasn't restarted)
+echo "🔌 Activating external access for Monitoring & Tracing..."
+kubectl port-forward --address 0.0.0.0 svc/prometheus-server -n $NAMESPACE 30090:80 > /dev/null 2>&1 &
+kubectl port-forward --address 0.0.0.0 svc/jaeger-query -n $NAMESPACE 30086:16686 > /dev/null 2>&1 &
+kubectl port-forward --address 0.0.0.0 svc/kibana -n $NAMESPACE 30001:5601 > /dev/null 2>&1 &
+echo "🚀 Accessibility check: Prometheus (30090), Jaeger (30086), Kibana (30001) are active."
 echo "======================================================"
