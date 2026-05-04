@@ -43,7 +43,18 @@ export function useMoteurs() {
               ? { 
                   ...m, 
                   vibrationRMS: Math.round(data.vibRms * 100) / 100,
-                  vibration: (data.vibRms).toFixed(2)
+                  vibration: (data.vibRms).toFixed(2),
+                  vibrationColor: data.anomalous ? "#EF4444" : "#10B981",
+                  // Locally update health to show recovery
+                  etatPct: data.anomalous ? Math.max(45, m.etatPct - 5) : Math.min(100, m.etatPct + 2),
+                  get etatLabel() { 
+                    const p = this.etatPct;
+                    const l = p > 80 ? "Normal" : p > 50 ? "Attention" : "Critique";
+                    return `${p}% ${l}`;
+                  },
+                  get etatColor() {
+                    return this.etatPct > 80 ? "#10B981" : this.etatPct > 50 ? "#F59E0B" : "#EF4444";
+                  }
                 } 
               : m
           );
