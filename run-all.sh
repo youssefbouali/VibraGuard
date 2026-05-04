@@ -129,14 +129,52 @@ helm upgrade --install elasticsearch elastic/elasticsearch -n $NAMESPACE \
 echo "⏳ Waiting for Elasticsearch to be ready..."
 kubectl wait --for=condition=Ready pod -l app=elasticsearch-master -n $NAMESPACE --timeout=300s || true
 
-echo "📊 Deploying Kibana (Visualization)..."
-helm upgrade --install kibana elastic/kibana -n $NAMESPACE \
-  --timeout 600s \
-  --set elasticsearchHosts="http://elasticsearch-master:9200" \
-  --set service.type=NodePort \
-  --set service.nodePort=30001 \
-  --set resources.requests.cpu=100m \
-  --set resources.requests.memory=512Mi
+echo "📊 Deploying Kibana (Visualization via manifest)..."
+kubectl apply -n $NAMESPACE -f - <<EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kibana
+  namespace: $NAMESPACE
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kibana
+  template:
+    metadata:
+      labels:
+        app: kibana
+    spec:
+      containers:
+        - name: kibana
+          image: docker.elastic.co/kibana/kibana:8.5.1
+          ports:
+            - containerPort: 5601
+          env:
+            - name: ELASTICSEARCH_HOSTS
+              value: "http://elasticsearch-master:9200"
+            - name: XPACK_SECURITY_ENABLED
+              value: "false"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kibana
+  namespace: $NAMESPACE
+spec:
+  type: NodePort
+  selector:
+    app: kibana
+  ports:
+    - port: 5601
+      targetPort: 5601
+      nodePort: 30001
+EOF
 
 echo "📈 Deploying Prometheus (Monitoring)..."
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
