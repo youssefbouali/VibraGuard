@@ -74,22 +74,31 @@ public class MotorController {
             List<Alert> allAlerts = alertRepository.findAll();
 
             return Flux.fromIterable(motors.stream().map(m -> {
-                List<VibrationData> motorVibs = vibrationRepository.findByMotorId(m.getId());
+                List<VibrationData> allVibs = vibrationRepository.findByMotorId(m.getId());
+                // Use a sliding window of the last 100 vibrations for responsiveness
+                List<VibrationData> motorVibs = allVibs.size() > 100 
+                    ? allVibs.subList(allVibs.size() - 100, allVibs.size()) 
+                    : allVibs;
+                
                 long totalVibs = motorVibs.size();
                 long anomalousVibs = motorVibs.stream().filter(VibrationData::isAnomalous).count();
                 
                 int healthPct = (totalVibs == 0) ? 100 : (int) (((double) (totalVibs - anomalousVibs) / totalVibs) * 100);
-                String label = healthPct > 80 ? "Normal" : healthPct > 50 ? "Attention" : "Critique";
-                String color = healthPct > 80 ? "#10B981" : healthPct > 50 ? "#F59E0B" : "#EF4444";
+                String healthLabel = healthPct > 80 ? "Normal" : healthPct > 50 ? "Attention" : "Critique";
+                String healthColor = healthPct > 80 ? "#10B981" : healthPct > 50 ? "#F59E0B" : "#EF4444";
+
+                // Vibration color based on LATEST reading status
+                boolean isLatestAnomalous = !allVibs.isEmpty() && allVibs.get(allVibs.size() - 1).isAnomalous();
+                String vibColor = isLatestAnomalous ? "#EF4444" : "#10B981";
 
                 Map<String, Object> map = new HashMap<>();
                 map.put("id", m.getId());
                 map.put("type", m.getType() != null ? m.getType() : "Asynchrone");
-                map.put("etatLabel", healthPct + "% " + label);
-                map.put("etatColor", color);
+                map.put("etatLabel", healthPct + "% " + healthLabel);
+                map.put("etatColor", healthColor);
                 map.put("etatPct", healthPct);
                 map.put("vibration", m.getVibration() != null ? m.getVibration() : "0.00");
-                map.put("vibrationColor", color);
+                map.put("vibrationColor", vibColor);
                 map.put("trendIcon", m.getTrendIcon() != null ? m.getTrendIcon().toLowerCase() : "flat");
                 
                 map.put("zone", m.getSite() != null ? m.getSite() : "Secteur A");
@@ -105,7 +114,12 @@ public class MotorController {
     public Mono<Motor> getMotorById(@PathVariable("id") String id) {
         return Mono.fromCallable(() -> {
             Motor m = motorRepository.findById(id).orElseThrow();
-            List<VibrationData> motorVibs = vibrationRepository.findByMotorId(id);
+            List<VibrationData> allVibs = vibrationRepository.findByMotorId(id);
+            // Sliding window
+            List<VibrationData> motorVibs = allVibs.size() > 100 
+                ? allVibs.subList(allVibs.size() - 100, allVibs.size()) 
+                : allVibs;
+
             long totalVibs = motorVibs.size();
             long anomalousVibs = motorVibs.stream().filter(VibrationData::isAnomalous).count();
             
@@ -116,8 +130,13 @@ public class MotorController {
             m.setEtatPct(healthPct);
             m.setEtatLabel(healthPct + "% " + label);
             m.setEtatColor(color);
+            
+            // Latest status for vibration color
+            boolean isLatestAnomalous = !allVibs.isEmpty() && allVibs.get(allVibs.size() - 1).isAnomalous();
+            m.setVibrationColor(isLatestAnomalous ? "#EF4444" : "#10B981");
+
             if (m.getVibration() == null || m.getVibration().isEmpty() || m.getVibration().equals("0.00")) {
-                m.setVibration(motorVibs.isEmpty() ? "0.00" : String.format("%.2f", motorVibs.get(motorVibs.size()-1).getVibRms()));
+                m.setVibration(allVibs.isEmpty() ? "0.00" : String.format("%.2f", allVibs.get(allVibs.size()-1).getVibRms()));
             }
             return m;
         }).subscribeOn(Schedulers.boundedElastic());

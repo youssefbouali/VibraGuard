@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useMoteurs } from "@/hooks/use-moteurs";
 
@@ -58,7 +58,7 @@ export function MoteursTable() {
           </svg>
           <span className="text-white text-base font-semibold">Moteurs Sous Surveillance</span>
         </div>
-        <button className="text-[#0EA5E9] text-[13px] font-medium hover:underline">Voir tout</button>
+        <Link to="/moteurs" className="text-[#0EA5E9] text-[13px] font-medium hover:underline">Voir tout</Link>
       </div>
 
       {/* Table */}

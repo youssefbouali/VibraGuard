@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAlerts } from "@/hooks/use-alerts";
 import { formatTime } from "@/lib/utils";
 
@@ -88,12 +88,12 @@ export function AlertesRecentes() {
           </svg>
           <span className="text-white text-base font-semibold">Alertes Récentes</span>
         </div>
-        <button 
-          onClick={() => navigate("/alertes")}
+        <Link 
+          to="/alertes"
           className="text-[#0EA5E9] text-[13px] font-medium hover:underline"
         >
           Historique
-        </button>
+        </Link>
       </div>
  
       {/* Alerts list - Limited to 5 and scrollable */}
