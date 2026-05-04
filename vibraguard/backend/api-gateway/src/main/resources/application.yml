@@ -15,11 +15,20 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+    properties:
+      hibernate:
+        connection:
+          provider_disables_autocommit: true
+    defer-datasource-initialization: true
   data:
     mongodb:
       uri: ${MONGO_URL:mongodb://mongodb.vibraguard.svc.cluster.local:27017/vibraguard}
   elasticsearch:
     uris: ${ELASTICSEARCH_URL:http://elasticsearch-master.vibraguard.svc.cluster.local:9200}
+    connection-timeout: 5s
+    socket-timeout: 30s
+  main:
+    lazy-initialization: true
 
 # IPFS Configuration
 ipfs:

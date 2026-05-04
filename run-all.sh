@@ -256,6 +256,10 @@ spec:
                   key: password
             - name: ELASTICSEARCH_URL
               value: "http://elasticsearch-master:9200"
+            - name: KAFKA_BROKER
+              value: "kafka:9092"
+            - name: MONGO_URL
+              value: "mongodb://mongodb.vibraguard.svc.cluster.local:27017/vibraguard"
 EOF
 
 cat <<EOF > k8s/backend-service.yaml
