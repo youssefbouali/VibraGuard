@@ -59,16 +59,42 @@ public class BIController {
             String uptimeTrend = (availability >= 100.0) ? "Optimal" : (availability >= 98.0 ? "+0.2%" : "-0.5%");
             boolean uptimeTrendUp = (availability >= 98.0);
             
-            // For motors, trend could be based on critical count ratio
             double criticalRatio = totalMotors == 0 ? 0 : (double) criticalMotors / totalMotors;
             String criticalTrend = (criticalMotors == 0) ? "Stable" : (criticalRatio > 0.1 ? "+2" : "-1");
             
-            // For alerts, trend could be based on new alerts count
             String alertsTrend = newAlerts > 0 ? "+" + newAlerts : "Aucune";
+
+            // Calculate MTTR (Mean Time To Repair) from Work Orders
+            List<WorkOrder> finishedOrders = allOrders.stream()
+                    .filter(o -> o.getCompletedAt() != null && o.getCreatedAt() != null)
+                    .collect(Collectors.toList());
+            
+            double avgMttrHours = 0.0;
+            if (!finishedOrders.isEmpty()) {
+                long totalDiffMinutes = 0;
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                int validCount = 0;
+                for (WorkOrder wo : finishedOrders) {
+                    try {
+                        Date start = sdf.parse(wo.getCreatedAt());
+                        Date end = sdf.parse(wo.getCompletedAt());
+                        long diff = (end.getTime() - start.getTime()) / (1000 * 60);
+                        if (diff >= 0) {
+                            totalDiffMinutes += diff;
+                            validCount++;
+                        }
+                    } catch (Exception e) {}
+                }
+                if (validCount > 0) {
+                    avgMttrHours = (double) totalDiffMinutes / (validCount * 60.0);
+                }
+            } else {
+                avgMttrHours = 4.5; // fallback for demo if no orders finished yet
+            }
 
             Map<String, Object> kpis = new HashMap<>();
             kpis.put("totalMotors", totalMotors);
-            kpis.put("totalMotorsTrend", "+0%"); // Motors don't change often
+            kpis.put("totalMotorsTrend", "+0%");
             kpis.put("criticalMotors", criticalMotors);
             kpis.put("criticalMotorsTrend", criticalTrend);
             kpis.put("uptime", String.format("%.1f%%", availability));
@@ -78,7 +104,7 @@ public class BIController {
             kpis.put("alertsTrend", alertsTrend);
             
             kpis.put("mtbf", 720.0); 
-            kpis.put("mttr", 4.5);
+            kpis.put("mttr", Math.round(avgMttrHours * 10.0) / 10.0);
             kpis.put("totalCost", totalCost);
             kpis.put("activeWorkOrders", allOrders.stream().filter(o -> !"Terminé".equalsIgnoreCase(o.getStatus())).count());
 

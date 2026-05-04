@@ -56,6 +56,9 @@ public class WorkOrderController {
                     workOrder.setAssignedTo(current.getFullName());
                 }
             }
+            if (workOrder.getCreatedAt() == null) {
+                workOrder.setCreatedAt(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+            }
             WorkOrder saved = workOrderRepository.save(workOrder);
             maybeCreateWorkOrderNotification(saved, principal);
             return saved;
@@ -68,6 +71,9 @@ public class WorkOrderController {
             return workOrderRepository.findById(id).map(existing -> {
                 existing.setTitle(workOrder.getTitle());
                 existing.setAsset(workOrder.getAsset());
+                if ("Terminé".equalsIgnoreCase(workOrder.getStatus()) && !"Terminé".equalsIgnoreCase(existing.getStatus())) {
+                    existing.setCompletedAt(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+                }
                 existing.setStatus(workOrder.getStatus());
                 existing.setPriority(workOrder.getPriority());
                 if (utils.isAdmin(principal)) {

@@ -100,7 +100,9 @@ export function MoteursTable() {
                 </td>
                 <td className="py-5 pr-4">
                   <div className="flex items-center gap-1">
-                    <span className="text-sm font-semibold" style={{ color: row.vibrationColor }}>{row.vibration}</span>
+                    <span className="text-sm font-semibold" style={{ color: row.vibrationColor }}>
+                      {String(row.vibration).replace(' mm/s', '')} mm/s
+                    </span>
                     {row.trendIcon === "up" && <TrendUp color={row.vibrationColor} />}
                     {row.trendIcon === "flat" && <TrendFlat />}
                   </div>

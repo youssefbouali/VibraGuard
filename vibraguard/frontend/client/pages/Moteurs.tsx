@@ -305,7 +305,7 @@ export default function Moteurs() {
                     </div>
                     <div className="px-6 py-4 flex items-center gap-1">
                       <span className={cn("font-bold text-lg", vibrationColor[status])}>
-                        {typeof m.vibrationRMS === 'number' ? m.vibrationRMS.toFixed(2) : "0.00"}
+                        {typeof m.vibrationRMS === 'number' ? m.vibrationRMS.toFixed(2) : String(m.vibration || "0.00").replace(' mm/s', '')}
                       </span>
                       <span className="text-[#98A6A8] text-xs">mm/s</span>
                     </div>
@@ -352,7 +352,9 @@ export default function Moteurs() {
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
                     <div>
                       <p className="text-[#64748B] text-[10px] font-bold uppercase mb-1">Vibration</p>
-                      <p className={cn("text-xl font-bold", vibrationColor[status])}>{m.vibrationRMS} <span className="text-xs font-normal opacity-60">mm/s</span></p>
+                      <p className={cn("text-xl font-bold", vibrationColor[status])}>
+                        {typeof m.vibrationRMS === 'number' ? m.vibrationRMS.toFixed(2) : String(m.vibration || "0.00").replace(' mm/s', '')} <span className="text-xs font-normal opacity-60">mm/s</span>
+                      </p>
                     </div>
                     <div>
                       <p className="text-[#64748B] text-[10px] font-bold uppercase mb-1">Type</p>
