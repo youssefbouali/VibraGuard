@@ -23,6 +23,8 @@ public class MotorController {
     @Autowired
     private VibrationRepository vibrationRepository;
     @Autowired
+    private VibrationSearchRepository vibrationSearchRepository;
+    @Autowired
     private VibrationStreamService vibrationStreamService;
 
     @PostMapping
@@ -168,6 +170,23 @@ public class MotorController {
                 vib.setTime(java.time.LocalDateTime.now().toString());
             }
             VibrationData saved = vibrationRepository.save(vib);
+            
+            // Sync to Elasticsearch
+            try {
+                VibrationSearchData searchData = new VibrationSearchData();
+                searchData.setId(saved.getId());
+                searchData.setMotorId(saved.getMotorId());
+                searchData.setTime(saved.getTime());
+                searchData.setVibRms(saved.getVibRms());
+                searchData.setVibPeak(saved.getVibPeak());
+                searchData.setVibKurtosis(saved.getVibKurtosis());
+                searchData.setTemperature(saved.getTemperature());
+                searchData.setAnomalous(saved.isAnomalous());
+                vibrationSearchRepository.save(searchData);
+            } catch (Exception e) {
+                System.err.println("Failed to sync to Elasticsearch: " + e.getMessage());
+            }
+
             vibrationStreamService.emit(saved);
             return saved;
         }).subscribeOn(Schedulers.boundedElastic());

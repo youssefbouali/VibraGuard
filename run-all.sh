@@ -114,9 +114,42 @@ cd "$KAFKA_DIR"
 docker build -t custom-kafka:latest .
 cd "$ROOT_DIR"
 
-#helm upgrade --install spark-operator spark/spark-kubernetes-operator -n $NAMESPACE
-#helm upgrade --install redis bitnami/redis -n $NAMESPACE --set architecture=standalone
-#helm upgrade --install elasticsearch elastic/elasticsearch -n $NAMESPACE --set replicas=1
+# helm upgrade --install spark-operator spark/spark-kubernetes-operator -n $NAMESPACE
+# helm upgrade --install redis bitnami/redis -n $NAMESPACE --set architecture=standalone
+
+echo "🔍 Deploying Elasticsearch (Single Node for Dev)..."
+# Using a lighter single-node setup instead of the full Helm chart if possible, 
+# but for consistency with your script style, I'll use the Helm chart with dev settings.
+helm upgrade --install elasticsearch elastic/elasticsearch -n $NAMESPACE \
+  --set replicas=1 \
+  --set minimumMasterNodes=1 \
+  --set resources.requests.cpu=100m \
+  --set resources.requests.memory=512Mi
+
+echo "📊 Deploying Kibana (Visualization)..."
+helm upgrade --install kibana elastic/kibana -n $NAMESPACE \
+  --set elasticsearchHosts="http://elasticsearch-master:9200" \
+  --set service.type=NodePort \
+  --set service.nodePort=30001 \
+  --set resources.requests.cpu=100m \
+  --set resources.requests.memory=512Mi
+
+echo "📈 Deploying Prometheus (Monitoring)..."
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm upgrade --install prometheus prometheus-community/prometheus -n $NAMESPACE \
+  --set server.service.type=NodePort \
+  --set server.service.nodePort=30090
+
+echo "🕵️  Deploying Jaeger (Tracing)..."
+helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
+helm repo update
+helm upgrade --install jaeger jaegertracing/jaeger -n $NAMESPACE \
+  --set allInOne.enabled=true \
+  --set agent.enabled=false \
+  --set collector.serviceType=ClusterIP \
+  --set query.serviceType=NodePort \
+  --set query.service.nodePort=30086
 
 # IPFS
 echo "🌐 Deploying IPFS..."
@@ -170,6 +203,8 @@ spec:
                 secretKeyRef:
                   name: oracle-db-credentials
                   key: password
+            - name: ELASTICSEARCH_URL
+              value: "http://elasticsearch-master:9200"
 EOF
 
 cat <<EOF > k8s/backend-service.yaml

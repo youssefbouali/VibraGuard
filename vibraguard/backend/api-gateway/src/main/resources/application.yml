@@ -18,6 +18,8 @@ spring:
   data:
     mongodb:
       uri: ${MONGO_URL:mongodb://mongodb.vibraguard.svc.cluster.local:27017/vibraguard}
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URL:http://elasticsearch-master.vibraguard.svc.cluster.local:9200}
 
 # IPFS Configuration
 ipfs:

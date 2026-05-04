@@ -617,15 +617,16 @@ kubectl expose deployment ipfs \
 
 # Elasticsearch
 echo "Déploiement d'Elasticsearch..."
-helm install elasticsearch elastic/elasticsearch -n vibraguard --set replicas=1
+helm install elasticsearch elastic/elasticsearch -n vibraguard --set replicas=1 --set minimumMasterNodes=1
 
 # Kibana (lié à Elasticsearch)
-#echo "Déploiement de Kibana..."
-#helm install kibana elastic/kibana -n vibraguard --set elasticsearchHosts="http://elasticsearch-master:9200"
+echo "Déploiement de Kibana..."
+helm install kibana elastic/kibana -n vibraguard --set elasticsearchHosts="http://elasticsearch-master:9200" --set service.type=NodePort --set service.nodePort=30001
 
 # Prometheus
-#echo "Déploiement de Prometheus..."
-#helm install prometheus prometheus-community/prometheus -n vibraguard
+echo "Déploiement de Prometheus..."
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm install prometheus prometheus-community/prometheus -n vibraguard --set server.service.type=NodePort --set server.service.nodePort=30090
 
 # Jaeger
 #echo "Déploiement de Jaeger..."
