@@ -47,7 +47,7 @@ public class BIController {
             long totalAlerts = allAlerts.size();
             long newAlerts = allAlerts.stream().filter(a -> "Nouveau".equalsIgnoreCase(a.getStatus())).count();
 
-            List<VibrationData> recentVibs = vibrationRepository.findTop1000ByOrderByIdDesc();
+            List<VibrationData> recentVibs = vibrationRepository.findTop1000ByOrderByTimeDesc();
             long totalVibs = recentVibs.size();
             long anomalousVibs = recentVibs.stream().filter(VibrationData::isAnomalous).count();
             

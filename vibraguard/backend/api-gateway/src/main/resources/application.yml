@@ -15,7 +15,9 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
-  # H2 console removed as we are using Oracle now
+  data:
+    mongodb:
+      uri: ${MONGO_URL:mongodb://mongodb.vibraguard.svc.cluster.local:27017/vibraguard}
 
 # IPFS Configuration
 ipfs:
