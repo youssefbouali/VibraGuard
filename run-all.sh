@@ -127,6 +127,15 @@ else
     echo "✅ IPFS is already deployed."
 fi
 
+# MongoDB
+echo "🍃 Deploying MongoDB..."
+if ! kubectl get deployment mongodb -n $NAMESPACE > /dev/null 2>&1; then
+    kubectl create deployment mongodb --image=mongo:latest -n $NAMESPACE
+    kubectl expose deployment mongodb --type=ClusterIP --port=27017 -n $NAMESPACE || true
+else
+    echo "✅ MongoDB is already deployed."
+fi
+
 # 5. Apply Application Manifests
 echo "🚀 Deploying Core Applications..."
 cd "$ROOT_DIR"
@@ -318,6 +327,43 @@ spec:
       protocol: TCP
       port: 2181
       targetPort: 2181
+EOF
+
+# MONGODB MANIFEST (For persistence and consistency)
+cat <<EOF > k8s/mongodb.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+  namespace: $NAMESPACE
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+        - name: mongodb
+          image: mongo:latest
+          ports:
+            - containerPort: 27017
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+  namespace: $NAMESPACE
+spec:
+  selector:
+    app: mongodb
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017
 EOF
 
 # AI PIPELINE MANIFESTS

@@ -611,6 +611,17 @@ kubectl expose deployment ipfs \
   --port=5001 \
   -n vibraguard
 
+# MongoDB
+echo "Déploiement de MongoDB..."
+kubectl create deployment mongodb \
+  --image=mongo:latest \
+  -n vibraguard
+
+kubectl expose deployment mongodb \
+  --type=ClusterIP \
+  --port=27017 \
+  -n vibraguard
+
 
 
 # Elasticsearch
