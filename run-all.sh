@@ -126,8 +126,12 @@ helm upgrade --install elasticsearch elastic/elasticsearch -n $NAMESPACE \
   --set resources.requests.cpu=100m \
   --set resources.requests.memory=512Mi
 
+echo "⏳ Waiting for Elasticsearch to be ready..."
+kubectl wait --for=condition=Ready pod -l app=elasticsearch-master -n $NAMESPACE --timeout=300s || true
+
 echo "📊 Deploying Kibana (Visualization)..."
 helm upgrade --install kibana elastic/kibana -n $NAMESPACE \
+  --timeout 600s \
   --set elasticsearchHosts="http://elasticsearch-master:9200" \
   --set service.type=NodePort \
   --set service.nodePort=30001 \
