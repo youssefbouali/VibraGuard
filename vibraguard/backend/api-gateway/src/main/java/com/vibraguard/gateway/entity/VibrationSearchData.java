@@ -8,7 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Document(indexName = "vibrations")
+@Document(indexName = "vibrations", createIndex = false)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,7 +19,7 @@ public class VibrationSearchData {
     @Field(type = FieldType.Keyword)
     private String motorId;
     
-    @Field(type = FieldType.Date)
+    @Field(type = FieldType.Keyword)
     private String time;
     
     @Field(type = FieldType.Double)
