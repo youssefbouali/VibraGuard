@@ -1,0 +1,74 @@
+name: Frontend Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'vibraguard/frontend/**'
+      - '.github/workflows/frontend-tests.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'vibraguard/frontend/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: ['18.x', '20.x']
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+    
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 10
+    
+    - name: Get pnpm store directory
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_ENV
+    
+    - name: Setup pnpm cache
+      uses: actions/cache@v3
+      with:
+        path: ${{ env.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+    
+    - name: Install dependencies
+      run: cd vibraguard/frontend && pnpm install
+    
+    - name: Run Type Check
+      run: cd vibraguard/frontend && pnpm typecheck
+    
+    - name: Run Tests
+      run: cd vibraguard/frontend && pnpm test
+    
+    - name: Run Test Coverage
+      run: cd vibraguard/frontend && pnpm test:coverage
+      continue-on-error: true
+    
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./vibraguard/frontend/coverage/coverage-final.json
+        flags: frontend
+        name: frontend-coverage
+      continue-on-error: true
+    
+    - name: Archive Coverage Report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: frontend-coverage-${{ matrix.node-version }}
+        path: vibraguard/frontend/coverage/

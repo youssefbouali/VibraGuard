@@ -1,0 +1,56 @@
+name: Blockchain Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'vibraguard/blockchain-net/**'
+      - '.github/workflows/blockchain-tests.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'vibraguard/blockchain-net/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: ['18.x', '20.x']
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+    
+    - name: Install dependencies
+      run: cd vibraguard/blockchain-net && npm install
+    
+    - name: Compile Contracts
+      run: cd vibraguard/blockchain-net && npx hardhat compile
+    
+    - name: Run Tests
+      run: cd vibraguard/blockchain-net && npm test
+    
+    - name: Run Coverage
+      run: cd vibraguard/blockchain-net && npx hardhat coverage
+      continue-on-error: true
+    
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./vibraguard/blockchain-net/coverage/coverage.json
+        flags: blockchain
+        name: blockchain-coverage
+      continue-on-error: true
+    
+    - name: Archive Coverage Report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: blockchain-coverage-${{ matrix.node-version }}
+        path: vibraguard/blockchain-net/coverage/

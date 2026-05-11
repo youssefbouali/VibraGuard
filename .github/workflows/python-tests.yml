@@ -1,0 +1,57 @@
+name: Python ML Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'vibraguard/ia_model/**'
+      - '.github/workflows/python-tests.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'vibraguard/ia_model/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        cd vibraguard/ia_model
+        pip install -r requirements.txt
+    
+    - name: Run Tests
+      run: cd vibraguard/ia_model && pytest tests/ -v
+    
+    - name: Generate Coverage Report
+      run: cd vibraguard/ia_model && pytest tests/ --cov=. --cov-report=xml --cov-report=html
+      continue-on-error: true
+    
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./vibraguard/ia_model/coverage.xml
+        flags: python
+        name: python-coverage
+      continue-on-error: true
+    
+    - name: Archive Coverage Report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: python-coverage-${{ matrix.python-version }}
+        path: vibraguard/ia_model/htmlcov/
