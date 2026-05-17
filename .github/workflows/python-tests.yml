@@ -10,6 +10,7 @@ on:
     branches: [ main, develop ]
     paths:
       - 'vibraguard/ia_model/**'
+  workflow_call:
 
 jobs:
   test:
@@ -51,7 +52,7 @@ jobs:
     
     - name: Archive Coverage Report
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: python-coverage-${{ matrix.python-version }}
         path: vibraguard/ia_model/htmlcov/

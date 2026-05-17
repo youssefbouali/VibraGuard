@@ -10,6 +10,7 @@ on:
     branches: [ main, develop ]
     paths:
       - 'vibraguard/backend/**'
+  workflow_call:
 
 jobs:
   test:
@@ -46,7 +47,7 @@ jobs:
     
     - name: Archive Test Results
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: backend-test-results
         path: vibraguard/backend/**/target/surefire-reports/

@@ -91,6 +91,16 @@ public class BIController {
             String criticalTrend = (criticalMotors == 0) ? "Stable" : (criticalRatio > 0.1 ? "+2" : "-1");
             
             String alertsTrend = newAlerts > 0 ? "+" + newAlerts : "Aucune";
+            long sitesConnected = allMotors.stream()
+                    .map(Motor::getSite)
+                    .filter(Objects::nonNull)
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .distinct()
+                    .count();
+            long activeAlerts = allAlerts.stream()
+                    .filter(a -> a.getStatus() == null || !a.getStatus().equalsIgnoreCase("Acquittée"))
+                    .count();
 
             // Calculate MTTR (Mean Time To Repair) from duration field and MTBF from order intervals
             List<WorkOrder> finishedOrders = allOrders.stream()
@@ -199,6 +209,8 @@ public class BIController {
             kpis.put("uptimeTrendUp", uptimeTrendUp);
             kpis.put("alerts", totalAlerts);
             kpis.put("alertsTrend", alertsTrend);
+            kpis.put("sitesConnected", sitesConnected);
+            kpis.put("activeAlerts", activeAlerts);
             
             kpis.put("mtbf", Math.round(avgMtbfHours * 10.0) / 10.0);
             kpis.put("mttr", Math.round(avgMttrHours * 10.0) / 10.0);
