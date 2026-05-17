@@ -64,32 +64,51 @@ public class BIController {
             
             String alertsTrend = newAlerts > 0 ? "+" + newAlerts : "Aucune";
 
-            // Calculate MTTR (Mean Time To Repair) from Work Orders
+            // Calculate MTTR (Mean Time To Repair) and MTBF from completed Work Orders
             List<WorkOrder> finishedOrders = allOrders.stream()
                     .filter(o -> o.getCompletedAt() != null && o.getCreatedAt() != null)
                     .collect(Collectors.toList());
             
             double avgMttrHours = 0.0;
+            double avgMtbfHours = 0.0;
             if (!finishedOrders.isEmpty()) {
-                long totalDiffMinutes = 0;
                 java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                int validCount = 0;
-                for (WorkOrder wo : finishedOrders) {
+                long totalRepairMinutes = 0;
+                int repairCount = 0;
+                List<WorkOrder> orderedByCompletedAt = finishedOrders.stream()
+                        .sorted(Comparator.comparing(WorkOrder::getCompletedAt))
+                        .collect(Collectors.toList());
+                
+                List<Long> mtbfIntervals = new ArrayList<>();
+                WorkOrder previous = null;
+                for (WorkOrder wo : orderedByCompletedAt) {
                     try {
                         Date start = sdf.parse(wo.getCreatedAt());
                         Date end = sdf.parse(wo.getCompletedAt());
-                        long diff = (end.getTime() - start.getTime()) / (1000 * 60);
-                        if (diff >= 0) {
-                            totalDiffMinutes += diff;
-                            validCount++;
+                        long repairMinutes = (end.getTime() - start.getTime()) / (1000 * 60);
+                        if (repairMinutes >= 0) {
+                            totalRepairMinutes += repairMinutes;
+                            repairCount++;
                         }
-                    } catch (Exception e) {}
+                        if (previous != null) {
+                            Date previousEnd = sdf.parse(previous.getCompletedAt());
+                            long intervalMinutes = (start.getTime() - previousEnd.getTime()) / (1000 * 60);
+                            if (intervalMinutes >= 0) {
+                                mtbfIntervals.add(intervalMinutes);
+                            }
+                        }
+                        previous = wo;
+                    } catch (Exception e) {
+                        // ignore invalid dates
+                    }
                 }
-                if (validCount > 0) {
-                    avgMttrHours = (double) totalDiffMinutes / (validCount * 60.0);
+                if (repairCount > 0) {
+                    avgMttrHours = (double) totalRepairMinutes / (repairCount * 60.0);
                 }
-            } else {
-                avgMttrHours = 4.5; // fallback for demo if no orders finished yet
+                if (!mtbfIntervals.isEmpty()) {
+                    long totalIntervalMinutes = mtbfIntervals.stream().mapToLong(Long::longValue).sum();
+                    avgMtbfHours = (double) totalIntervalMinutes / (mtbfIntervals.size() * 60.0);
+                }
             }
 
             Map<String, Object> kpis = new HashMap<>();
@@ -103,7 +122,7 @@ public class BIController {
             kpis.put("alerts", totalAlerts);
             kpis.put("alertsTrend", alertsTrend);
             
-            kpis.put("mtbf", 720.0); 
+            kpis.put("mtbf", Math.round(avgMtbfHours * 10.0) / 10.0);
             kpis.put("mttr", Math.round(avgMttrHours * 10.0) / 10.0);
             kpis.put("totalCost", totalCost);
             kpis.put("activeWorkOrders", allOrders.stream().filter(o -> !"Terminé".equalsIgnoreCase(o.getStatus())).count());

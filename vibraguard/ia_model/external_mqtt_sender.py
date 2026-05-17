@@ -12,7 +12,7 @@ MQTT_BROKER = os.getenv("MQTT_BROKER", "vibraguard.mywire.org")  # Fallback to m
 MQTT_PORT = int(os.getenv("MQTT_PORT", 30083))        # Default MQTT port for external access
 MQTT_TOPIC = os.getenv("MQTT_TOPIC", "vibraguard/sensors")
 CLIENT_ID = f"vibraguard_external_simulator_{uuid.uuid4()}" # Unique client ID
-MOTOR_ID = os.getenv("MOTOR_ID", "MTR-Broyeur-04") # Specify the motor ID here
+MOTOR_ID = os.getenv("MOTOR_ID", "aaa") # Specify the motor ID here
 
 # Optional: Add Username and Password if your broker requires authentication
 MQTT_USER = None   # e.g., "my_username"
@@ -23,7 +23,7 @@ MQTT_PASS = None   # e.g., "my_password"
 # ==========================================
 def generate_sensor_data():
     """Generates synthetic sensor data aligned with training CSV types."""
-    is_anomaly = random.random() < 1
+    is_anomaly = random.random() < 0
     
     if is_anomaly:
         scenario = random.choice(["ROULEMENT", "DESEQUILIBRE", "DESALIGNEMENT", "SURCHAUFFE", "ELECTRIQUE"])

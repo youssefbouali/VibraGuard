@@ -1,0 +1,1642 @@
+openapi: 3.0.0
+info:
+  title: VibraGuard API
+  description: The API for the VibraGuard IoT predictive maintenance system
+  version: "1.0.0"
+  contact:
+    name: VibraGuard Team
+  license:
+    name: MIT
+
+servers:
+  - url: https://api.vibraguard.com/api/v1
+    description: Production server
+  - url: http://localhost:8080/api/v1
+    description: Development server
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization
+  - name: Motors
+    description: Motor and vibration management
+  - name: Alerts
+    description: Machine Learning alerts and anomalies
+  - name: WorkOrders
+    description: Work order management
+  - name: Technicians
+    description: Technician profile management
+  - name: Analytics
+    description: Business Intelligence and KPI analytics
+
+paths:
+  # ==================== AUTHENTICATION ====================
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user account
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User successfully registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          description: Invalid input or user already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate user and generate JWT token
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Get current user profile information
+      operationId: getCurrentUser
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== MOTORS & VIBRATIONS ====================
+  /iot/motors:
+    get:
+      tags:
+        - Motors
+      summary: List all motors with current health status
+      operationId: getMotors
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: skip
+          in: query
+          description: Number of records to skip
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          description: Maximum number of records to return
+          schema:
+            type: integer
+            default: 10
+        - name: status
+          in: query
+          description: Filter by health status
+          schema:
+            type: string
+            enum: [healthy, warning, critical]
+      responses:
+        '200':
+          description: List of motors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Motor'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Motors
+      summary: Add a new motor to the system
+      operationId: createMotor
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMotorRequest'
+      responses:
+        '201':
+          description: Motor created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Motor'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /iot/motors/{id}:
+    get:
+      tags:
+        - Motors
+      summary: Get details and status of a specific motor
+      operationId: getMotor
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Motor ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Motor details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Motor'
+        '404':
+          description: Motor not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Motors
+      summary: Update motor information
+      operationId: updateMotor
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Motor ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMotorRequest'
+      responses:
+        '200':
+          description: Motor updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Motor'
+        '404':
+          description: Motor not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Motors
+      summary: Delete a motor and its associated data
+      operationId: deleteMotor
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Motor ID
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Motor deleted successfully
+        '404':
+          description: Motor not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /iot/motors/{id}/vibration:
+    get:
+      tags:
+        - Motors
+      summary: Get vibration data history for a specific motor
+      operationId: getMotorVibrationHistory
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Motor ID
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          description: Start date for filtering
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          description: End date for filtering
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          description: Maximum number of records
+          schema:
+            type: integer
+            default: 100
+      responses:
+        '200':
+          description: Vibration history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VibrationData'
+        '404':
+          description: Motor not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /iot/motors/vibrations:
+    get:
+      tags:
+        - Motors
+      summary: Get all vibration data across all motors
+      operationId: getAllVibrations
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: skip
+          in: query
+          description: Number of records to skip
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          description: Maximum number of records
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: All vibration data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VibrationData'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Motors
+      summary: Record new vibration sensor reading
+      operationId: recordVibration
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VibrationDataInput'
+      responses:
+        '201':
+          description: Vibration data recorded and synced
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VibrationData'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== ML ALERTS ====================
+  /ml/alerts:
+    get:
+      tags:
+        - Alerts
+      summary: List maintenance and anomaly alerts
+      operationId: getAlerts
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: skip
+          in: query
+          description: Number of records to skip
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          description: Maximum number of records
+          schema:
+            type: integer
+            default: 20
+        - name: status
+          in: query
+          description: Filter by alert status
+          schema:
+            type: string
+            enum: [open, acknowledged, resolved]
+        - name: priority
+          in: query
+          description: Filter by priority level
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+      responses:
+        '200':
+          description: List of alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Alert'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Alerts
+      summary: Create a new maintenance or anomaly alert
+      operationId: createAlert
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAlertRequest'
+      responses:
+        '201':
+          description: Alert created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alert'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ml/alerts/{id}:
+    put:
+      tags:
+        - Alerts
+      summary: Update alert status, priority, or level
+      operationId: updateAlert
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Alert ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAlertRequest'
+      responses:
+        '200':
+          description: Alert updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alert'
+        '404':
+          description: Alert not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ml/alerts/mark-all-read:
+    post:
+      tags:
+        - Alerts
+      summary: Mark all new alerts as read for current user
+      operationId: markAllAlertsRead
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: All alerts marked as read
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ml/alerts/{id}/read:
+    post:
+      tags:
+        - Alerts
+      summary: Mark a specific alert as read
+      operationId: markAlertRead
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Alert ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Alert marked as read
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alert'
+        '404':
+          description: Alert not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== WORK ORDERS ====================
+  /iot/work-orders:
+    get:
+      tags:
+        - WorkOrders
+      summary: Get work orders with dynamic filtering based on user role
+      operationId: getWorkOrders
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: skip
+          in: query
+          description: Number of records to skip
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          description: Maximum number of records
+          schema:
+            type: integer
+            default: 20
+        - name: status
+          in: query
+          description: Filter by work order status
+          schema:
+            type: string
+            enum: [open, in_progress, completed, cancelled]
+      responses:
+        '200':
+          description: List of work orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkOrder'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - WorkOrders
+      summary: Create a new work order and notify assigned technician
+      operationId: createWorkOrder
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWorkOrderRequest'
+      responses:
+        '201':
+          description: Work order created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkOrder'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /iot/work-orders/{id}:
+    put:
+      tags:
+        - WorkOrders
+      summary: Update work order status, assignment, and costs
+      operationId: updateWorkOrder
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Work Order ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWorkOrderRequest'
+      responses:
+        '200':
+          description: Work order updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkOrder'
+        '404':
+          description: Work order not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - WorkOrders
+      summary: Delete a work order from the system
+      operationId: deleteWorkOrder
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Work Order ID
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Work order deleted successfully
+        '404':
+          description: Work order not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== TECHNICIANS ====================
+  /iot/technicians:
+    get:
+      tags:
+        - Technicians
+      summary: List all technicians with roles and departments
+      operationId: getTechnicians
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: skip
+          in: query
+          description: Number of records to skip
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          description: Maximum number of records
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: List of technicians
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Technician'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /iot/technicians/{id}:
+    get:
+      tags:
+        - Technicians
+      summary: Get profile of a specific technician
+      operationId: getTechnician
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Technician ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Technician profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Technician'
+        '404':
+          description: Technician not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Technicians
+      summary: Update technician profile information
+      operationId: updateTechnician
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Technician ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTechnicianRequest'
+      responses:
+        '200':
+          description: Technician updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Technician'
+        '404':
+          description: Technician not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Technicians
+      summary: Delete a technician account
+      operationId: deleteTechnician
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Technician ID
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Technician deleted successfully
+        '404':
+          description: Technician not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== BUSINESS INTELLIGENCE ====================
+  /bi/kpis:
+    get:
+      tags:
+        - Analytics
+      summary: Aggregate and calculate real-time KPIs for dashboard
+      operationId: getKPIs
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: KPI data including MTTR, critical motors, availability, costs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KPIData'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /bi/kpis/upsert:
+    post:
+      tags:
+        - Analytics
+      summary: Insert or update a specific KPI in the database
+      operationId: upsertKPI
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertKPIRequest'
+      responses:
+        '200':
+          description: KPI upserted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KPI'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /bi/mtbf-by-site:
+    get:
+      tags:
+        - Analytics
+      summary: Get MTBF (Mean Time Between Failures) metrics by site
+      operationId: getMTBFBySite
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          description: Start date for analysis
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          description: End date for analysis
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: MTBF metrics by site
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MTBFBySite'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /bi/maintenance-costs:
+    get:
+      tags:
+        - Analytics
+      summary: Get maintenance cost history and distribution
+      operationId: getMaintenanceCosts
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          description: Start date for analysis
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          description: End date for analysis
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Maintenance cost data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaintenanceCosts'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /bi/interventions:
+    get:
+      tags:
+        - Analytics
+      summary: Get intervention statistics
+      operationId: getInterventionStats
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          description: Start date for analysis
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          description: End date for analysis
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Intervention statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterventionStats'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # ==================== REQUEST/RESPONSE MODELS ====================
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - firstName
+        - lastName
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 8
+        firstName:
+          type: string
+        lastName:
+          type: string
+        department:
+          type: string
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          example: Bearer
+        user:
+          $ref: '#/components/schemas/UserResponse'
+
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        role:
+          type: string
+          enum: [admin, technician, user]
+        department:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    # ==================== MOTOR MODELS ====================
+    Motor:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        location:
+          type: string
+        siteId:
+          type: string
+        installationDate:
+          type: string
+          format: date
+        healthStatus:
+          type: string
+          enum: [healthy, warning, critical]
+        lastVibrationReading:
+          type: number
+          format: double
+        lastReadingTime:
+          type: string
+          format: date-time
+        specifications:
+          type: object
+          properties:
+            horsepower:
+              type: number
+            rpmRating:
+              type: integer
+            manufacturer:
+              type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateMotorRequest:
+      type: object
+      required:
+        - name
+        - location
+        - siteId
+      properties:
+        name:
+          type: string
+        location:
+          type: string
+        siteId:
+          type: string
+        installationDate:
+          type: string
+          format: date
+        specifications:
+          type: object
+          properties:
+            horsepower:
+              type: number
+            rpmRating:
+              type: integer
+            manufacturer:
+              type: string
+
+    UpdateMotorRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        location:
+          type: string
+        installationDate:
+          type: string
+          format: date
+        specifications:
+          type: object
+
+    VibrationData:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        motorId:
+          type: string
+          format: uuid
+        timestamp:
+          type: string
+          format: date-time
+        accelerationX:
+          type: number
+          format: double
+        accelerationY:
+          type: number
+          format: double
+        accelerationZ:
+          type: number
+          format: double
+        velocityRMS:
+          type: number
+          format: double
+        frequency:
+          type: number
+          format: double
+        temperature:
+          type: number
+          format: double
+        anomalyScore:
+          type: number
+          format: double
+          description: ML anomaly score (0-1)
+
+    VibrationDataInput:
+      type: object
+      required:
+        - motorId
+        - accelerationX
+        - accelerationY
+        - accelerationZ
+      properties:
+        motorId:
+          type: string
+          format: uuid
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 format, defaults to current time
+        accelerationX:
+          type: number
+          format: double
+        accelerationY:
+          type: number
+          format: double
+        accelerationZ:
+          type: number
+          format: double
+        velocityRMS:
+          type: number
+          format: double
+        frequency:
+          type: number
+          format: double
+        temperature:
+          type: number
+          format: double
+
+    # ==================== ALERT MODELS ====================
+    Alert:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        motorId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [maintenance, anomaly]
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        status:
+          type: string
+          enum: [open, acknowledged, resolved]
+        severity:
+          type: string
+          enum: [minor, moderate, severe]
+        assignedTo:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        resolvedAt:
+          type: string
+          format: date-time
+        isRead:
+          type: boolean
+
+    CreateAlertRequest:
+      type: object
+      required:
+        - motorId
+        - type
+        - title
+        - priority
+      properties:
+        motorId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [maintenance, anomaly]
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        severity:
+          type: string
+          enum: [minor, moderate, severe]
+        assignedTo:
+          type: string
+          format: uuid
+
+    UpdateAlertRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [open, acknowledged, resolved]
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        severity:
+          type: string
+          enum: [minor, moderate, severe]
+        assignedTo:
+          type: string
+          format: uuid
+
+    # ==================== WORK ORDER MODELS ====================
+    WorkOrder:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        alertId:
+          type: string
+          format: uuid
+        motorId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [open, in_progress, completed, cancelled]
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        assignedTo:
+          type: string
+          format: uuid
+        createdBy:
+          type: string
+          format: uuid
+        estimatedCost:
+          type: number
+          format: double
+        actualCost:
+          type: number
+          format: double
+        createdAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+
+    CreateWorkOrderRequest:
+      type: object
+      required:
+        - alertId
+        - motorId
+        - title
+        - priority
+        - assignedTo
+      properties:
+        alertId:
+          type: string
+          format: uuid
+        motorId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        assignedTo:
+          type: string
+          format: uuid
+        estimatedCost:
+          type: number
+          format: double
+
+    UpdateWorkOrderRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [open, in_progress, completed, cancelled]
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        assignedTo:
+          type: string
+          format: uuid
+        actualCost:
+          type: number
+          format: double
+        completedAt:
+          type: string
+          format: date-time
+
+    # ==================== TECHNICIAN MODELS ====================
+    Technician:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        department:
+          type: string
+        role:
+          type: string
+          enum: [junior, senior, supervisor]
+        skills:
+          type: array
+          items:
+            type: string
+        assignedSites:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    UpdateTechnicianRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+        department:
+          type: string
+        role:
+          type: string
+          enum: [junior, senior, supervisor]
+        skills:
+          type: array
+          items:
+            type: string
+        assignedSites:
+          type: array
+          items:
+            type: string
+
+    # ==================== ANALYTICS MODELS ====================
+    KPIData:
+      type: object
+      properties:
+        mttr:
+          type: number
+          format: double
+          description: Mean Time To Repair in hours
+        criticalMotorsCount:
+          type: integer
+          description: Number of motors with critical status
+        globalAvailability:
+          type: number
+          format: double
+          description: Global availability percentage
+        totalMaintenanceCosts:
+          type: number
+          format: double
+        lastUpdated:
+          type: string
+          format: date-time
+
+    KPI:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        value:
+          type: number
+          format: double
+        unit:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    UpsertKPIRequest:
+      type: object
+      required:
+        - name
+        - value
+      properties:
+        name:
+          type: string
+        value:
+          type: number
+          format: double
+        unit:
+          type: string
+
+    MTBFBySite:
+      type: object
+      properties:
+        siteId:
+          type: string
+        siteName:
+          type: string
+        mtbf:
+          type: number
+          format: double
+          description: Mean Time Between Failures in hours
+        totalFailures:
+          type: integer
+        period:
+          type: string
+          enum: [daily, weekly, monthly, yearly]
+
+    MaintenanceCosts:
+      type: object
+      properties:
+        totalCosts:
+          type: number
+          format: double
+        costsByType:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+        history:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              cost:
+                type: number
+                format: double
+              description:
+                type: string
+
+    InterventionStats:
+      type: object
+      properties:
+        totalInterventions:
+          type: integer
+        completedInterventions:
+          type: integer
+        pendingInterventions:
+          type: integer
+        averageDuration:
+          type: number
+          format: double
+          description: Average duration in hours
+        successRate:
+          type: number
+          format: double
+          description: Success rate as percentage
+
+    # ==================== COMMON MODELS ====================
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        details:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
