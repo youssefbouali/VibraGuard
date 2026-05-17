@@ -1,9 +1,10 @@
 package com.vibraguard;
 
+import com.vibraguard.gateway.ApiGatewayApplication;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
+@SpringBootTest(classes = ApiGatewayApplication.class)
 public class ApiGatewayApplicationTests {
 
     @Test
