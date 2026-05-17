@@ -79,22 +79,40 @@ public class BIController {
                         .sorted(Comparator.comparing(WorkOrder::getCompletedAt))
                         .collect(Collectors.toList());
                 
-                // Calculate MTTR from duration field
+                // Calculate MTTR from duration field, supporting values like "10h 00m"
                 for (WorkOrder wo : orderedByCompletedAt) {
                     if (wo.getDuration() != null && !wo.getDuration().trim().isEmpty()) {
                         try {
                             String dur = wo.getDuration().trim().toLowerCase();
                             double hours = 0;
-                            if (dur.contains("h")) {
-                                hours = Double.parseDouble(dur.replace("h", "").trim());
-                            } else if (dur.contains("m")) {
-                                double minutes = Double.parseDouble(dur.replace("m", "").trim());
-                                hours = minutes / 60.0;
+                            java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("(?:(\\d+(?:\\.\\d+)?)h)?\\s*(?:(\\d+(?:\\.\\d+)?)m)?").matcher(dur);
+                            if (matcher.matches()) {
+                                if (matcher.group(1) != null) {
+                                    hours += Double.parseDouble(matcher.group(1));
+                                }
+                                if (matcher.group(2) != null) {
+                                    hours += Double.parseDouble(matcher.group(2)) / 60.0;
+                                }
+                            } else if (dur.contains("h") || dur.contains("m")) {
+                                // fallback for slightly different formatting
+                                String normalized = dur.replace("h", " h ").replace("m", " m ").trim();
+                                String[] parts = normalized.split("\\s+");
+                                for (int i = 0; i < parts.length - 1; i += 2) {
+                                    String value = parts[i];
+                                    String unit = parts[i + 1];
+                                    if (unit.equals("h")) {
+                                        hours += Double.parseDouble(value);
+                                    } else if (unit.equals("m")) {
+                                        hours += Double.parseDouble(value) / 60.0;
+                                    }
+                                }
                             } else {
                                 hours = Double.parseDouble(dur);
                             }
-                            totalDurationHours += hours;
-                            durationCount++;
+                            if (hours >= 0) {
+                                totalDurationHours += hours;
+                                durationCount++;
+                            }
                         } catch (NumberFormatException e) {
                             // ignore invalid duration
                         }
@@ -102,6 +120,26 @@ public class BIController {
                 }
                 if (durationCount > 0) {
                     avgMttrHours = totalDurationHours / durationCount;
+                } else {
+                    // Fallback to created/completed timestamps when duration field cannot be parsed
+                    long totalRepairMinutes = 0;
+                    int repairCount = 0;
+                    for (WorkOrder wo : orderedByCompletedAt) {
+                        try {
+                            Date start = sdf.parse(wo.getCreatedAt());
+                            Date end = sdf.parse(wo.getCompletedAt());
+                            long repairMinutes = (end.getTime() - start.getTime()) / (1000 * 60);
+                            if (repairMinutes >= 0) {
+                                totalRepairMinutes += repairMinutes;
+                                repairCount++;
+                            }
+                        } catch (Exception e) {
+                            // ignore invalid dates
+                        }
+                    }
+                    if (repairCount > 0) {
+                        avgMttrHours = (double) totalRepairMinutes / (repairCount * 60.0);
+                    }
                 }
                 
                 // Calculate MTBF from intervals between completed orders
