@@ -8,12 +8,40 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/bi")
 public class BIController {
+
+    private static final List<DateTimeFormatter> DATE_FORMATTERS = List.of(
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"),
+            DateTimeFormatter.ISO_LOCAL_DATE_TIME,
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"),
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
+    );
+
+    private static Date parseDate(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String trimmed = value.trim();
+        for (DateTimeFormatter formatter : DATE_FORMATTERS) {
+            try {
+                LocalDateTime dateTime = LocalDateTime.parse(trimmed, formatter);
+                return Date.from(dateTime.atZone(ZoneId.systemDefault()).toInstant());
+            } catch (DateTimeParseException e) {
+                // try next formatter
+            }
+        }
+        return null;
+    }
 
     @Autowired
     private WorkOrderRepository workOrderRepository;
@@ -72,7 +100,6 @@ public class BIController {
             double avgMttrHours = 0.0;
             double avgMtbfHours = 0.0;
             if (!finishedOrders.isEmpty()) {
-                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 double totalDurationHours = 0;
                 int durationCount = 0;
                 List<WorkOrder> orderedByCompletedAt = finishedOrders.stream()
@@ -125,16 +152,14 @@ public class BIController {
                     long totalRepairMinutes = 0;
                     int repairCount = 0;
                     for (WorkOrder wo : orderedByCompletedAt) {
-                        try {
-                            Date start = sdf.parse(wo.getCreatedAt());
-                            Date end = sdf.parse(wo.getCompletedAt());
+                        Date start = parseDate(wo.getCreatedAt());
+                        Date end = parseDate(wo.getCompletedAt());
+                        if (start != null && end != null) {
                             long repairMinutes = (end.getTime() - start.getTime()) / (1000 * 60);
                             if (repairMinutes >= 0) {
                                 totalRepairMinutes += repairMinutes;
                                 repairCount++;
                             }
-                        } catch (Exception e) {
-                            // ignore invalid dates
                         }
                     }
                     if (repairCount > 0) {
@@ -146,19 +171,17 @@ public class BIController {
                 List<Long> mtbfIntervals = new ArrayList<>();
                 WorkOrder previous = null;
                 for (WorkOrder wo : orderedByCompletedAt) {
-                    try {
-                        Date start = sdf.parse(wo.getCreatedAt());
-                        if (previous != null) {
-                            Date previousEnd = sdf.parse(previous.getCompletedAt());
+                    Date start = parseDate(wo.getCreatedAt());
+                    if (previous != null && start != null) {
+                        Date previousEnd = parseDate(previous.getCompletedAt());
+                        if (previousEnd != null) {
                             long intervalMinutes = (start.getTime() - previousEnd.getTime()) / (1000 * 60);
                             if (intervalMinutes >= 0) {
                                 mtbfIntervals.add(intervalMinutes);
                             }
                         }
-                        previous = wo;
-                    } catch (Exception e) {
-                        // ignore invalid dates
                     }
+                    previous = wo;
                 }
                 if (!mtbfIntervals.isEmpty()) {
                     long totalIntervalMinutes = mtbfIntervals.stream().mapToLong(Long::longValue).sum();
