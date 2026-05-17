@@ -28,11 +28,12 @@ export default function RapportsBI() {
       
       const kpis = await api.getBIKPIs();
       const mtbf = await api.getMtbfBySite();
+      const costs = await api.getMaintenanceCosts();
 
       const formatTrend = (t: any) => {
         if (!t) return "";
         const s = String(t);
-        if (s === "Stable") return "";
+        if (s === "Stable" || s === "Optimal") return "";
         if (s.startsWith("-")) return "";
         return s;
       };
@@ -64,9 +65,17 @@ export default function RapportsBI() {
       autoTable(doc, {
         startY: (doc as any).lastAutoTable.finalY + 15,
         head: [['Site OCP', 'MTBF (Heures)']],
-        body: mtbf.map(s => [s.siteName, s.mtbfValue]),
+        body: mtbf.length > 0 ? mtbf.map((s: any) => [s.name, s.value]) : [["Aucune donnée", ""]],
         theme: 'striped',
         headStyles: { fillColor: [0, 122, 61] }
+      });
+
+      autoTable(doc, {
+        startY: (doc as any).lastAutoTable.finalY + 15,
+        head: [['Mois', 'Coût Réel', 'Budget']],
+        body: costs.length > 0 ? costs.map((c: any) => [c.month, `${c.reel.toLocaleString()} $`, `${c.budget.toLocaleString()} $`]) : [["Aucune donnée", "", ""]],
+        theme: 'striped',
+        headStyles: { fillColor: [15, 39, 48] }
       });
 
       doc.save("VibraGuard_BI_Report.pdf");
@@ -91,7 +100,7 @@ export default function RapportsBI() {
       const formatTrend = (t: any) => {
         if (!t) return "";
         const s = String(t);
-        if (s === "Stable") return "";
+        if (s === "Stable" || s === "Optimal") return "";
         if (s.startsWith("-")) return "";
         return s;
       };
@@ -106,10 +115,14 @@ export default function RapportsBI() {
       ];
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(kpiData), "KPIs Globaux");
 
-      const mtbfData = mtbfArr.map(s => ({ "Site": s.siteName, "MTBF (h)": s.mtbfValue }));
+      const mtbfData = mtbfArr.length > 0
+        ? mtbfArr.map((s: any) => ({ "Site": s.name, "MTBF (h)": s.value }))
+        : [{ "Site": "Aucune donnée", "MTBF (h)": "" }];
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mtbfData), "MTBF par Site");
 
-      const costData = costs.map(c => ({ "Mois": c.mois, "Réel": c.reel, "Budget": c.budget }));
+      const costData = costs.length > 0
+        ? costs.map((c: any) => ({ "Mois": c.month, "Réel": c.reel, "Budget": c.budget }))
+        : [{ "Mois": "Aucune donnée", "Réel": "", "Budget": "" }];
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(costData), "Coûts Maintenance");
 
       XLSX.writeFile(wb, "VibraGuard_BI_Data.xlsx");
