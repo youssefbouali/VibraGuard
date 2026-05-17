@@ -64,7 +64,7 @@ public class BIController {
             
             String alertsTrend = newAlerts > 0 ? "+" + newAlerts : "Aucune";
 
-            // Calculate MTTR (Mean Time To Repair) and MTBF from completed Work Orders
+            // Calculate MTTR (Mean Time To Repair) from duration field and MTBF from order intervals
             List<WorkOrder> finishedOrders = allOrders.stream()
                     .filter(o -> o.getCompletedAt() != null && o.getCreatedAt() != null)
                     .collect(Collectors.toList());
@@ -73,23 +73,43 @@ public class BIController {
             double avgMtbfHours = 0.0;
             if (!finishedOrders.isEmpty()) {
                 java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                long totalRepairMinutes = 0;
-                int repairCount = 0;
+                double totalDurationHours = 0;
+                int durationCount = 0;
                 List<WorkOrder> orderedByCompletedAt = finishedOrders.stream()
                         .sorted(Comparator.comparing(WorkOrder::getCompletedAt))
                         .collect(Collectors.toList());
                 
+                // Calculate MTTR from duration field
+                for (WorkOrder wo : orderedByCompletedAt) {
+                    if (wo.getDuration() != null && !wo.getDuration().trim().isEmpty()) {
+                        try {
+                            String dur = wo.getDuration().trim().toLowerCase();
+                            double hours = 0;
+                            if (dur.contains("h")) {
+                                hours = Double.parseDouble(dur.replace("h", "").trim());
+                            } else if (dur.contains("m")) {
+                                double minutes = Double.parseDouble(dur.replace("m", "").trim());
+                                hours = minutes / 60.0;
+                            } else {
+                                hours = Double.parseDouble(dur);
+                            }
+                            totalDurationHours += hours;
+                            durationCount++;
+                        } catch (NumberFormatException e) {
+                            // ignore invalid duration
+                        }
+                    }
+                }
+                if (durationCount > 0) {
+                    avgMttrHours = totalDurationHours / durationCount;
+                }
+                
+                // Calculate MTBF from intervals between completed orders
                 List<Long> mtbfIntervals = new ArrayList<>();
                 WorkOrder previous = null;
                 for (WorkOrder wo : orderedByCompletedAt) {
                     try {
                         Date start = sdf.parse(wo.getCreatedAt());
-                        Date end = sdf.parse(wo.getCompletedAt());
-                        long repairMinutes = (end.getTime() - start.getTime()) / (1000 * 60);
-                        if (repairMinutes >= 0) {
-                            totalRepairMinutes += repairMinutes;
-                            repairCount++;
-                        }
                         if (previous != null) {
                             Date previousEnd = sdf.parse(previous.getCompletedAt());
                             long intervalMinutes = (start.getTime() - previousEnd.getTime()) / (1000 * 60);
@@ -101,9 +121,6 @@ public class BIController {
                     } catch (Exception e) {
                         // ignore invalid dates
                     }
-                }
-                if (repairCount > 0) {
-                    avgMttrHours = (double) totalRepairMinutes / (repairCount * 60.0);
                 }
                 if (!mtbfIntervals.isEmpty()) {
                     long totalIntervalMinutes = mtbfIntervals.stream().mapToLong(Long::longValue).sum();
