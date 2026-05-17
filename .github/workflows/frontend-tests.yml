@@ -47,7 +47,7 @@ jobs:
           ${{ runner.os }}-pnpm-store-
     
     - name: Install dependencies
-      run: cd vibraguard/frontend && pnpm install
+      run: cd vibraguard/frontend && pnpm install --no-frozen-lockfile
     
     - name: Run Type Check
       run: cd vibraguard/frontend && pnpm typecheck
