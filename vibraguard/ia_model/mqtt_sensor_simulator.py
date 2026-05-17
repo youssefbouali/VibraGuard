@@ -32,9 +32,6 @@ def generate_mock_data():
             "vib_rms": 5.0 + random.uniform(0, 5),
             "vib_peak": 15.0 + random.uniform(0, 10),
             "vib_kurtosis": 4.0 + random.uniform(0, 4),
-            "fft_dominant_freq": 24.5 + random.uniform(-5, 5),
-            "fft_max_amplitude": 10.0 + random.uniform(0, 10),
-            "fft_total_power": 500.0 + random.uniform(0, 500),
             "current_rms": 12.0 + random.uniform(0, 5),
             "current_thd": 15.0 + random.uniform(0, 10),
             "temperature": 75.0 + random.uniform(0, 20)
@@ -46,9 +43,6 @@ def generate_mock_data():
             "vib_rms": 2.5 + random.uniform(-0.5, 0.5),
             "vib_peak": 8.0 + random.uniform(-1, 1),
             "vib_kurtosis": 3.0 + random.uniform(-0.5, 0.5),
-            "fft_dominant_freq": 24.5 + random.uniform(-1, 1),
-            "fft_max_amplitude": 4.0 + random.uniform(-1, 1),
-            "fft_total_power": 200.0 + random.uniform(-50, 50),
             "current_rms": 8.5 + random.uniform(-0.5, 0.5),
             "current_thd": 5.0 + random.uniform(-1, 1),
             "temperature": 55.0 + random.uniform(-5, 5)

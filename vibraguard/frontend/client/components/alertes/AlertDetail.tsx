@@ -123,10 +123,10 @@ export function AlertDetail({ alerte, onClose, onAcquitter, onEscalader }: Alert
             <span className="text-[#EF4444] text-xl font-bold">{alerte.velociteRms != null ? `${alerte.velociteRms} mm/s` : 'N/A'}</span>
           </div>
 
-          {/* Accélération Peak */}
+          {/* Vibration Peak */}
           <div className="flex flex-col gap-2 p-4 rounded-lg border border-white/5 bg-[rgba(10,17,24,0.60)]">
-            <span className="text-[#64748B] text-xs">Accélération Peak</span>
-            <span className="text-[#EF4444] text-xl font-bold">{alerte.accelerationPeak != null ? `${alerte.accelerationPeak} g` : 'N/A'}</span>
+            <span className="text-[#64748B] text-xs">Vibration Peak</span>
+            <span className="text-[#EF4444] text-xl font-bold">{alerte.accelerationPeak != null ? `${alerte.accelerationPeak} mm/s` : 'N/A'}</span>
           </div>
 
           {/* Température */}

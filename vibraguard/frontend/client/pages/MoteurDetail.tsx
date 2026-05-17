@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 import { MoteurDetailHeader } from "@/components/dashboard/MoteurDetailHeader";
 import { SanteCard } from "@/components/dashboard/SanteCard";
 import { TendanceVibratoire } from "@/components/dashboard/TendanceVibratoire";
-import { FFTChart } from "@/components/dashboard/FFTChart";
 import { DernieresAlertes } from "@/components/dashboard/DernieresAlertes";
 import { Header } from "@/components/dashboard/Header";
 import { api } from "@/lib/api";
@@ -14,8 +13,6 @@ import { useVibrations } from "@/hooks/use-vibrations";
 const tabs = [
   "Vue d'ensemble",
   "Vibrations Temps Réel",
-  "Analyse FFT",
-  "Prédiction RUL",
   "Historique Alertes",
   "Interventions",
 ];
@@ -100,8 +97,7 @@ export default function MoteurDetail() {
                 <TendanceVibratoire vibrations={vibrations} />
               </div>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-4 sm:gap-6">
-              <FFTChart data={vibrations[0]} />
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)] gap-4 sm:gap-6">
               <DernieresAlertes alerts={alerts} />
             </div>
           </>
@@ -120,11 +116,6 @@ export default function MoteurDetail() {
           </div>
         )}
 
-        {activeTab === "Analyse FFT" && (
-          <div className="w-full">
-            <FFTChart data={vibrations[0]} />
-          </div>
-        )}
 
         {activeTab === "Historique Alertes" && (
           <div className="w-full">
@@ -132,16 +123,6 @@ export default function MoteurDetail() {
           </div>
         )}
 
-        {activeTab === "Prédiction RUL" && (
-          <div className="p-8 rounded-lg border border-black/[0.08] bg-[#0B1518] text-center">
-            <h3 className="text-[#E6F0F2] text-lg font-semibold mb-2">Prédiction de Durée de Vie Résiduelle (RUL)</h3>
-            <p className="text-[#98A6A8]">Calcul basé sur les algorithmes de Maintenance Prédictive...</p>
-            <div className="mt-6 flex flex-col items-center">
-               <div className="text-4xl font-bold text-[#007A3D] mb-2">{motor.rul || 85}%</div>
-               <div className="text-sm text-[#98A6A8]">Santé Structurelle</div>
-            </div>
-          </div>
-        )}
 
         {activeTab === "Interventions" && (
           <div className="p-8 rounded-lg border border-black/[0.08] bg-[#0B1518] text-center">

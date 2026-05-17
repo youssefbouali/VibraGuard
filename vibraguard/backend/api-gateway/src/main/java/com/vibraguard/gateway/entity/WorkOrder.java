@@ -27,4 +27,6 @@ public class WorkOrder {
     private double cost;
     private String duration;
     private String parts;
+    private String createdAt;
+    private String completedAt;
 }

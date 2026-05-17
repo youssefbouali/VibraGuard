@@ -14,7 +14,7 @@ echo "🚀 Starting VibraGuard Platform Deployment from: $ROOT_DIR"
 # 1. Verify/Start Minikube
 if ! minikube status > /dev/null 2>&1; then
     echo "📦 Starting Minikube..."
-    minikube start --driver=docker --cpus=4 --memory=8192mb --ports=30008:30008,30007:30007,30001:30001,30083:30083
+    minikube start --driver=docker --cpus=4 --memory=8192mb --ports=30008:30008,30007:30007,30001:30001,30083:30083,30090:30090,30086:30086
 else
     echo "✅ Minikube is already running."
 fi
@@ -104,15 +104,97 @@ cd "$KAFKA_DIR"
 docker build -t custom-kafka:latest .
 cd "$ROOT_DIR"
 
-#helm upgrade --install spark-operator spark/spark-kubernetes-operator -n $NAMESPACE
-#helm upgrade --install redis bitnami/redis -n $NAMESPACE --set architecture=standalone
-#helm upgrade --install elasticsearch elastic/elasticsearch -n $NAMESPACE --set replicas=1
+# helm upgrade --install spark-operator spark/spark-kubernetes-operator -n $NAMESPACE
+# helm upgrade --install redis bitnami/redis -n $NAMESPACE --set architecture=standalone
+
+echo "🔍 Deploying Elasticsearch (Single Node for Dev)..."
+# Using a lighter single-node setup instead of the full Helm chart if possible, 
+# but for consistency with your script style, I'll use the Helm chart with dev settings.
+helm upgrade --install elasticsearch elastic/elasticsearch -n $NAMESPACE \
+  --set replicas=1 \
+  --set minimumMasterNodes=1 \
+  --set xpack.security.enabled=false \
+  --set xpack.security.http.ssl.enabled=false \
+  --set resources.requests.cpu=100m \
+  --set resources.requests.memory=512Mi
+
+echo "⏳ Waiting for Elasticsearch to be ready..."
+kubectl wait --for=condition=Ready pod -l app=elasticsearch-master -n $NAMESPACE --timeout=300s || true
+
+echo "📊 Deploying Kibana (Visualization via manifest)..."
+kubectl apply -n $NAMESPACE -f - <<EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kibana
+  namespace: $NAMESPACE
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kibana
+  template:
+    metadata:
+      labels:
+        app: kibana
+    spec:
+      containers:
+        - name: kibana
+          image: docker.elastic.co/kibana/kibana:8.5.1
+          ports:
+            - containerPort: 5601
+          env:
+            - name: ELASTICSEARCH_HOSTS
+              value: "http://elasticsearch-master:9200"
+            - name: XPACK_SECURITY_ENABLED
+              value: "false"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kibana
+  namespace: $NAMESPACE
+spec:
+  type: NodePort
+  selector:
+    app: kibana
+  ports:
+    - port: 5601
+      targetPort: 5601
+      nodePort: 30001
+EOF
+
+echo "📈 Deploying Prometheus (Monitoring)..."
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm upgrade --install prometheus prometheus-community/prometheus -n $NAMESPACE \
+  --set server.service.type=NodePort \
+  --set server.service.nodePort=30090
+
+echo "🕵️  Deploying Jaeger (Tracing)..."
+helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
+helm repo update
+helm upgrade --install jaeger jaegertracing/jaeger -n $NAMESPACE \
+  --set allInOne.enabled=true \
+  --set agent.enabled=false \
+  --set collector.serviceType=ClusterIP \
+  --set query.serviceType=NodePort \
+  --set query.service.nodePort=30086
+
 # IPFS
-#if ! kubectl get deployment ipfs -n $NAMESPACE > /dev/#null 2>&1; then
-#    echo "🌐 Deploying IPFS..."
-#    kubectl create deployment ipfs --image=ipfs/#kubo:latest -n $NAMESPACE
-#    kubectl expose deployment ipfs --type=NodePort #--port=5001 --target-port=5001 --node-port=30001 -n #$NAMESPACE || true
-#fi
+echo "🌐 Deploying IPFS..."
+if ! kubectl get deployment ipfs -n $NAMESPACE > /dev/null 2>&1; then
+    kubectl create deployment ipfs --image=ipfs/kubo:latest -n $NAMESPACE
+    kubectl expose deployment ipfs --type=NodePort --port=5001 -n $NAMESPACE || true
+else
+    echo "✅ IPFS is already deployed."
+fi
+
+# MongoDB is now handled via declarative manifest in k8s/mongodb.yaml
 
 # 5. Apply Application Manifests
 echo "🚀 Deploying Core Applications..."
@@ -160,6 +242,8 @@ spec:
                 secretKeyRef:
                   name: oracle-db-credentials
                   key: password
+            - name: ELASTICSEARCH_URL
+              value: "http://elasticsearch-master:9200"
 EOF
 
 cat <<EOF > k8s/backend-service.yaml
@@ -318,6 +402,43 @@ spec:
       targetPort: 2181
 EOF
 
+# MONGODB MANIFEST (For persistence and consistency)
+cat <<EOF > k8s/mongodb.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+  namespace: $NAMESPACE
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+        - name: mongodb
+          image: mongo:latest
+          ports:
+            - containerPort: 27017
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+  namespace: $NAMESPACE
+spec:
+  selector:
+    app: mongodb
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017
+EOF
+
 # AI PIPELINE MANIFESTS
 echo "🧠 Deploying AI Pipeline (Bridge & Spark Streaming)..."
 cat <<EOF > k8s/ai-pipeline.yaml
@@ -469,4 +590,12 @@ echo "Access points:"
 echo "Frontend: http://$MINIKUBE_IP:30008"
 echo "Backend:  http://$MINIKUBE_IP:30007"
 #echo "IPFS API: http://$MINIKUBE_IP:$(kubectl get svc -n $NAMESPACE ipfs -o jsonpath='{.spec.ports[0].nodePort}')"
+echo "======================================================"
+
+# Safety: Ensure port-forwarding for all observability tools (in case minikube wasn't restarted)
+echo "🔌 Activating external access for Monitoring & Tracing..."
+kubectl port-forward --address 0.0.0.0 svc/prometheus-server -n $NAMESPACE 30090:80 > /dev/null 2>&1 &
+kubectl port-forward --address 0.0.0.0 svc/jaeger-query -n $NAMESPACE 30086:16686 > /dev/null 2>&1 &
+kubectl port-forward --address 0.0.0.0 svc/kibana -n $NAMESPACE 30001:5601 > /dev/null 2>&1 &
+echo "🚀 Accessibility check: Prometheus (30090), Jaeger (30086), Kibana (30001) are active."
 echo "======================================================"

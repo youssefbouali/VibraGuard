@@ -30,7 +30,6 @@ export function MoteurDetailHeader({ motor }: { motor: any }) {
         ['Vitesse Nominale', motor.speed || 'N/A'],
         ['Puissance', motor.power || 'N/A'],
         ['Localisation', motor.localisation || ''],
-        ['RUL (Durée de vie restante)', `${motor.rul || 85}%`],
       ],
       theme: 'striped',
       headStyles: { fillStyle: 'fill', fillColor: [0, 122, 61] }
@@ -74,7 +73,7 @@ export function MoteurDetailHeader({ motor }: { motor: any }) {
                 </g>
                 <defs><clipPath id="critique-clip"><rect width="12" height="12" fill="white"/></clipPath></defs>
               </svg>
-              {motor.etatLabel}
+              {motor.etatLabel === "Normal" ? "Optimal" : motor.etatLabel === "Attention" ? "Alerte" : motor.etatLabel}
             </span>
           </div>
 

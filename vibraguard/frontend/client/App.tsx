@@ -16,6 +16,8 @@ import AlerteDetail from "./pages/AlerteDetail";
 import OrdresDeTravail from "./pages/OrdresDeTravail";
 import CreerOrdreDeTravail from "./pages/CreerOrdreDeTravail";
 import RapportsBI from "./pages/RapportsBI";
+import Reports from "./pages/Reports";
+import ReportShare from "./pages/ReportShare";
 import AuditBlockchain from "./pages/AuditBlockchain";
 import Parametres from "./pages/Parametres";
 import ProfilUtilisateur from "./pages/ProfilUtilisateur";
@@ -56,13 +58,17 @@ const App = () => (
             <Route path="/alertes/:id" element={<ProtectedRoute><AlerteDetail /></ProtectedRoute>} />
             <Route path="/ordres-de-travail" element={<ProtectedRoute><OrdresDeTravail /></ProtectedRoute>} />
             <Route path="/ordres-de-travail/creer" element={<ProtectedRoute><CreerOrdreDeTravail /></ProtectedRoute>} />
-            <Route path="/rapports-bi" element={<ProtectedRoute><RapportsBI /></ProtectedRoute>} />
-            <Route path="/audit" element={<ProtectedRoute><AuditBlockchain /></ProtectedRoute>} />
+            <Route path="/rapports-bi" element={<ProtectedRoute allowedRoles={["admin"]}><RapportsBI /></ProtectedRoute>} />
+            <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+            <Route path="/audit" element={<ProtectedRoute allowedRoles={["admin"]}><AuditBlockchain /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             <Route path="/parametres" element={<ProtectedRoute><Parametres /></ProtectedRoute>} />
             <Route path="/parametres/profil" element={<ProtectedRoute><ProfilUtilisateur /></ProtectedRoute>} />
-            <Route path="/parametres/utilisateurs/ajouter" element={<ProtectedRoute><AjouterUtilisateur /></ProtectedRoute>} />
-            <Route path="/parametres/utilisateurs/:id" element={<ProtectedRoute><UtilisateurDetail /></ProtectedRoute>} />
+            <Route path="/parametres/utilisateurs/ajouter" element={<ProtectedRoute allowedRoles={["admin"]}><AjouterUtilisateur /></ProtectedRoute>} />
+            <Route path="/parametres/utilisateurs/:id" element={<ProtectedRoute allowedRoles={["admin"]}><UtilisateurDetail /></ProtectedRoute>} />
+
+            {/* Public Shared Report Route */}
+            <Route path="/reports/share/:id" element={<ReportShare />} />
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
+import { useAuth } from "@/lib/auth-context";
 
 interface User {
   id: string | number;
@@ -13,109 +15,112 @@ interface User {
   lastConnection: string | "En ligne";
 }
 
-const ROLES = ["Tous les rôles", "Admin", "Ingénieur Data", "Technicien", "Responsable"];
-const DEPARTMENTS = [
-  "Tous les départements",
-  "Direction",
-  "Analyse & ML",
-  "Maintenance Ligne A",
-  "Maintenance Ligne B",
-  "Opérations",
-  "Maintenance",
-];
 
-const ROLE_STYLES: Record<string, { border: string; bg: string; text: string }> = {
-  Admin: {
-    border: "border-[rgba(217,63,63,0.30)]",
-    bg: "bg-[rgba(217,63,63,0.15)]",
-    text: "text-[#D93F3F]",
-  },
-  "Ingénieur Data": {
-    border: "border-[rgba(12,108,242,0.30)]",
-    bg: "bg-[rgba(12,108,242,0.15)]",
-    text: "text-[#0C6CF2]",
-  },
-  Technicien: {
-    border: "border-[rgba(207,239,241,0.30)]",
-    bg: "bg-[rgba(207,239,241,0.15)]",
-    text: "text-[#CFEFF1]",
-  },
-  Responsable: {
-    border: "border-[rgba(242,169,0,0.30)]",
-    bg: "bg-[rgba(242,169,0,0.15)]",
-    text: "text-[#F2A900]",
-  },
-};
+const ITEMS_PER_PAGE = 6;
 
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
+export function UtilisateursTab() {
+  const ROLES = ["Tous les rôles", "Admin", "Ingénieur Data", "Technicien", "Responsable"];
+  const DEPARTMENTS = [
+    "Tous les départements",
+    "Direction",
+    "Analyse & ML",
+    "Maintenance Ligne A",
+    "Maintenance Ligne B",
+    "Opérations",
+    "Maintenance",
+  ];
 
-function UserAvatar({ user }: { user: User }) {
-  if (user.avatar) {
+  const ROLE_STYLES: Record<string, { border: string; bg: string; text: string }> = {
+    Admin: {
+      border: "border-[rgba(217,63,63,0.30)]",
+      bg: "bg-[rgba(217,63,63,0.15)]",
+      text: "text-[#D93F3F]",
+    },
+    "Ingénieur Data": {
+      border: "border-[rgba(12,108,242,0.30)]",
+      bg: "bg-[rgba(12,108,242,0.15)]",
+      text: "text-[#0C6CF2]",
+    },
+    Technicien: {
+      border: "border-[rgba(207,239,241,0.30)]",
+      bg: "bg-[rgba(207,239,241,0.15)]",
+      text: "text-[#CFEFF1]",
+    },
+    Responsable: {
+      border: "border-[rgba(242,169,0,0.30)]",
+      bg: "bg-[rgba(242,169,0,0.15)]",
+      text: "text-[#F2A900]",
+    },
+  };
+
+  const RoleBadge = ({ role }: { role: string }) => {
+    const styles = ROLE_STYLES[role] || ROLE_STYLES["Technicien"];
     return (
-      <img
-        src={user.avatar}
-        alt={user.name}
-        className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-      />
-    );
-  }
-  return (
-    <div className="w-10 h-10 rounded-full bg-[#007A3D]/30 border border-[#007A3D]/40 flex items-center justify-center flex-shrink-0">
-      <span className="text-[#10B981] text-sm font-semibold">{getInitials(user.name)}</span>
-    </div>
-  );
-}
-
-function RoleBadge({ role }: { role: string }) {
-  const styles = ROLE_STYLES[role] || ROLE_STYLES["Technicien"];
-  return (
-    <span
-      className={`inline-flex items-center px-3 py-[6px] rounded border text-xs font-semibold ${styles.border} ${styles.bg} ${styles.text}`}
-    >
-      {role}
-    </span>
-  );
-}
-
-function StatusBadge({ status }: { status: User["status"] }) {
-  if (status === "Actif") {
-    return (
-      <span className="inline-flex items-center gap-[6px] px-3 py-[6px] rounded bg-[rgba(0,122,61,0.15)]">
-        <span className="w-[6px] h-[6px] rounded-full bg-[#007A3D] shadow-[0_0_6px_0_#007A3D] flex-shrink-0" />
-        <span className="text-xs font-semibold text-[#007A3D]">Actif</span>
+      <span
+        className={`inline-flex items-center px-3 py-[6px] rounded border text-xs font-semibold ${styles.border} ${styles.bg} ${styles.text}`}
+      >
+        {role}
       </span>
     );
-  }
-  return (
-    <span className="inline-flex items-center gap-[6px] px-3 py-[6px] rounded bg-[rgba(155,179,181,0.15)]">
-      <span className="w-[6px] h-[6px] rounded-full bg-[#CFEFF1] flex-shrink-0" />
-      <span className="text-xs font-semibold text-[#CFEFF1]">Inactif</span>
-    </span>
-  );
-}
+  };
 
-function LastConnectionCell({ value }: { value: string }) {
-  if (value === "En ligne") {
+  const StatusBadge = ({ status }: { status: User["status"] }) => {
+    if (status === "Actif") {
+      return (
+        <span className="inline-flex items-center gap-[6px] px-3 py-[6px] rounded bg-[rgba(0,122,61,0.15)]">
+          <span className="w-[6px] h-[6px] rounded-full bg-[#007A3D] shadow-[0_0_6px_0_#007A3D] flex-shrink-0" />
+          <span className="text-xs font-semibold text-[#007A3D]">Actif</span>
+        </span>
+      );
+    }
     return (
-      <span className="flex items-center gap-2 text-sm font-medium text-[#007A3D]">
-        <span className="w-[6px] h-[6px] rounded-full bg-[#007A3D] shadow-[0_0_6px_0_#007A3D] flex-shrink-0" />
-        En ligne
+      <span className="inline-flex items-center gap-[6px] px-3 py-[6px] rounded bg-[rgba(155,179,181,0.15)]">
+        <span className="w-[6px] h-[6px] rounded-full bg-[#CFEFF1] flex-shrink-0" />
+        <span className="text-xs font-semibold text-[#CFEFF1]">Inactif</span>
       </span>
     );
-  }
-  return <span className="text-sm text-[#CFEFF1]">{value}</span>;
-}
+  };
 
-const EditIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-    <g clipPath="url(#edit-clip)">
+  const LastConnectionCell = ({ value }: { value: string }) => {
+    if (value === "En ligne") {
+      return (
+        <span className="flex items-center gap-2 text-sm font-medium text-[#007A3D]">
+          <span className="w-[6px] h-[6px] rounded-full bg-[#007A3D] shadow-[0_0_6px_0_#007A3D] flex-shrink-0" />
+          En ligne
+        </span>
+      );
+    }
+    return <span className="text-sm text-[#CFEFF1]">{value}</span>;
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const UserAvatar = ({ user }: { user: User }) => {
+    if (user.avatar) {
+      return (
+        <img
+          src={user.avatar}
+          alt={user.name}
+          className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+        />
+      );
+    }
+    return (
+      <div className="w-10 h-10 rounded-full bg-[#007A3D]/30 border border-[#007A3D]/40 flex items-center justify-center flex-shrink-0">
+        <span className="text-[#10B981] text-sm font-semibold">{getInitials(user.name)}</span>
+      </div>
+    );
+  };
+
+  const EditIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <path
         d="M15.8805 5.10929C16.7062 4.28376 16.7064 2.94515 15.8808 2.11941C15.0553 1.29368 13.7167 1.29351 12.891 2.11904L2.88146 12.1308C2.70732 12.3044 2.57855 12.5182 2.50646 12.7533L1.51571 16.0173C1.47622 16.1494 1.51245 16.2926 1.61006 16.39C1.70766 16.4875 1.85088 16.5235 1.98296 16.4838L5.24771 15.4938C5.48259 15.4223 5.69634 15.2944 5.87021 15.121L15.8805 5.10929"
         stroke="#CFEFF1"
@@ -123,18 +128,11 @@ const EditIcon = () => (
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-    </g>
-    <defs>
-      <clipPath id="edit-clip">
-        <rect width="18" height="18" fill="white" />
-      </clipPath>
-    </defs>
-  </svg>
-);
+    </svg>
+  );
 
-const DeleteIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-    <g clipPath="url(#delete-clip)">
+  const DeleteIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <path
         d="M12 15.75V14.25C12 12.5943 10.6557 11.25 9 11.25H4.5C2.84425 11.25 1.5 12.5943 1.5 14.25V15.75"
         stroke="#D93F3F"
@@ -156,18 +154,8 @@ const DeleteIcon = () => (
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-    </g>
-    <defs>
-      <clipPath id="delete-clip">
-        <rect width="18" height="18" fill="white" />
-      </clipPath>
-    </defs>
-  </svg>
-);
-
-const ITEMS_PER_PAGE = 6;
-
-export function UtilisateursTab() {
+    </svg>
+  );
   const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -177,6 +165,7 @@ export function UtilisateursTab() {
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
   const [deptDropdownOpen, setDeptDropdownOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const { user: currentUser } = useAuth();
 
   useEffect(() => {
     setLoading(true);
@@ -188,14 +177,37 @@ export function UtilisateursTab() {
       .finally(() => setLoading(false));
   }, []);
 
+  const handleDelete = async (id: string, name: string) => {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer l'utilisateur ${name} ?`)) {
+      try {
+        await api.deleteTechnician(id);
+        toast.success("Utilisateur supprimé avec succès");
+        setUsers(prev => prev.filter(u => u.id.toString() !== id.toString()));
+      } catch (error) {
+        console.error("Failed to delete user:", error);
+        toast.error("Erreur lors de la suppression");
+      }
+    }
+  };
+
   const filteredUsers = users.filter((u) => {
     const matchesSearch =
       search === "" ||
-      u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase());
-    const matchesRole = selectedRole === "Tous les rôles" || u.role === selectedRole;
+      (u.name && u.name.toLowerCase().includes(search.toLowerCase())) ||
+      (u.email && u.email.toLowerCase().includes(search.toLowerCase()));
+
+    const userRole = u.role?.toLowerCase() || "";
+    const filterRole = selectedRole.toLowerCase();
+
+    const matchesRole = selectedRole === "Tous les rôles" || 
+      userRole === filterRole ||
+      (userRole === "admin" && filterRole === "admin") ||
+      ((userRole === "technicien" || userRole === "technician") && filterRole === "technicien");
+
     const matchesDept =
-      selectedDepartment === "Tous les départements" || u.department === selectedDepartment;
+      selectedDepartment === "Tous les départements" || 
+      (u.department && u.department.toLowerCase() === selectedDepartment.toLowerCase());
+      
     return matchesSearch && matchesRole && matchesDept;
   });
 
@@ -403,57 +415,62 @@ export function UtilisateursTab() {
             </div>
           ) : (
             <>
-              {paginatedUsers.map((user, idx) => (
+              {paginatedUsers.map((u, idx) => (
                 <div
-                  key={user.id}
+                  key={u.id}
                   className={`flex flex-col md:grid md:grid-cols-[2fr_1.2fr_1.4fr_1fr_1.3fr_auto] items-start md:items-center gap-3 md:gap-0 px-6 py-4 ${idx < paginatedUsers.length - 1 ? "border-b border-black/[0.08]" : ""
                     } hover:bg-white/[0.02] transition-colors`}
                 >
               {/* User info */}
               <div className="flex items-center gap-4 w-full md:w-auto">
-                <UserAvatar user={user} />
+                <UserAvatar user={u} />
                 <div className="flex flex-col gap-1 min-w-0">
                   <span className="text-sm font-semibold text-[#E8F6F5] leading-tight">
-                    {user.name}
+                    {u.name}
                   </span>
                   <span className="text-[13px] text-[#CFEFF1] leading-tight truncate">
-                    {user.email}
+                    {u.email}
                   </span>
                 </div>
               </div>
-
+ 
               {/* Role */}
               <div className="md:px-0 md:py-0">
-                <RoleBadge role={user.role} />
+                <RoleBadge role={u.role} />
               </div>
-
+ 
               {/* Department */}
               <div className="text-sm text-[#E8F6F5] md:px-0">
-                {user.department}
+                {u.department}
               </div>
-
+ 
               {/* Status */}
               <div>
-                <StatusBadge status={user.status} />
+                <StatusBadge status={u.status} />
               </div>
-
+ 
               {/* Last connection */}
               <div>
-                <LastConnectionCell value={user.lastConnection} />
+                <LastConnectionCell value={u.lastConnection} />
               </div>
-
+ 
               {/* Actions */}
-              <div className="flex items-center gap-2 justify-end">
-                <button
-                  onClick={() => navigate(`/parametres/utilisateurs/${user.id}`)}
-                  className="flex items-center justify-center w-8 h-8 rounded hover:bg-white/5 transition-colors"
-                >
-                  <EditIcon />
-                </button>
-                <button className="flex items-center justify-center w-8 h-8 rounded hover:bg-[#D93F3F]/10 transition-colors">
-                  <DeleteIcon />
-                </button>
-              </div>
+                <div className="flex items-center gap-2 justify-end">
+                  <button
+                    onClick={() => navigate(`/parametres/utilisateurs/${u.id}`)}
+                    className="flex items-center justify-center w-8 h-8 rounded hover:bg-white/5 transition-colors"
+                  >
+                    <EditIcon />
+                  </button>
+                  {u.id.toString() !== currentUser?.id?.toString() && (
+                    <button 
+                      onClick={() => handleDelete(u.id.toString(), u.name)}
+                      className="flex items-center justify-center w-8 h-8 rounded hover:bg-[#D93F3F]/10 transition-colors"
+                    >
+                      <DeleteIcon />
+                    </button>
+                  )}
+                </div>
               </div>
               ))}
 

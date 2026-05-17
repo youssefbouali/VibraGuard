@@ -33,7 +33,7 @@ sudo mv kubectl /usr/local/bin/
 
 # Étape 1: Démarrer Minikube (cluster from scratch)
 echo "Démarrage de Minikube..."
-minikube start --driver=docker --cpus=4 --memory=8192mb --ports=30008:30008,30007:30007,30001:30001  # Ajuste selon ta machine
+minikube start --driver=docker --cpus=4 --memory=8192mb --ports=30008:30008,30007:30007,30001:30001,30083:30083,30090:30090,30086:30086  # Fixed ports for external access
 
 # Démarrer Minikube (avec Docker comme driver)
 #minikube start --driver=docker --cpus=2 --memory=4096mb
@@ -611,19 +611,30 @@ kubectl expose deployment ipfs \
   --port=5001 \
   -n vibraguard
 
+# MongoDB deployment is now managed via k8s manifests
+
 
 
 # Elasticsearch
 echo "Déploiement d'Elasticsearch..."
-helm install elasticsearch elastic/elasticsearch -n vibraguard --set replicas=1
+helm install elasticsearch elastic/elasticsearch -n vibraguard \
+  --set replicas=1 \
+  --set minimumMasterNodes=1 \
+  --set xpack.security.enabled=false \
+  --set xpack.security.http.ssl.enabled=false
 
 # Kibana (lié à Elasticsearch)
-#echo "Déploiement de Kibana..."
-#helm install kibana elastic/kibana -n vibraguard --set elasticsearchHosts="http://elasticsearch-master:9200"
+echo "Déploiement de Kibana..."
+helm upgrade --install kibana elastic/kibana -n vibraguard \
+  --set elasticsearchHosts="http://elasticsearch-master:9200" \
+  --set xpack.security.enabled=false \
+  --set service.type=NodePort \
+  --set service.nodePort=30001
 
 # Prometheus
-#echo "Déploiement de Prometheus..."
-#helm install prometheus prometheus-community/prometheus -n vibraguard
+echo "Déploiement de Prometheus..."
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm install prometheus prometheus-community/prometheus -n vibraguard --set server.service.type=NodePort --set server.service.nodePort=30090
 
 # Jaeger
 #echo "Déploiement de Jaeger..."
@@ -642,3 +653,10 @@ helm install elasticsearch elastic/elasticsearch -n vibraguard --set replicas=1
 echo "Déploiement terminé ! Vérifie avec 'kubectl get all -n vibraguard'"
 echo "Pour accéder, utilise 'minikube service <service-name> -n vibraguard'"
 echo "Adapte les values.yaml pour prod (ex. : persistence avec PV, secrets)."
+
+# Ensure connectivity even if minikube wasn't restarted with the new ports
+echo "🔌 Ensuring port-forwarding for external access..."
+kubectl port-forward --address 0.0.0.0 svc/prometheus-server -n vibraguard 30090:80 > /dev/null 2>&1 &
+kubectl port-forward --address 0.0.0.0 svc/jaeger-query -n vibraguard 30086:16686 > /dev/null 2>&1 &
+kubectl port-forward --address 0.0.0.0 svc/kibana -n vibraguard 30001:5601 > /dev/null 2>&1 &
+echo "✅ All monitoring ports (30090, 30086, 30001) are now forwarded."

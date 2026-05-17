@@ -12,7 +12,7 @@ interface User {
 interface AuthContextType {
     user: User | null;
     token: string | null;
-    login: (token: string, user: User) => void;
+    login: (token: string, user: User, rememberMe: boolean) => void;
     logout: () => void;
     isLoading: boolean;
 }
@@ -21,7 +21,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
-    const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
+    const [token, setToken] = useState<string | null>(
+        localStorage.getItem("token") || sessionStorage.getItem("token")
+    );
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -51,14 +53,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         fetchUser();
     }, [token]);
 
-    const login = (newToken: string, userData: User) => {
-        localStorage.setItem("token", newToken);
+    const login = (newToken: string, userData: User, rememberMe: boolean) => {
+        if (rememberMe) {
+            localStorage.setItem("token", newToken);
+        } else {
+            sessionStorage.setItem("token", newToken);
+        }
         setToken(newToken);
         setUser(userData);
     };
 
     const logout = () => {
         localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
         setToken(null);
         setUser(null);
     };

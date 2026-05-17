@@ -1,18 +1,33 @@
-import { useState } from "react";
+import { useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { SeuilsTab } from "./parametres/SeuilsTab";
 import { UtilisateursTab } from "./parametres/UtilisateursTab";
+import { useAuth } from "@/lib/auth-context";
 
-const TABS = [
-  "Capteurs IoT",
-  "Seuils Alertes",
-  "Modèles ML",
-  "IPFS",
-  "Kafka",
-  "Utilisateurs",
-];
 export default function Parametres() {
-  const [activeTab, setActiveTab] = useState("Seuils Alertes");
+  const tabs = [
+    "Utilisateurs",
+    "Capteurs IoT",
+    "Seuils Alertes",
+    "Modèles ML",
+    "IPFS",
+    "Kafka",
+  ];
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "Utilisateurs";
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const isAdmin = user?.role ? user.role.toLowerCase().includes("admin") || user.role.toLowerCase().includes("administrateur") : false;
+
+  useEffect(() => {
+    if (!isAdmin) {
+      navigate("/parametres/profil");
+    }
+  }, [isAdmin, navigate]);
+
+  const setActiveTab = (tab: string) => {
+    setSearchParams({ tab });
+  };
 
   return (
     <DashboardLayout
@@ -56,7 +71,7 @@ export default function Parametres() {
         {/* Tabs */}
         <div className="border-b border-black/[0.08] -mb-2">
           <div className="flex gap-6 sm:gap-8 overflow-x-auto scrollbar-none">
-            {TABS.map((tab) => {
+            {tabs.map((tab) => {
               const isActive = tab === activeTab;
               return (
                 <button
@@ -79,9 +94,9 @@ export default function Parametres() {
 
         {/* Tab content */}
         <div className="flex-1 pb-8">
-          {activeTab === "Seuils Alertes" && <SeuilsTab />}
-          {activeTab === "Utilisateurs" && <UtilisateursTab />}
-          {activeTab !== "Seuils Alertes" && activeTab !== "Utilisateurs" && (
+          {activeTab === "Utilisateurs" ? (
+            <UtilisateursTab />
+          ) : (
             <div className="flex items-center justify-center h-48 text-[#C9E7E6] text-sm opacity-50">
               Contenu de l'onglet «{activeTab}» à venir
             </div>

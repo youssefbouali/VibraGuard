@@ -143,6 +143,11 @@ export function KanbanCard({ ot, onClick }: KanbanCardProps) {
 
   return (
     <div
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData("taskId", ot.id);
+        e.dataTransfer.effectAllowed = "move";
+      }}
       onClick={onClick}
       className={cn(
         "flex flex-col gap-3 p-4 rounded-md border border-black/[0.08] bg-[#0B1518] shadow-[0_4px_12px_rgba(0,0,0,0.2)] cursor-pointer hover:border-white/10 transition-colors",

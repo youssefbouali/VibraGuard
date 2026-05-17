@@ -15,9 +15,22 @@ const dotColor: Record<ColumnStatus, string> = {
   done: "bg-[#00924A]",
 };
 
-export function KanbanColumn({ title, status, tasks, onCardClick }: KanbanColumnProps) {
+export function KanbanColumn({ title, status, tasks, onCardClick, onDrop }: KanbanColumnProps & { onDrop?: (taskId: string, newStatus: ColumnStatus) => void }) {
   return (
-    <div className="flex flex-col flex-1 min-w-[280px] max-w-[400px] rounded-lg border border-black/[0.08] bg-[rgba(11,21,24,0.40)] overflow-hidden">
+    <div 
+      onDragOver={(e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        const taskId = e.dataTransfer.getData("taskId");
+        if (taskId && onDrop) {
+          onDrop(taskId, status);
+        }
+      }}
+      className="flex flex-col flex-1 min-w-[280px] max-w-[400px] rounded-lg border border-black/[0.08] bg-[rgba(11,21,24,0.40)] overflow-hidden"
+    >
       {/* Column header */}
       <div className="flex items-center justify-between px-5 py-5 border-b border-black/[0.08] bg-[rgba(11,21,24,0.80)] shrink-0">
         <div className="flex items-center gap-2">

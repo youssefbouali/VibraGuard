@@ -10,12 +10,37 @@ export default function Register() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(true);
   const [role, setRole] = useState("Technicien");
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [enterprise, setEnterprise] = useState("OCP Group");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  const calculatePasswordStrength = (pwd: string) => {
+    if (!pwd) return { level: "", score: 0 };
+    let strength = 0;
+    const hasLowerCase = /[a-z]/.test(pwd);
+    const hasUpperCase = /[A-Z]/.test(pwd);
+    const hasNumbers = /\d/.test(pwd);
+    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd);
+    
+    if (pwd.length >= 8) strength++;
+    if (pwd.length >= 12) strength++;
+    if (hasLowerCase) strength++;
+    if (hasUpperCase) strength++;
+    if (hasNumbers) strength++;
+    if (hasSpecialChar) strength++;
+    
+    if (strength <= 2) return { level: "Faible", score: 1 };
+    if (strength <= 4) return { level: "Moyen", score: 2 };
+    return { level: "Fort", score: 3 };
+  };
+
+  const passwordStrength = calculatePasswordStrength(password);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,12 +58,25 @@ export default function Register() {
     setIsLoading(true);
 
     try {
+      const roleMap: Record<string, string> = {
+        "Technicien": "TECHNICIEN",
+        "Ingénieur": "INGENIEUR",
+        "Manager": "MANAGER",
+        "Administrateur": "ADMIN"
+      };
+
       const response = await fetch("/api/v1/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password, fullName, role }),
+        body: JSON.stringify({ 
+          email, 
+          password, 
+          fullName, 
+          role: roleMap[role] || "TECHNICIEN",
+          enterprise 
+        }),
       });
 
       if (!response.ok) {
@@ -47,7 +85,21 @@ export default function Register() {
       }
 
       const data = await response.json();
-      login(data.token, { email: data.email, fullName: data.fullName });
+      
+      if (!data.token) {
+        toast.success("Demande envoyée ! Votre compte doit être activé par un administrateur.");
+        navigate("/"); // Redirect to login
+        return;
+      }
+
+      login(data.token, { 
+        email: data.email, 
+        fullName: data.fullName,
+        role: data.role || "Utilisateur", 
+        employeeId: data.employeeId || "",
+        phoneNumber: data.phoneNumber || "",
+        department: data.department || "Maintenance"
+      }, true);
 
       toast.success("Compte créé avec succès !");
       navigate("/dashboard");
@@ -245,12 +297,23 @@ export default function Register() {
                 {/* Password strength */}
                 <div className="flex items-center gap-2 mt-1.5">
                   <div className="flex gap-1 flex-1">
-                    <div className="h-1 flex-1 rounded-full bg-[#10B981]" />
-                    <div className="h-1 flex-1 rounded-full bg-[#10B981]" />
-                    <div className="h-1 flex-1 rounded-full bg-[#10B981]" />
+                    <div className={`h-1 flex-1 rounded-full transition-colors ${
+                      passwordStrength.score >= 1 ? "bg-[#EF4444]" : "bg-[rgba(255,255,255,0.10)]"
+                    }`} />
+                    <div className={`h-1 flex-1 rounded-full transition-colors ${
+                      passwordStrength.score >= 2 ? "bg-[#F59E0B]" : "bg-[rgba(255,255,255,0.10)]"
+                    }`} />
+                    <div className={`h-1 flex-1 rounded-full transition-colors ${
+                      passwordStrength.score >= 3 ? "bg-[#10B981]" : "bg-[rgba(255,255,255,0.10)]"
+                    }`} />
                     <div className="h-1 flex-1 rounded-full bg-[rgba(255,255,255,0.10)]" />
                   </div>
-                  <span className="text-[#10B981] text-xs font-medium">Fort</span>
+                  <span className={`text-xs font-medium transition-colors ${
+                    passwordStrength.score === 1 ? "text-[#EF4444]" :
+                    passwordStrength.score === 2 ? "text-[#F59E0B]" :
+                    passwordStrength.score === 3 ? "text-[#10B981]" :
+                    "text-[#64748B]"
+                  }`}>{password ? passwordStrength.level : ""}</span>
                 </div>
               </FormField>
               <FormField label="Confirmation">
@@ -281,9 +344,11 @@ export default function Register() {
                 <InputWrapper>
                   <input
                     type="text"
-                    defaultValue="OCP Group"
+                    value={enterprise}
+                    onChange={(e) => setEnterprise(e.target.value)}
                     className="flex-1 bg-transparent text-white text-[15px] font-normal outline-none min-w-0"
                     placeholder="Votre entreprise"
+                    required
                   />
                 </InputWrapper>
               </FormField>
@@ -323,9 +388,22 @@ export default function Register() {
               </button>
               <span className="text-[#CBD5E1] text-sm leading-snug">
                 J'accepte les{" "}
-                <a href="#" className="text-[#10B981] hover:text-[#34D399] transition-colors">Conditions d'utilisation</a>
+                <button 
+                  type="button"
+                  onClick={() => setShowTermsModal(true)}
+                  className="text-[#10B981] hover:text-[#34D399] transition-colors"
+                >
+                  Conditions d'utilisation
+                </button>
                 {" "}et la{" "}
-                <a href="#" className="text-[#10B981] hover:text-[#34D399] transition-colors">Politique de confidentialité</a>.
+                <button 
+                  type="button"
+                  onClick={() => setShowPrivacyModal(true)}
+                  className="text-[#10B981] hover:text-[#34D399] transition-colors"
+                >
+                  Politique de confidentialité
+                </button>
+                .
               </span>
             </label>
 
@@ -355,6 +433,77 @@ export default function Register() {
             </svg>
             <span className="text-xs">2026 OCP Group. Tous droits réservés.</span>
           </div>
+        </div>
+      </div>
+
+      {/* Terms Modal */}
+      {showTermsModal && (
+        <LegalModal 
+          title="Conditions d'utilisation" 
+          onClose={() => setShowTermsModal(false)}
+        >
+          <div className="space-y-4 text-[#94A3B8] text-sm leading-relaxed">
+            <p className="text-white font-semibold">1. Acceptation des conditions</p>
+            <p>En accédant à VibraGuard, vous acceptez d'être lié par ces conditions d'utilisation, toutes les lois et réglementations applicables.</p>
+            
+            <p className="text-white font-semibold">2. Licence d'utilisation</p>
+            <p>VibraGuard est un outil de maintenance prédictive propriété d'OCP Group. L'accès est réservé au personnel autorisé uniquement.</p>
+            
+            <p className="text-white font-semibold">3. Responsabilité</p>
+            <p>Les données fournies par l'IA sont à titre indicatif. Les décisions finales de maintenance incombent aux ingénieurs qualifiés.</p>
+            
+            <p className="text-white font-semibold">4. Restrictions</p>
+            <p>Il est interdit d'exporter des données sensibles en dehors de l'infrastructure sécurisée de l'entreprise sans autorisation explicite.</p>
+          </div>
+        </LegalModal>
+      )}
+
+      {showPrivacyModal && (
+        <LegalModal 
+          title="Politique de confidentialité" 
+          onClose={() => setShowPrivacyModal(false)}
+        >
+          <div className="space-y-4 text-[#94A3B8] text-sm leading-relaxed">
+            <p className="text-white font-semibold">1. Données collectées</p>
+            <p>Nous collectons votre nom, email professionnel et entreprise pour la gestion des accès et la personnalisation de votre tableau de bord.</p>
+            
+            <p className="text-white font-semibold">2. Utilisation des données</p>
+            <p>Vos données sont utilisées pour sécuriser les accès à la plateforme et vous notifier en cas d'alertes critiques sur les machines dont vous avez la charge.</p>
+            
+            <p className="text-white font-semibold">3. Sécurité</p>
+            <p>Toutes les données sont chiffrées et stockées sur nos serveurs sécurisés. Nous utilisons la technologie Blockchain pour l'auditabilité des interventions.</p>
+            
+            <p className="text-white font-semibold">4. Vos droits</p>
+            <p>Conformément à la réglementation RGPD, vous disposez d'un droit d'accès et de rectification de vos données personnelles via votre profil.</p>
+          </div>
+        </LegalModal>
+      )}
+    </div>
+  );
+}
+
+function LegalModal({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="w-full max-w-lg bg-[#0D161F] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
+          <h3 className="text-white font-bold">{title}</h3>
+          <button onClick={onClose} className="text-[#64748B] hover:text-white transition-colors">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
+        <div className="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+          {children}
+        </div>
+        <div className="px-6 py-4 border-t border-white/5 bg-white/[0.02]">
+          <button 
+            onClick={onClose}
+            className="w-full py-2 bg-[#10B981] hover:bg-[#0ea572] text-white rounded-lg font-medium transition-colors"
+          >
+            J'ai compris
+          </button>
         </div>
       </div>
     </div>

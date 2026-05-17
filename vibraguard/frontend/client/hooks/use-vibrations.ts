@@ -6,9 +6,12 @@ export interface VibrationData {
   id?: string;
   motorId?: string;
   time: string;
-  x: number;
-  y: number;
-  z: number;
+  vibRms: number;
+  vibPeak: number;
+  vibKurtosis: number;
+  temperature: number;
+  currentRms: number;
+  isAnomalous: boolean;
 }
 
 export function useVibrations(motorId?: string) {
@@ -23,7 +26,7 @@ export function useVibrations(motorId?: string) {
     queryFn: () =>
       motorId
         ? apiRequest("GET", `/api/v1/iot/motors/${motorId}/vibration`)
-        : apiRequest("GET", "/api/v1/iot/vibrations"),
+        : apiRequest("GET", "/api/v1/iot/motors/vibrations"),
   });
 
   useEffect(() => {
@@ -38,9 +41,10 @@ export function useVibrations(motorId?: string) {
         const newData: VibrationData = JSON.parse(event.data);
         // If filtering by motorId, only append matching data
         if (motorId && newData.motorId && newData.motorId !== motorId) return;
-        queryClient.setQueryData<VibrationData[]>(queryKey, (oldData = []) => {
-          const updated = [...oldData, newData];
-          if (updated.length > 40) return updated.slice(updated.length - 40);
+        queryClient.setQueryData<VibrationData[]>(queryKey, (oldData) => {
+          const safeOldData = Array.isArray(oldData) ? oldData : [];
+          const updated = [...safeOldData, newData];
+          if (updated.length > 200) return updated.slice(updated.length - 200);
           return updated;
         });
       } catch (err) {

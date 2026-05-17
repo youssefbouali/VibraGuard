@@ -1,3 +1,5 @@
+import { formatTime } from "@/lib/utils";
+
 export function DernieresAlertes({ alerts = [] }: { alerts?: any[] }) {
   const getIcon = (level: string, color: string) => {
     const stroke = color.startsWith("#") ? color : `#${color}`;
@@ -15,7 +17,8 @@ export function DernieresAlertes({ alerts = [] }: { alerts?: any[] }) {
     );
   };
 
-  const displayAlerts = alerts.length > 0 ? alerts : [
+  const filteredAlerts = alerts.filter(a => a.type === "ALERT" || !a.type);
+  const displayAlerts = filteredAlerts.length > 0 ? filteredAlerts : [
     { id: "fake-1", message: "Aucune alerte récente", level: "Info", time: "-", color: "#C9EDEB" }
   ];
 
@@ -55,10 +58,10 @@ export function DernieresAlertes({ alerts = [] }: { alerts?: any[] }) {
             {/* Text */}
             <div className="flex flex-col gap-1.5 flex-1 min-w-0">
               <span className="text-[15px] font-semibold text-[#EAF6F5] leading-tight">
-                {alert.message}
+                {alert.anomalyType && alert.anomalyType !== "NONE" ? `${alert.anomalyType} - ${alert.message}` : alert.message}
               </span>
               <span className="text-[13px] text-[#C9EDEB] leading-tight">
-                {alert.time} • {alert.level}
+                {formatTime(alert.time)} • {alert.level}
               </span>
             </div>
           </div>

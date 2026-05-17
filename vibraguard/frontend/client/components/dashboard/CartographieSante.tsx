@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useMoteurs } from "@/hooks/use-moteurs";
 
@@ -103,7 +104,7 @@ export function CartographieSante() {
           </svg>
           <span className="text-white text-base font-semibold">Cartographie Santé</span>
         </div>
-        <button className="text-[#0EA5E9] text-[13px] font-medium hover:underline">Vue liste</button>
+        <Link to="/moteurs" className="text-[#0EA5E9] text-[13px] font-medium hover:underline">Vue liste</Link>
       </div>
 
       {/* Grid */}

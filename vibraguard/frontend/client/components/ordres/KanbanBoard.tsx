@@ -11,6 +11,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 
 
 import { useWorkOrders } from "@/hooks/use-work-orders";
@@ -44,7 +45,16 @@ export function KanbanBoard() {
     parts: wo.parts ? wo.parts.split(",").map((p: string) => p.trim()) : [],
   }));
 
-  const filtered = mappedTasks.filter(
+  const { user } = useAuth();
+  const currentRole = user?.role?.toLowerCase() || "";
+  const isTechnician = currentRole.includes("technicien") || currentRole.includes("technician");
+  const currentUserName = user?.fullName?.toLowerCase() || "";
+
+  const visibleTasks = isTechnician
+    ? mappedTasks.filter((task) => task.assignee.toLowerCase().includes(currentUserName))
+    : mappedTasks;
+
+  const filtered = visibleTasks.filter(
     (t) =>
       t.id.toLowerCase().includes(search.toLowerCase()) ||
       t.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -54,6 +64,38 @@ export function KanbanBoard() {
   const todo = filtered.filter((t) => t.status === "todo");
   const inprogress = filtered.filter((t) => t.status === "inprogress");
   const done = filtered.filter((t) => t.status === "done");
+
+  const handleDrop = async (taskId: string, newColStatus: string) => {
+    try {
+      const statusMap: Record<string, string> = {
+        todo: "Nouveau",
+        inprogress: "En cours",
+        done: "Terminé"
+      };
+      
+      const newBackendStatus = statusMap[newColStatus];
+      const originalWO = apiWorkOrders.find((wo: any) => wo.id === taskId);
+      
+      if (originalWO && originalWO.status !== newBackendStatus) {
+        await toast.promise(
+          api.updateWorkOrder(taskId, {
+            ...originalWO,
+            status: newBackendStatus
+          }),
+          {
+            loading: 'Mise à jour du statut...',
+            success: () => {
+              refetch();
+              return 'Statut mis à jour !';
+            },
+            error: 'Erreur lors de la mise à jour',
+          }
+        );
+      }
+    } catch (err) {
+      console.error("Drop error:", err);
+    }
+  };
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
@@ -80,6 +122,7 @@ export function KanbanBoard() {
           title="À faire" 
           status="todo" 
           tasks={todo} 
+          onDrop={handleDrop}
           onCardClick={(ot) => {
             setSelectedOT(ot);
             setNewStatus(ot.status === "todo" ? "Nouveau" : ot.status === "inprogress" ? "En cours" : "Terminé");
@@ -90,6 +133,7 @@ export function KanbanBoard() {
           title="En cours" 
           status="inprogress" 
           tasks={inprogress} 
+          onDrop={handleDrop}
           onCardClick={(ot) => {
             setSelectedOT(ot);
             setNewStatus(ot.status === "todo" ? "Nouveau" : ot.status === "inprogress" ? "En cours" : "Terminé");
@@ -100,6 +144,7 @@ export function KanbanBoard() {
           title="Terminé" 
           status="done" 
           tasks={done} 
+          onDrop={handleDrop}
           onCardClick={(ot) => {
             setSelectedOT(ot);
             setNewStatus(ot.status === "todo" ? "Nouveau" : ot.status === "inprogress" ? "En cours" : "Terminé");

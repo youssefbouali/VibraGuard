@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useMoteurs } from "@/hooks/use-moteurs";
 
@@ -58,7 +58,7 @@ export function MoteursTable() {
           </svg>
           <span className="text-white text-base font-semibold">Moteurs Sous Surveillance</span>
         </div>
-        <button className="text-[#0EA5E9] text-[13px] font-medium hover:underline">Voir tout</button>
+        <Link to="/moteurs" className="text-[#0EA5E9] text-[13px] font-medium hover:underline">Voir tout</Link>
       </div>
 
       {/* Table */}
@@ -100,7 +100,9 @@ export function MoteursTable() {
                 </td>
                 <td className="py-5 pr-4">
                   <div className="flex items-center gap-1">
-                    <span className="text-sm font-semibold" style={{ color: row.vibrationColor }}>{row.vibration}</span>
+                    <span className="text-sm font-semibold" style={{ color: row.vibrationColor }}>
+                      {String(row.vibration).replace(' mm/s', '')} mm/s
+                    </span>
                     {row.trendIcon === "up" && <TrendUp color={row.vibrationColor} />}
                     {row.trendIcon === "flat" && <TrendFlat />}
                   </div>

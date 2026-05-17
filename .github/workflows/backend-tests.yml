@@ -1,0 +1,52 @@
+name: Backend Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'vibraguard/backend/**'
+      - '.github/workflows/backend-tests.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'vibraguard/backend/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        java-version: ['17']
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        java-version: ${{ matrix.java-version }}
+        distribution: 'temurin'
+        cache: maven
+    
+    - name: Run Maven Tests
+      run: mvn -B test -f vibraguard/backend/pom.xml
+    
+    - name: Generate Coverage Report
+      run: mvn -B -P coverage test -f vibraguard/backend/pom.xml
+      continue-on-error: true
+    
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./vibraguard/backend/**/target/site/jacoco/jacoco.xml
+        flags: backend
+        name: backend-coverage
+      continue-on-error: true
+    
+    - name: Archive Test Results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: backend-test-results
+        path: vibraguard/backend/**/target/surefire-reports/

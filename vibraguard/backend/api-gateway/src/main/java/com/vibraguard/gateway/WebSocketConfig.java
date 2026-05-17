@@ -17,10 +17,14 @@ public class WebSocketConfig {
     @Autowired
     private VibrationWebSocketHandler vibrationWebSocketHandler;
 
+    @Autowired
+    private AlertWebSocketHandler alertWebSocketHandler;
+
     @Bean
     public HandlerMapping webSocketHandlerMapping() {
         Map<String, WebSocketHandler> map = new HashMap<>();
         map.put("/ws/vibrations", vibrationWebSocketHandler);
+        map.put("/ws/alerts", alertWebSocketHandler);
 
         SimpleUrlHandlerMapping handlerMapping = new SimpleUrlHandlerMapping();
         handlerMapping.setOrder(-1); // High priority

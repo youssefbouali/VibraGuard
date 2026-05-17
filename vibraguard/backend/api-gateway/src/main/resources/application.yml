@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: api-gateway
+  codec:
+    max-in-memory-size: 50MB
   datasource:
     url: ${DB_URL:jdbc:oracle:thin:@oracle-db.vibraguard.svc.cluster.local:1521:xe}
     driver-class-name: oracle.jdbc.OracleDriver
@@ -13,4 +15,31 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
-  # H2 console removed as we are using Oracle now
+  data:
+    mongodb:
+      uri: ${MONGO_URL:mongodb://mongodb.vibraguard.svc.cluster.local:27017/vibraguard}
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URL:http://elasticsearch-master.vibraguard.svc.cluster.local:9200}
+
+# IPFS Configuration
+ipfs:
+  api:
+    url: ${IPFS_API_URL:http://ipfs:5001}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: ${JAEGER_ENDPOINT:http://jaeger:4318/v1/traces}

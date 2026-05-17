@@ -5,6 +5,7 @@ import { AlertDetail } from "@/components/alertes/AlertDetail";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { formatTime } from "@/lib/utils";
 
 const ALERTES_DATA: Alerte[] = [
   {
@@ -87,16 +88,17 @@ export default function Alertes() {
     return {
       id: a.id,
       moteur: cleanMotorId,
-      typeDefaut: a.message,
+      typeDefaut: (a.anomalyType && a.anomalyType !== "NONE") ? a.anomalyType : a.message,
       severite: severite,
       confiance: a.scoreConfianceIA ?? (a.priority === "high" ? 96 : 85),
-      dateHeure: a.time,
+      dateHeure: formatTime(a.time),
       statut: a.status || "Nouveau",
       velociteRms: a.velociteRms,
       accelerationPeak: a.accelerationPeak,
       temperature: a.temperature,
       scoreConfianceIA: a.scoreConfianceIA,
       depassementSeuil: a.depassementSeuil,
+      type: a.type, // ALERT or NOTIFICATION
     };
   });
 
@@ -106,6 +108,7 @@ export default function Alertes() {
   const itemsPerPage = 10;
 
   const filteredAlertes = mappedAlerts.filter((a) => {
+    if (a.type !== "ALERT") return false;
     if (severiteFilter !== "Toutes" && a.severite !== severiteFilter) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();

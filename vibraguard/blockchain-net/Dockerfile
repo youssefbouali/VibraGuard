@@ -15,5 +15,5 @@ EXPOSE 8545
 # Set timezone to align with logs
 ENV TZ=UTC
 
-# Run Hardhat node bound to all interfaces
-CMD ["npx", "hardhat", "node", "--hostname", "0.0.0.0"]
+# Start Hardhat node and deploy the WorkOrderRegistry contract automatically
+CMD ["sh", "-c", "npx hardhat node --hostname 0.0.0.0 & sleep 5 && npx hardhat run scripts/deploy.js --network localhost && wait"]

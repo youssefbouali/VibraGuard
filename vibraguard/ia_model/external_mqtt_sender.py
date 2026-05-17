@@ -12,7 +12,7 @@ MQTT_BROKER = os.getenv("MQTT_BROKER", "vibraguard.mywire.org")  # Fallback to m
 MQTT_PORT = int(os.getenv("MQTT_PORT", 30083))        # Default MQTT port for external access
 MQTT_TOPIC = os.getenv("MQTT_TOPIC", "vibraguard/sensors")
 CLIENT_ID = f"vibraguard_external_simulator_{uuid.uuid4()}" # Unique client ID
-MOTOR_ID = os.getenv("MOTOR_ID", "MTR-Broyeur-04") # Specify the motor ID here
+MOTOR_ID = os.getenv("MOTOR_ID", "aaa") # Specify the motor ID here
 
 # Optional: Add Username and Password if your broker requires authentication
 MQTT_USER = None   # e.g., "my_username"
@@ -22,34 +22,85 @@ MQTT_PASS = None   # e.g., "my_password"
 # DATA GENERATION
 # ==========================================
 def generate_sensor_data():
-    """Generates synthetic sensor data."""
-    is_anomaly = random.random() < 1.0  # 20% chance to generate an anomaly
+    """Generates synthetic sensor data aligned with training CSV types."""
+    is_anomaly = random.random() < 0
     
     if is_anomaly:
-        data = {
-            "motor_id": MOTOR_ID,
-            "rpm": random.uniform(1300, 1500),
-            "vib_rms": random.uniform(5.0, 10.0),
-            "vib_peak": random.uniform(15.0, 25.0),
-            "vib_kurtosis": random.uniform(4.0, 8.0),
-            "fft_dominant_freq": random.uniform(19.5, 29.5),
-            "fft_max_amplitude": random.uniform(10.0, 20.0),
-            "fft_total_power": random.uniform(500.0, 1000.0),
-            "current_rms": random.uniform(12.0, 17.0),
-            "current_thd": random.uniform(15.0, 25.0),
-            "temperature": random.uniform(75.0, 95.0),
-            "status": "anomalous"
-        }
+        scenario = random.choice(["ROULEMENT", "DESEQUILIBRE", "DESALIGNEMENT", "SURCHAUFFE", "ELECTRIQUE"])
+        
+        if scenario == "ROULEMENT":
+            # DEFAUT_ROULEMENT: High Kurtosis and Peak
+            data = {
+                "motor_id": MOTOR_ID,
+                "rpm": random.uniform(1460, 1485),
+                "vib_rms": random.uniform(3.5, 5.0),
+                "vib_peak": random.uniform(20.0, 30.0),
+                "vib_kurtosis": random.uniform(7.0, 12.0),
+                "current_rms": random.uniform(8.5, 9.5),
+                "current_thd": random.uniform(4.0, 6.0),
+                "temperature": random.uniform(55.0, 65.0),
+                "status": "anomalous"
+            }
+        elif scenario == "DESEQUILIBRE":
+            # DESEQUILIBRE: Very High RMS, moderate Peak
+            data = {
+                "motor_id": MOTOR_ID,
+                "rpm": random.uniform(1350, 1420),
+                "vib_rms": random.uniform(9.0, 14.0),
+                "vib_peak": random.uniform(14.0, 18.0),
+                "vib_kurtosis": random.uniform(2.8, 3.2),
+                "current_rms": random.uniform(9.5, 11.0),
+                "current_thd": random.uniform(5.0, 8.0),
+                "temperature": random.uniform(60.0, 75.0),
+                "status": "anomalous"
+            }
+        elif scenario == "DESALIGNEMENT":
+            # DESALIGNEMENT: Moderate RMS and Peak, some temperature rise
+            data = {
+                "motor_id": MOTOR_ID,
+                "rpm": random.uniform(1440, 1470),
+                "vib_rms": random.uniform(5.0, 8.0),
+                "vib_peak": random.uniform(10.0, 15.0),
+                "vib_kurtosis": random.uniform(3.0, 4.5),
+                "current_rms": random.uniform(9.0, 10.5),
+                "current_thd": random.uniform(6.0, 9.0),
+                "temperature": random.uniform(70.0, 80.0),
+                "status": "anomalous"
+            }
+        elif scenario == "SURCHAUFFE":
+            # SURCHAUFFE: Extreme Temperature
+            data = {
+                "motor_id": MOTOR_ID,
+                "rpm": random.uniform(1470, 1490),
+                "vib_rms": random.uniform(3.0, 4.5),
+                "vib_peak": random.uniform(8.0, 12.0),
+                "vib_kurtosis": random.uniform(2.5, 3.5),
+                "current_rms": random.uniform(11.0, 13.0),
+                "current_thd": random.uniform(7.0, 10.0),
+                "temperature": random.uniform(95.0, 115.0),
+                "status": "anomalous"
+            }
+        else: # ELECTRIQUE
+            # SURCHARGE_ELECTRIQUE: High Current and THD
+            data = {
+                "motor_id": MOTOR_ID,
+                "rpm": random.uniform(1450, 1480),
+                "vib_rms": random.uniform(2.5, 4.0),
+                "vib_peak": random.uniform(7.0, 10.0),
+                "vib_kurtosis": random.uniform(2.5, 3.5),
+                "current_rms": random.uniform(15.0, 22.0),
+                "current_thd": random.uniform(18.0, 30.0),
+                "temperature": random.uniform(75.0, 85.0),
+                "status": "anomalous"
+            }
     else:
+        # NORMAL / NONE
         data = {
             "motor_id": MOTOR_ID,
             "rpm": random.uniform(1450, 1490),
             "vib_rms": random.uniform(2.0, 3.0),
             "vib_peak": random.uniform(7.0, 9.0),
             "vib_kurtosis": random.uniform(2.5, 3.5),
-            "fft_dominant_freq": random.uniform(23.5, 25.5),
-            "fft_max_amplitude": random.uniform(3.0, 5.0),
-            "fft_total_power": random.uniform(150.0, 250.0),
             "current_rms": random.uniform(8.0, 9.0),
             "current_thd": random.uniform(4.0, 6.0),
             "temperature": random.uniform(50.0, 60.0),

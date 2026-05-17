@@ -25,7 +25,6 @@ scaler = joblib.load(SCALER_PATH)
 
 FEATURE_COLUMNS = [
     'rpm', 'vib_rms', 'vib_peak', 'vib_kurtosis', 
-    'fft_dominant_freq', 'fft_max_amplitude', 'fft_total_power', 
     'current_rms', 'current_thd', 'temperature'
 ]
 
@@ -36,14 +35,12 @@ def predict_anomaly(*features):
         features_array = np.array(features).reshape(1, -1)
         scaled_features = scaler.transform(features_array)
         
-        prediction = model.predict(scaled_features)[0]
-        # Get probability (assuming index 1 is anomalous)
+        prediction_type = str(model.predict(scaled_features)[0])
         probas = model.predict_proba(scaled_features)[0]
-        confidence = probas[1] if len(probas) > 1 else probas[0]
-        if prediction == 0:
-            confidence = probas[0] # confidence in normal
-            
-        return f"{prediction},{confidence * 100:.2f}"
+        confidence = float(np.max(probas))
+        
+        label = "0" if prediction_type == "NONE" else "1"
+        return f"{label},{prediction_type},{confidence * 100:.2f}"
     except Exception as e:
         return f"Error,{str(e)}"
 
@@ -84,43 +81,46 @@ def write_to_backend(batch_df, epoch_id):
         raw_pred = str(row['prediction'])
         parts = raw_pred.split(',')
         prediction_val = parts[0]
-        confidence_val = float(parts[1]) if len(parts) > 1 and parts[1].replace('.','',1).isdigit() else 94.5 
+        anomaly_type_val = parts[1] if len(parts) > 1 else "NONE"
+        confidence_val = float(parts[2]) if len(parts) > 2 and parts[2].replace('.','',1).isdigit() else 94.5 
         
-        print(f"📡 Motor {motor} - Prediction: {prediction_val} (Confidence: {confidence_val}%)")
-        
-        # 1. Update Vibration Data (FFT metrics)
-        vib_payload = {
-            "motorId": motor,
-            "x": v_rms,
-            "y": v_peak,
-            "z": v_kurt,
-            "dominantFreq": row['fft_dominant_freq'],
-            "maxAmplitude": row['fft_max_amplitude']
-        }
-        call_api("iot/vibrations", data=vib_payload)
+        print(f"📡 Motor {motor} - Prediction: {prediction_val} (Type: {anomaly_type_val}, Confidence: {confidence_val}%)")
         
         # Check for prediction anomaly
         is_anomaly = prediction_val.strip().upper() in ['1', '1.0', 'TRUE', 'ANOMALOUS', 'ANOMALY']
         
+        # 1. Update Vibration Data
+        vib_payload = {
+            "motorId": motor,
+            "vibRms": v_rms,
+            "vibPeak": v_peak,
+            "vibKurtosis": v_kurt,
+            "temperature": temp,
+            "currentRms": float(row['current_rms']),
+            "anomalous": is_anomaly
+        }
+        call_api("iot/motors/vibrations", data=vib_payload)
+        
         # Calculate Health and RUL (Dynamic)
         health_score = max(5.0, min(95.0, 100.0 - (v_rms * 7.5)))
-        if health_score < 30.0:
+        
+        # If AI detects anomaly, force state to Alerte or Critique
+        if is_anomaly:
+            if health_score > 60.0: health_score = 55.0 # Force drop
+            label, color = "Critique", "EF4444"
+        elif health_score < 30.0:
             label, color = "Critique", "EF4444"
         elif health_score < 70.0:
             label, color = "Alerte", "F59E0B"
         else:
-            label, color = "Attention", "F59E0B"
+            label, color = "Normal", "10B981"
         
-        base_rul = 60.0
-        stress = (v_rms * 3.0) + (max(0.0, temp - 70.0) * 0.5)
-        rul = int(max(2.0, base_rul - stress))
-
         motor_update = {
             "etatPct": int(health_score),
             "etatLabel": f"{int(health_score)}% {label}",
             "etatColor": f"#{color}",
-            "rul": rul,
-            "rulTrend": f"-{int(v_rms/2) + 1} jours depuis hier",
+            "derniereAlerteType": anomaly_type_val if is_anomaly else "Sain",
+            "vibration": f"{v_rms:.2f}",
             "power": row.power if hasattr(row, 'power') and row.power else "450 kW",
             "speed": row.speed if hasattr(row, 'speed') and row.speed else "1480 RPM"
         }
@@ -140,12 +140,13 @@ def write_to_backend(batch_df, epoch_id):
                 "accelerationPeak": v_peak,
                 "temperature": temp,
                 "scoreConfianceIA": confidence_val,
-                "depassementSeuil": v_rms * 0.15
+                "depassementSeuil": v_rms * 0.15,
+                "anomalyType": anomaly_type_val
             }
             call_api("ml/alerts", data=alert_payload)
             
             # 3. Decrease Inventory (Simulate usage of sensor part)
-            call_api("iot/inventory/decrement/PART-02")
+            call_api(f"iot/inventory-parts/decrement/PART-02")
                 
     # 4. Upsert KPIs (aggregates for the batch)
     total_records = len(pandas_df)
@@ -173,9 +174,6 @@ schema = StructType([
     StructField("vib_rms", DoubleType()),
     StructField("vib_peak", DoubleType()),
     StructField("vib_kurtosis", DoubleType()),
-    StructField("fft_dominant_freq", DoubleType()),
-    StructField("fft_max_amplitude", DoubleType()),
-    StructField("fft_total_power", DoubleType()),
     StructField("current_rms", DoubleType()),
     StructField("current_thd", DoubleType()),
     StructField("temperature", DoubleType()),

@@ -6,4 +6,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface AlertRepository extends JpaRepository<Alert, String> {
+    @org.springframework.transaction.annotation.Transactional
+    void deleteByMotorId(String motorId);
 }

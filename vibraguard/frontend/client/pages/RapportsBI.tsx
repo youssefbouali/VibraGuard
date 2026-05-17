@@ -44,10 +44,10 @@ export default function RapportsBI() {
         startY: 45,
         head: [['KPI Stratégiques', 'Valeur', 'Tendance']],
         body: [
-          ["MTBF (Mean Time Between Failures)", `${kpis.mtbf} h`, kpis.mtbfTrend],
-          ["MTTR (Mean Time To Repair)", `${kpis.mttr} h`, kpis.mttrTrend],
-          ["Disponibilité Opérationnelle", `${kpis.availability} %`, kpis.availabilityTrend],
-          ["Coût Maintenance Total", `${kpis.maintenanceCost.toLocaleString()} $`, kpis.maintenanceCostTrend]
+          ["MTBF (Mean Time Between Failures)", `${kpis.mtbf || 0} h`, kpis.mtbfTrend || "Stable"],
+          ["MTTR (Mean Time To Repair)", `${kpis.mttr || 0} h`, kpis.mttrTrend || "Stable"],
+          ["Disponibilité Opérationnelle", `${kpis.uptime || '0%'}`, kpis.uptimeTrend || "Stable"],
+          ["Coût Maintenance Total", `${(kpis.totalCost || 0).toLocaleString()} $`, kpis.totalCostTrend || "Stable"]
         ],
         theme: 'grid',
         headStyles: { fillColor: [15, 39, 48] }
@@ -83,10 +83,10 @@ export default function RapportsBI() {
       const wb = XLSX.utils.book_new();
       
       const kpiData = [
-        { Indicateur: "MTBF", Valeur: kpis.mtbf, Tendance: kpis.mtbfTrend },
-        { Indicateur: "MTTR", Valeur: kpis.mttr, Tendance: kpis.mttrTrend },
-        { Indicateur: "Disponibilité", Valeur: kpis.availability, Tendance: kpis.availabilityTrend },
-        { Indicateur: "Coût Maintenance", Valeur: kpis.maintenanceCost, Tendance: kpis.maintenanceCostTrend }
+        { Indicateur: "MTBF", Valeur: kpis.mtbf || 0, Tendance: kpis.mtbfTrend || "Stable" },
+        { Indicateur: "MTTR", Valeur: kpis.mttr || 0, Tendance: kpis.mttrTrend || "Stable" },
+        { Indicateur: "Disponibilité", Valeur: kpis.uptime || "0%", Tendance: kpis.uptimeTrend || "Stable" },
+        { Indicateur: "Coût Maintenance", Valeur: kpis.totalCost || 0, Tendance: kpis.totalCostTrend || "Stable" }
       ];
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(kpiData), "KPIs Globaux");
 

@@ -7,35 +7,7 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
 
-// ─── Toggle ──────────────────────────────────────────────────────────────────
-function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <button
-      role="switch"
-      aria-checked={checked}
-      onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border transition-colors focus-visible:outline-none ${checked ? "bg-[#007A3D] border-[#007A3D]" : "bg-[#071018]/20 border-black/[0.08]"
-        }`}
-    >
-      <span
-        className={`pointer-events-none inline-block h-[18px] w-[18px] rounded-full bg-white shadow transition-transform duration-200 translate-y-[3px] ${checked ? "translate-x-[23px]" : "translate-x-[3px]"
-          }`}
-      />
-    </button>
-  );
-}
 
-// ─── Select ───────────────────────────────────────────────────────────────────
-function SelectField({ value }: { value: string }) {
-  return (
-    <div className="flex items-center justify-between w-[200px] px-4 py-[10px] rounded-md border border-black/[0.08] bg-[#0D1316] cursor-pointer">
-      <span className="text-[#E6F0F2] text-sm">{value}</span>
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <path d="M4 6L8 10L12 6" stroke="#E6F0F2" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </div>
-  );
-}
 
 // ─── Info Field ───────────────────────────────────────────────────────────────
 function InfoField({ label, icon, value, muted }: { label: string; icon: React.ReactNode; value: string; muted?: boolean }) {
@@ -140,8 +112,6 @@ interface WorkOrder {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function ProfilUtilisateur() {
   const { user } = useAuth();
-  const [pushNotif, setPushNotif] = useState(true);
-  const [emailReports, setEmailReports] = useState(false);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -213,16 +183,7 @@ export default function ProfilUtilisateur() {
 
                 {/* Fields grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
-                  <InfoField
-                    label="Identifiant Employé"
-                    muted
-                    icon={
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <path d="M2.66663 6H13.3333M2.66663 10H13.3333M6.66663 2L5.33329 14M10.6666 2L9.33329 14" stroke="#98A6A8" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    }
-                    value={user?.employeeId || "chargement..."}
-                  />
+
                   <InfoField
                     label="Adresse Email"
                     icon={
@@ -256,55 +217,7 @@ export default function ProfilUtilisateur() {
               </div>
             </section>
 
-            {/* ── Préférences et Notifications ── */}
-            <section className="rounded-lg border border-black/[0.08] bg-[#0B1518]">
-              <div className="flex items-center gap-3 px-6 py-5 border-b border-black/[0.08]">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="shrink-0">
-                  <path d="M8.33333 4.16667H2.5M10 15.8333H2.5M11.6667 2.5V5.83333M13.3333 14.1667V17.5M17.5 10H10M17.5 15.8333H13.3333M17.5 4.16667H11.6667M6.66667 8.33333V11.6667M6.66667 10H2.5" stroke="#98A6A8" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                <span className="text-[#E6F0F2] text-base font-semibold">Préférences et Notifications</span>
-              </div>
 
-              <div className="p-6">
-                <div className="flex flex-col gap-6">
-                  {/* Notifications Push */}
-                  <div className="flex items-center justify-between pb-6 border-b border-black/[0.08]">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[#E6F0F2] text-[15px] font-medium">Notifications Push</span>
-                      <span className="text-[#98A6A8] text-[13px]">Recevoir des alertes critiques sur l'application mobile</span>
-                    </div>
-                    <Toggle checked={pushNotif} onChange={setPushNotif} />
-                  </div>
-
-                  {/* Rapports par Email */}
-                  <div className="flex items-center justify-between pb-6 border-b border-black/[0.08]">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[#E6F0F2] text-[15px] font-medium">Rapports par Email</span>
-                      <span className="text-[#98A6A8] text-[13px]">Recevoir le résumé quotidien des interventions</span>
-                    </div>
-                    <Toggle checked={emailReports} onChange={setEmailReports} />
-                  </div>
-
-                  {/* Langue */}
-                  <div className="flex items-center justify-between pb-6 border-b border-black/[0.08]">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[#E6F0F2] text-[15px] font-medium">Langue de l'interface</span>
-                      <span className="text-[#98A6A8] text-[13px]">Choisissez votre langue préférée (FR/AR/EN)</span>
-                    </div>
-                    <SelectField value="Français (FR)" />
-                  </div>
-
-                  {/* Thème */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[#E6F0F2] text-[15px] font-medium">Thème Visuel</span>
-                      <span className="text-[#98A6A8] text-[13px]">Apparence de l'application VibraGuard</span>
-                    </div>
-                    <SelectField value="Sombre (Industry 4.0)" />
-                  </div>
-                </div>
-              </div>
-            </section>
 
             {/* ── Mes interventions récentes ── */}
             <section className="rounded-lg border border-black/[0.08] bg-[#0B1518]">

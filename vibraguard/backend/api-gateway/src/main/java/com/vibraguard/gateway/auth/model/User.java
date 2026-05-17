@@ -30,4 +30,5 @@ public class User {
     private String phoneNumber;
     private String department;
     private String status;
+    private String enterprise;
 }

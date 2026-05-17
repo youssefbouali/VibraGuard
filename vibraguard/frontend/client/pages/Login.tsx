@@ -38,7 +38,7 @@ export default function Login() {
         employeeId: data.employeeId || "",
         phoneNumber: data.phoneNumber || "",
         department: data.department || "Maintenance"
-      });
+      }, rememberMe);
 
       toast.success("Connexion réussie !");
       navigate("/dashboard");
@@ -212,9 +212,6 @@ export default function Login() {
               </button>
               <span className="text-[#CBD5E1] text-xs sm:text-sm font-normal">Se souvenir de moi</span>
             </label>
-            <Link to="/forgot-password" className="text-[#10B981] text-xs sm:text-sm font-medium hover:text-[#34D399] transition-colors">
-              Mot de passe oublié ?
-            </Link>
           </div>
 
           {/* Submit button */}

@@ -1,0 +1,1207 @@
+{
+  "info": {
+    "_postman_id": "vibraguard-api-tests",
+    "name": "VibraGuard API - Integration Tests",
+    "description": "Comprehensive integration tests for VibraGuard API endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Register successful - Status 201', function() {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response contains user data', function() {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('email');",
+                  "    pm.expect(jsonData.email).to.equal(pm.variables.get('testEmail'));",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.environment.set('userId', jsonData.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"Password123!\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"department\": \"Maintenance\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Login successful - Status 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains access token', function() {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('access_token');",
+                  "    pm.expect(jsonData.token_type).to.equal('Bearer');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.environment.set('authToken', jsonData.access_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get Current User Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Get profile successful - Status 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains user profile', function() {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('email');",
+                  "    pm.expect(jsonData).to.have.property('firstName');",
+                  "    pm.expect(jsonData).to.have.property('role');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Motors",
+      "item": [
+        {
+          "name": "Create Motor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Motor created - Status 201', function() {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response contains motor data', function() {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('name');",
+                  "    pm.expect(jsonData.healthStatus).to.be.oneOf(['healthy', 'warning', 'critical']);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.environment.set('motorId', jsonData.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Main Production Motor\",\n  \"location\": \"Production Floor - Zone A\",\n  \"siteId\": \"site-001\",\n  \"installationDate\": \"2024-01-15\",\n  \"specifications\": {\n    \"horsepower\": 150,\n    \"rpmRating\": 3600,\n    \"manufacturer\": \"Siemens\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/iot/motors",
+              "host": ["{{baseUrl}}"],
+              "path": ["iot", "motors"]
+            }
+          }
+        },
+        {
+          "name": "List Motors",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Motors listed - Status 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function() {",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Motors contain required properties', function() {",
+                  "    let jsonData = pm.response.json();",
+                  "    if (jsonData.length > 0) {",
+                  "        pm.expect(jsonData[0]).to.have.property('id');",
+                  "        pm.expect(jsonData[0]).to.have.property('name');",
+                  "        pm.expect(jsonData[0]).to.have.property('healthStatus');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/iot/motors?skip=0&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["iot", "motors"],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Motor Details",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Motor retrieved - Status 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains motor details', function() {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('name');",
+                  "    pm.expect(jsonData).to.have.property('specifications');",
+                  "    pm.expect(jsonData).to.have.property('lastReadingTime');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/iot/motors/{{motorId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["iot", "motors", "{{motorId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Motor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Motor updated - Status 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Updated data matches request', function() {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.location).to.include('Updated');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Main Production Motor - Updated\",\n  \"location\": \"Production Floor - Zone A - Updated\",\n  \"specifications\": {\n    \"horsepower\": 150,\n    \"rpmRating\": 3600,\n    \"manufacturer\": \"Siemens\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/iot/motors/{{motorId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["iot", "motors", "{{motorId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vibrations",
+      "item": [
+        {
+          "name": "Record Vibration Data",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Vibration recorded - Status 201', function() {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response contains vibration data', function() {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('motorId');",
+                  "    pm.expect(jsonData).to.have.property('timestamp');",
+                  "    pm.expect(jsonData).to.have.property('velocityRMS');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.environment.set('vibrationId', jsonData.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motorId\": \"{{motorId}}\",\n  \"accelerationX\": 2.5,\n  \"accelerationY\": 1.8,\n  \"accelerationZ\": 3.2,\n  \"velocityRMS\": 4.5,\n  \"frequency\": 60.0,\n  \"temperature\": 65.5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/iot/motors/vibrations",
+              "host": ["{{baseUrl}}"],
+              "path": ["iot", "motors", "vibrations"]
+            }
+          }
+        },
+        {
+          "name": "Get Motor Vibration History",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Vibration history retrieved - Status 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function() {",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Vibrations contain required properties', function() {",
+                  "    let jsonData = pm.response.json();",
+                  "    if (jsonData.length > 0) {",
+                  "        pm.expect(jsonData[0]).to.have.property('motorId');",
+                  "        pm.expect(jsonData[0]).to.have.property('velocityRMS');",
+                  "        pm.expect(jsonData[0]).to.have.property('timestamp');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/iot/motors/{{motorId}}/vibration?limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["iot", "motors", "{{motorId}}", "vibration"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Vibrations",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('All vibrations retrieved - Status 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function() {",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/iot/motors/vibrations?skip=0&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["iot", "motors", "vibrations"],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alerts",
+      "item": [
+        {
+          "name": "Create Alert",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Alert created - Status 201', function() {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response contains alert data', function() {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('motorId');",
+                  "    pm.expect(['maintenance', 'anomaly']).to.include(jsonData.type);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.environment.set('alertId', jsonData.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motorId\": \"{{motorId}}\",\n  \"type\": \"anomaly\",\n  \"title\": \"Unusual Vibration Detected\",\n  \"description\": \"ML model detected anomalous vibration pattern\",\n  \"priority\": \"high\",\n  \"severity\": \"moderate\",\n  \"assignedTo\": \"{{userId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ml/alerts",
+              "host": ["{{baseUrl}}"],
+              "path": ["ml", "alerts"]
+            }
+          }
+        },
+        {
+          "name": "List Alerts",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Alerts listed - Status 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function() {",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Alerts contain required properties', function() {",
+                  "    let jsonData = pm.response.json();",
+                  "    if (jsonData.length > 0) {",
+                  "        pm.expect(jsonData[0]).to.have.property('id');",
+                  "        pm.expect(jsonData[0]).to.have.property('priority');",
+                  "        pm.expect(jsonData[0]).to.have.property('status');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ml/alerts?skip=0&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["ml", "alerts"],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Alert Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Alert updated - Status 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Status updated correctly', function() {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.equal('acknowledged');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"acknowledged\",\n  \"priority\": \"high\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ml/alerts/{{alertId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["ml", "alerts", "{{alertId}}"]
+            }
+          }
+        },
+        {
+          "name": "Mark Alert as Read",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Alert marked as read - Status 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Alert is marked as read', function() {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.isRead).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ml/alerts/{{alertId}}/read",
+              "host": ["{{baseUrl}}"],
+              "path": ["ml", "alerts", "{{alertId}}", "read"]
+            }
+          }
+        },
+        {
+          "name": "Mark All Alerts as Read",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('All alerts marked as read - Status 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ml/alerts/mark-all-read",
+              "host": ["{{baseUrl}}"],
+              "path": ["ml", "alerts", "mark-all-read"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Work Orders",
+      "item": [
+        {
+          "name": "Create Work Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Work order created - Status 201', function() {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response contains work order data', function() {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "    pm.expect(jsonData.status).to.equal('open');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.environment.set('workOrderId', jsonData.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alertId\": \"{{alertId}}\",\n  \"motorId\": \"{{motorId}}\",\n  \"title\": \"Vibration Issue Inspection\",\n  \"description\": \"Inspect and resolve anomalous vibrations detected by ML model\",\n  \"priority\": \"high\",\n  \"assignedTo\": \"{{userId}}\",\n  \"estimatedCost\": 500.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/iot/work-orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["iot", "work-orders"]
+            }
+          }
+        },
+        {
+          "name": "List Work Orders",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Work orders listed - Status 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function() {",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Work orders contain required properties', function() {",
+                  "    let jsonData = pm.response.json();",
+                  "    if (jsonData.length > 0) {",
+                  "        pm.expect(jsonData[0]).to.have.property('id');",
+                  "        pm.expect(jsonData[0]).to.have.property('status');",
+                  "        pm.expect(['open', 'in_progress', 'completed', 'cancelled']).to.include(jsonData[0].status);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/iot/work-orders?skip=0&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["iot", "work-orders"],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Work Order Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Work order updated - Status 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Status updated correctly', function() {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(['open', 'in_progress', 'completed', 'cancelled']).to.include(jsonData.status);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in_progress\",\n  \"actualCost\": 450.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/iot/work-orders/{{workOrderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["iot", "work-orders", "{{workOrderId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Technicians",
+      "item": [
+        {
+          "name": "List Technicians",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Technicians listed - Status 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function() {",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Technicians contain required properties', function() {",
+                  "    let jsonData = pm.response.json();",
+                  "    if (jsonData.length > 0) {",
+                  "        pm.expect(jsonData[0]).to.have.property('id');",
+                  "        pm.expect(jsonData[0]).to.have.property('firstName');",
+                  "        pm.expect(jsonData[0]).to.have.property('role');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/iot/technicians?skip=0&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["iot", "technicians"],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Technician Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Technician retrieved - Status 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains technician details', function() {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('firstName');",
+                  "    pm.expect(jsonData).to.have.property('email');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/iot/technicians/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["iot", "technicians", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Technician Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Technician updated - Status 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Role updated correctly', function() {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(['junior', 'senior', 'supervisor']).to.include(jsonData.role);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+1-555-0123\",\n  \"department\": \"Maintenance\",\n  \"role\": \"senior\",\n  \"skills\": [\"Vibration Analysis\", \"Motor Diagnostics\", \"Electrical Repair\"],\n  \"assignedSites\": [\"site-001\", \"site-002\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/iot/technicians/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["iot", "technicians", "{{userId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics & Business Intelligence",
+      "item": [
+        {
+          "name": "Get KPIs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('KPIs retrieved - Status 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains KPI data', function() {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('mttr');",
+                  "    pm.expect(jsonData).to.have.property('criticalMotorsCount');",
+                  "    pm.expect(jsonData).to.have.property('globalAvailability');",
+                  "    pm.expect(jsonData).to.have.property('totalMaintenanceCosts');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bi/kpis",
+              "host": ["{{baseUrl}}"],
+              "path": ["bi", "kpis"]
+            }
+          }
+        },
+        {
+          "name": "Upsert KPI",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('KPI upserted - Status 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains KPI data', function() {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('name');",
+                  "    pm.expect(jsonData).to.have.property('value');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"System Availability\",\n  \"value\": 98.5,\n  \"unit\": \"%\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bi/kpis/upsert",
+              "host": ["{{baseUrl}}"],
+              "path": ["bi", "kpis", "upsert"]
+            }
+          }
+        },
+        {
+          "name": "Get MTBF by Site",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('MTBF by site retrieved - Status 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function() {",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('MTBF data contains required properties', function() {",
+                  "    let jsonData = pm.response.json();",
+                  "    if (jsonData.length > 0) {",
+                  "        pm.expect(jsonData[0]).to.have.property('siteId');",
+                  "        pm.expect(jsonData[0]).to.have.property('mtbf');",
+                  "        pm.expect(jsonData[0]).to.have.property('totalFailures');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bi/mtbf-by-site",
+              "host": ["{{baseUrl}}"],
+              "path": ["bi", "mtbf-by-site"]
+            }
+          }
+        },
+        {
+          "name": "Get Maintenance Costs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Maintenance costs retrieved - Status 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains cost data', function() {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('totalCosts');",
+                  "    pm.expect(jsonData).to.have.property('history');",
+                  "    pm.expect(jsonData.history).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bi/maintenance-costs",
+              "host": ["{{baseUrl}}"],
+              "path": ["bi", "maintenance-costs"]
+            }
+          }
+        },
+        {
+          "name": "Get Intervention Statistics",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Intervention stats retrieved - Status 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains intervention statistics', function() {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('totalInterventions');",
+                  "    pm.expect(jsonData).to.have.property('completedInterventions');",
+                  "    pm.expect(jsonData).to.have.property('successRate');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bi/interventions",
+              "host": ["{{baseUrl}}"],
+              "path": ["bi", "interventions"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "testEmail",
+      "value": "test.user+{{$timestamp}}@vibraguard.com",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "motorId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "vibrationId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "alertId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "workOrderId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

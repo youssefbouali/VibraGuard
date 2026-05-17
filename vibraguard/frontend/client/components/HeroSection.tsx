@@ -95,17 +95,7 @@ export default function HeroSection() {
             <div className="text-[#94A3B8] text-xs mt-1">+2% ce mois</div>
           </div>
 
-          {/* Bottom-right stat card: Prédiction RUL */}
-          <div className="absolute bottom-6 -right-4 md:-right-10 w-[160px] rounded-[6px] border border-black/[0.08] bg-[#0B1518] backdrop-blur-[12px] shadow-[0_10px_25px_-5px_rgba(0,0,0,0.50)] p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
-                <path d="M14.4866 12.0005L9.15329 2.66714C8.91654 2.24939 8.47346 1.99121 7.99329 1.99121C7.51312 1.99121 7.07004 2.24939 6.83329 2.66714L1.49995 12.0005C1.26068 12.4149 1.26181 12.9257 1.50292 13.339C1.74402 13.7524 2.18813 14.0048 2.66662 14.0005H13.3333C13.8094 14 14.2491 13.7457 14.487 13.3332C14.7248 12.9208 14.7247 12.4128 14.4866 12.0005ZM7.99995 6.00048V8.66714M7.99995 11.3338H8.00662" stroke="#EAB308" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <span className="text-[#94A3B8] text-[13px]">Prédiction RUL</span>
-            </div>
-            <div className="text-white text-2xl font-bold">45 Jours</div>
-            <div className="text-[#94A3B8] text-xs mt-1">Maintenance reco.</div>
-          </div>
+
         </div>
       </div>
     </section>

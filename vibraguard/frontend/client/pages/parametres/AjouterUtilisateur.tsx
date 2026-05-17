@@ -217,20 +217,7 @@ export default function AjouterUtilisateur() {
                         </div>
 
                         <div className="flex flex-col gap-8 p-6">
-                            {/* Avatar Placeholder */}
-                            <div className="flex items-center gap-6">
-                                <div className="w-24 h-24 rounded-full bg-[#0D1316] border-2 border-dashed border-[#98A6A8]/30 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-[#007A3D]/50 transition-colors">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-[#98A6A8]">
-                                        <path d="M12 16V12M12 12V8M12 12H16M12 12H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-                                    </svg>
-                                    <span className="text-[10px] text-[#98A6A8] font-medium">Photo</span>
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-[#E6F0F2] text-sm font-medium">Avatar de l'utilisateur</span>
-                                    <span className="text-[#98A6A8] text-xs">JPG, PNG ou GIF. Max 5MB.</span>
-                                </div>
-                            </div>
+
 
                             {/* Fields grid */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">

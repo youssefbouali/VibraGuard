@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { cn } from "@/lib/utils";
+import { cn, formatTime } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import {
@@ -20,7 +20,7 @@ import {
 import { Loader2, Trash2, Edit, MoreHorizontal, Save, X, Plus } from "lucide-react";
 import { useMoteurs } from "@/hooks/use-moteurs";
 
-type HealthStatus = "Critique" | "Attention" | "Normal";
+type HealthStatus = "Critique" | "Alerte" | "Optimal" | "Attention" | "Normal"; // Backward compatibility included
 
 interface Moteur {
   id: string;
@@ -31,6 +31,7 @@ interface Moteur {
   etatSante: HealthStatus;
   vibrationRMS: number;
   derniereAlerte: string;
+  derniereAlerteType?: string;
   alerteRef?: string;
   etatColor?: string;
 }
@@ -50,7 +51,21 @@ const statusConfig: Record<HealthStatus, { color: string; bg: string; border: st
     dot: "bg-[#F2A900]",
     glow: "shadow-[0_0_8px_0_#F2A900]",
   },
+  Alerte: {
+    color: "text-[#F2A900]",
+    bg: "bg-[rgba(242,169,0,0.10)]",
+    border: "border-[rgba(242,169,0,0.20)]",
+    dot: "bg-[#F2A900]",
+    glow: "shadow-[0_0_8px_0_#F2A900]",
+  },
   Normal: {
+    color: "text-[#007A3D]",
+    bg: "bg-[rgba(0,122,61,0.10)]",
+    border: "border-[rgba(0,122,61,0.20)]",
+    dot: "bg-[#007A3D]",
+    glow: "shadow-[0_0_8px_0_#007A3D]",
+  },
+  Optimal: {
     color: "text-[#007A3D]",
     bg: "bg-[rgba(0,122,61,0.10)]",
     border: "border-[rgba(0,122,61,0.20)]",
@@ -62,7 +77,9 @@ const statusConfig: Record<HealthStatus, { color: string; bg: string; border: st
 const vibrationColor: Record<string, string> = {
   Critique: "text-[#D93F3F]",
   Attention: "text-[#F2A900]",
+  Alerte: "text-[#F2A900]",
   Normal: "text-[#007A3D]",
+  Optimal: "text-[#007A3D]",
 };
 
 // SVG icons
@@ -95,10 +112,15 @@ const EyeIcon = () => (
 
 function HealthBadge({ status }: { status: HealthStatus }) {
   const cfg = statusConfig[status] || statusConfig["Normal"];
+  const labelMap: Record<string, string> = {
+    "Normal": "Optimal",
+    "Attention": "Alerte",
+    "Critique": "Critique"
+  };
   return (
     <span className={cn("inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[13px] font-medium", cfg.bg, cfg.border, cfg.color)}>
       <span className={cn("w-2 h-2 rounded-full shrink-0", cfg.dot, cfg.glow)} />
-      {status}
+      {labelMap[status] || status}
     </span>
   );
 }
@@ -113,7 +135,7 @@ function ActionBtn({ children }: { children: React.ReactNode }) {
 
 export default function Moteurs() {
   const navigate = useNavigate();
-  const [view, setView] = useState<"liste" | "carte">("liste");
+  const [view, setView] = useState<"liste" | "carte">("carte");
   const [search, setSearch] = useState("");
   const [selectedZone, setSelectedZone] = useState("Toutes les zones");
   const [selectedStatus, setSelectedStatus] = useState("Tous");
@@ -132,7 +154,9 @@ export default function Moteurs() {
   const filtered = (apiMoteurs || []).filter((m: any) => {
     const matchesSearch = (m.id + m.localisation + m.zone).toLowerCase().includes(search.toLowerCase());
     const matchesZone = selectedZone === "Toutes les zones" || m.zone === selectedZone;
-    const status = m.etatSante || (m.etatColor === "bg-[#007A3D]" ? "Normal" : m.etatColor === "bg-[#F2A900]" ? "Attention" : "Critique");
+    let status = m.etatSante || (m.etatColor === "bg-[#007A3D]" ? "Optimal" : m.etatColor === "bg-[#F2A900]" ? "Alerte" : "Critique");
+    if (status === "Normal") status = "Optimal";
+    if (status === "Attention") status = "Alerte";
     const matchesStatus = selectedStatus === "Tous" || status === selectedStatus;
     return matchesSearch && matchesZone && matchesStatus;
   });
@@ -144,7 +168,7 @@ export default function Moteurs() {
   const paginatedMoteurs = filtered.slice(startIndex, startIndex + perPage);
 
   const zones = ["Toutes les zones", ...new Set((apiMoteurs || []).map((m: any) => m.zone))];
-  const statuses = ["Tous", "Normal", "Attention", "Critique"];
+  const statuses = ["Tous", "Optimal", "Alerte", "Critique"];
 
   return (
     <DashboardLayout breadcrumb="Moteurs">
@@ -202,18 +226,18 @@ export default function Moteurs() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* État dropdown */}
+            {/* Santé dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 h-10 px-4 rounded-md border border-black/[0.08] bg-[#0D1316] text-[#E6F0F2] text-sm min-w-[160px]">
-                  <span className="flex-1 text-left">État: {selectedStatus}</span>
+                  <span className="flex-1 text-left">Santé: {selectedStatus}</span>
                   <MoreHorizontal className="w-4 h-4 text-[#98A6A8]" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="bg-[#0D1316] border-white/10 text-white min-w-[160px]">
                 {statuses.map(s => (
                   <DropdownMenuItem key={s} onClick={() => { setSelectedStatus(s); setCurrentPage(1); }} className="hover:bg-white/5 cursor-pointer flex items-center gap-2">
-                    {s !== "Tous" && <div className={cn("w-2 h-2 rounded-full", s === "Normal" ? "bg-[#007A3D]" : s === "Attention" ? "bg-[#F2A900]" : "bg-[#D93F3F]")} />}
+                    {s !== "Tous" && <div className={cn("w-2 h-2 rounded-full", (s === "Optimal" || s === "Normal") ? "bg-[#007A3D]" : (s === "Alerte" || s === "Attention") ? "bg-[#F2A900]" : "bg-[#D93F3F]")} />}
                     {s}
                   </DropdownMenuItem>
                 ))}
@@ -262,7 +286,10 @@ export default function Moteurs() {
 
             <div className="divide-y divide-black/[0.08]">
               {paginatedMoteurs.map((m: any) => {
-                const status = (m.etatSante as HealthStatus) || (m.etatColor === "bg-[#007A3D]" ? "Normal" : m.etatColor === "bg-[#F2A900]" ? "Attention" : "Critique");
+                const status = (m.etatSante as HealthStatus) || 
+                               (m.etatColor === "#10B981" ? "Normal" : 
+                                m.etatColor === "#F59E0B" ? "Attention" : 
+                                m.etatColor === "#EF4444" ? "Critique" : "Normal");
                 return (
                   <div key={m.id} className="grid grid-cols-[1.5fr_1fr_1.5fr_1fr_1fr_auto] hover:bg-white/[0.02] transition-colors cursor-pointer" onClick={() => navigate(`/moteurs/${m.id}`)}>
                     <div className="px-6 py-4 flex flex-col">
@@ -277,10 +304,19 @@ export default function Moteurs() {
                       <span className="text-[#98A6A8] text-xs">{m.puissance}</span>
                     </div>
                     <div className="px-6 py-4 flex items-center gap-1">
-                      <span className={cn("font-bold text-lg", vibrationColor[status])}>{m.vibrationRMS}</span>
+                      <span className={cn("font-bold text-lg", vibrationColor[status])}>
+                        {typeof m.vibrationRMS === 'number' ? m.vibrationRMS.toFixed(2) : String(m.vibration || "0.00").replace(' mm/s', '')}
+                      </span>
                       <span className="text-[#98A6A8] text-xs">mm/s</span>
                     </div>
-                    <div className="px-6 py-4 text-sm text-[#98A6A8]">{m.derniereAlerte || "N/A"}</div>
+                    <div className="px-6 py-4 text-sm font-medium">
+                      <div className="flex flex-col">
+                        <span className={cn("text-xs uppercase", (m.derniereAlerteType && m.derniereAlerteType !== 'Sain') ? "text-[#EF4444]" : "text-[#10B981]")}>
+                          {m.derniereAlerteType || "Aucun"}
+                        </span>
+                        <span className="text-[#64748B] text-[10px]">{m.derniereAlerte ? formatTime(m.derniereAlerte) : "N/A"}</span>
+                      </div>
+                    </div>
                     <div className="px-6 py-4 flex items-center justify-end gap-2 pr-10">
                        <ActionBtn><VibrationIcon /></ActionBtn>
                        <DropdownMenu>
@@ -301,7 +337,10 @@ export default function Moteurs() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {paginatedMoteurs.map((m: any) => {
-              const status = (m.etatSante as HealthStatus) || (m.etatColor === "bg-[#007A3D]" ? "Normal" : m.etatColor === "bg-[#F2A900]" ? "Attention" : "Critique");
+              const status = (m.etatSante as HealthStatus) || 
+                             (m.etatColor === "#10B981" ? "Normal" : 
+                              m.etatColor === "#F59E0B" ? "Attention" : 
+                              m.etatColor === "#EF4444" ? "Critique" : "Normal");
               return (
                 <div key={m.id} onClick={() => navigate(`/moteurs/${m.id}`)} className="bg-[#0B1518] rounded-xl border border-white/5 p-6 hover:border-[#0EA5E9]/30 transition-all cursor-pointer">
                   <div className="flex justify-between items-start mb-4">
@@ -313,7 +352,9 @@ export default function Moteurs() {
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
                     <div>
                       <p className="text-[#64748B] text-[10px] font-bold uppercase mb-1">Vibration</p>
-                      <p className={cn("text-xl font-bold", vibrationColor[status])}>{m.vibrationRMS} <span className="text-xs font-normal opacity-60">mm/s</span></p>
+                      <p className={cn("text-xl font-bold", vibrationColor[status])}>
+                        {typeof m.vibrationRMS === 'number' ? m.vibrationRMS.toFixed(2) : String(m.vibration || "0.00").replace(' mm/s', '')} <span className="text-xs font-normal opacity-60">mm/s</span>
+                      </p>
                     </div>
                     <div>
                       <p className="text-[#64748B] text-[10px] font-bold uppercase mb-1">Type</p>

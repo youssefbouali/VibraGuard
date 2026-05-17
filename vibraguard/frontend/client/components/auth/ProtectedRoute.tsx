@@ -4,10 +4,24 @@ import { useAuth } from "@/lib/auth-context";
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
+    allowedRoles?: Array<"admin" | "technician">;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-    const { token, isLoading } = useAuth();
+const normalizeRole = (role: string | undefined) =>
+    role?.toLowerCase().replace(/[^a-z]/g, "") || "";
+
+const isAdminRole = (role: string | undefined) => {
+    const normalized = normalizeRole(role);
+    return normalized.startsWith("admin") || normalized.startsWith("administrateur");
+};
+
+const isTechnicianRole = (role: string | undefined) => {
+    const normalized = normalizeRole(role);
+    return normalized.includes("technicien") || normalized.includes("technician");
+};
+
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
+    const { token, isLoading, user } = useAuth();
     const location = useLocation();
 
     if (isLoading) {
@@ -20,6 +34,16 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
     if (!token) {
         return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+
+    if (allowedRoles && allowedRoles.length > 0) {
+        const role = user?.role;
+        const adminAllowed = allowedRoles.includes("admin") && isAdminRole(role);
+        const techAllowed = allowedRoles.includes("technician") && isTechnicianRole(role);
+
+        if (!adminAllowed && !techAllowed) {
+            return <Navigate to="/dashboard" replace />;
+        }
     }
 
     return <>{children}</>;

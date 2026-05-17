@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAlerts } from "@/hooks/use-alerts";
+import { useAuth } from "@/lib/auth-context";
 
 const navItems = [
   {
@@ -59,6 +60,17 @@ const navItems = [
     ),
   },
   {
+    label: "Rapports IPFS",
+    href: "/reports",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <path d="M4.5 16.5C3.67213 16.5 3 15.8279 3 15V3C3 2.17213 3.67213 1.5 4.5 1.5H10.5C10.9795 1.49923 11.4395 1.68982 11.778 2.0295L14.469 4.7205C14.8096 5.05909 15.0008 5.51974 15 6V15C15 15.8279 14.3279 16.5 13.5 16.5H4.5" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M10.5 1.5V5.25C10.5 5.66394 10.8361 6 11.25 6H15" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M8 10H12M8 13H12" stroke="currentColor" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
     label: "Audit Blockchain",
     href: "/audit",
     icon: (
@@ -89,11 +101,25 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
   const location = useLocation();
   const { data: alerts = [] } = useAlerts();
 
+  const { user } = useAuth();
+  const isAdmin = user?.role ? user.role.toLowerCase().includes("admin") || user.role.toLowerCase().includes("administrateur") : false;
+
   const dynamicNavItems = navItems.map(item => {
     if (item.label === "Alertes") {
-      return { ...item, badge: alerts.length };
+      const alertCount = alerts.filter(a => (a.type === "ALERT" || !a.type) && a.status !== "Read").length;
+      return { ...item, badge: alertCount };
+    }
+    if (item.label === "Paramètres" && !isAdmin) {
+      return { ...item, href: "/parametres/profil" };
     }
     return item;
+  });
+
+  const filteredNavItems = dynamicNavItems.filter((item) => {
+    if (["Rapports BI", "Audit Blockchain"].includes(item.label)) {
+      return isAdmin;
+    }
+    return true;
   });
 
   return (
@@ -126,7 +152,7 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
 
       {/* Nav */}
       <nav className="flex-1 flex flex-col gap-2 p-4 overflow-y-auto">
-        {dynamicNavItems.map((item) => {
+        {filteredNavItems.map((item) => {
           const isActive =
             item.href === "/dashboard"
               ? location.pathname === item.href

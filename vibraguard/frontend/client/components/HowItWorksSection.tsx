@@ -34,7 +34,7 @@ const steps = [
       </svg>
     ),
     label: "3. IA",
-    description: "Analyse & Prédiction RUL",
+    description: "Détection d'anomalies",
     highlight: true,
   },
   {
