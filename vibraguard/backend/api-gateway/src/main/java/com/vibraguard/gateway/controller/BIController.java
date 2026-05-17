@@ -8,12 +8,40 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/bi")
 public class BIController {
+
+    private static final List<DateTimeFormatter> DATE_FORMATTERS = List.of(
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"),
+            DateTimeFormatter.ISO_LOCAL_DATE_TIME,
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"),
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
+    );
+
+    private static Date parseDate(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String trimmed = value.trim();
+        for (DateTimeFormatter formatter : DATE_FORMATTERS) {
+            try {
+                LocalDateTime dateTime = LocalDateTime.parse(trimmed, formatter);
+                return Date.from(dateTime.atZone(ZoneId.systemDefault()).toInstant());
+            } catch (DateTimeParseException e) {
+                // try next formatter
+            }
+        }
+        return null;
+    }
 
     @Autowired
     private WorkOrderRepository workOrderRepository;
@@ -64,7 +92,7 @@ public class BIController {
             
             String alertsTrend = newAlerts > 0 ? "+" + newAlerts : "Aucune";
 
-            // Calculate MTTR (Mean Time To Repair) and MTBF from completed Work Orders
+            // Calculate MTTR (Mean Time To Repair) from duration field and MTBF from order intervals
             List<WorkOrder> finishedOrders = allOrders.stream()
                     .filter(o -> o.getCompletedAt() != null && o.getCreatedAt() != null)
                     .collect(Collectors.toList());
@@ -72,38 +100,88 @@ public class BIController {
             double avgMttrHours = 0.0;
             double avgMtbfHours = 0.0;
             if (!finishedOrders.isEmpty()) {
-                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                long totalRepairMinutes = 0;
-                int repairCount = 0;
+                double totalDurationHours = 0;
+                int durationCount = 0;
                 List<WorkOrder> orderedByCompletedAt = finishedOrders.stream()
                         .sorted(Comparator.comparing(WorkOrder::getCompletedAt))
                         .collect(Collectors.toList());
                 
+                // Calculate MTTR from duration field, supporting values like "10h 00m"
+                for (WorkOrder wo : orderedByCompletedAt) {
+                    if (wo.getDuration() != null && !wo.getDuration().trim().isEmpty()) {
+                        try {
+                            String dur = wo.getDuration().trim().toLowerCase();
+                            double hours = 0;
+                            java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("(?:(\\d+(?:\\.\\d+)?)h)?\\s*(?:(\\d+(?:\\.\\d+)?)m)?").matcher(dur);
+                            if (matcher.matches()) {
+                                if (matcher.group(1) != null) {
+                                    hours += Double.parseDouble(matcher.group(1));
+                                }
+                                if (matcher.group(2) != null) {
+                                    hours += Double.parseDouble(matcher.group(2)) / 60.0;
+                                }
+                            } else if (dur.contains("h") || dur.contains("m")) {
+                                // fallback for slightly different formatting
+                                String normalized = dur.replace("h", " h ").replace("m", " m ").trim();
+                                String[] parts = normalized.split("\\s+");
+                                for (int i = 0; i < parts.length - 1; i += 2) {
+                                    String value = parts[i];
+                                    String unit = parts[i + 1];
+                                    if (unit.equals("h")) {
+                                        hours += Double.parseDouble(value);
+                                    } else if (unit.equals("m")) {
+                                        hours += Double.parseDouble(value) / 60.0;
+                                    }
+                                }
+                            } else {
+                                hours = Double.parseDouble(dur);
+                            }
+                            if (hours >= 0) {
+                                totalDurationHours += hours;
+                                durationCount++;
+                            }
+                        } catch (NumberFormatException e) {
+                            // ignore invalid duration
+                        }
+                    }
+                }
+                if (durationCount > 0) {
+                    avgMttrHours = totalDurationHours / durationCount;
+                } else {
+                    // Fallback to created/completed timestamps when duration field cannot be parsed
+                    long totalRepairMinutes = 0;
+                    int repairCount = 0;
+                    for (WorkOrder wo : orderedByCompletedAt) {
+                        Date start = parseDate(wo.getCreatedAt());
+                        Date end = parseDate(wo.getCompletedAt());
+                        if (start != null && end != null) {
+                            long repairMinutes = (end.getTime() - start.getTime()) / (1000 * 60);
+                            if (repairMinutes >= 0) {
+                                totalRepairMinutes += repairMinutes;
+                                repairCount++;
+                            }
+                        }
+                    }
+                    if (repairCount > 0) {
+                        avgMttrHours = (double) totalRepairMinutes / (repairCount * 60.0);
+                    }
+                }
+                
+                // Calculate MTBF from intervals between completed orders
                 List<Long> mtbfIntervals = new ArrayList<>();
                 WorkOrder previous = null;
                 for (WorkOrder wo : orderedByCompletedAt) {
-                    try {
-                        Date start = sdf.parse(wo.getCreatedAt());
-                        Date end = sdf.parse(wo.getCompletedAt());
-                        long repairMinutes = (end.getTime() - start.getTime()) / (1000 * 60);
-                        if (repairMinutes >= 0) {
-                            totalRepairMinutes += repairMinutes;
-                            repairCount++;
-                        }
-                        if (previous != null) {
-                            Date previousEnd = sdf.parse(previous.getCompletedAt());
+                    Date start = parseDate(wo.getCreatedAt());
+                    if (previous != null && start != null) {
+                        Date previousEnd = parseDate(previous.getCompletedAt());
+                        if (previousEnd != null) {
                             long intervalMinutes = (start.getTime() - previousEnd.getTime()) / (1000 * 60);
                             if (intervalMinutes >= 0) {
                                 mtbfIntervals.add(intervalMinutes);
                             }
                         }
-                        previous = wo;
-                    } catch (Exception e) {
-                        // ignore invalid dates
                     }
-                }
-                if (repairCount > 0) {
-                    avgMttrHours = (double) totalRepairMinutes / (repairCount * 60.0);
+                    previous = wo;
                 }
                 if (!mtbfIntervals.isEmpty()) {
                     long totalIntervalMinutes = mtbfIntervals.stream().mapToLong(Long::longValue).sum();

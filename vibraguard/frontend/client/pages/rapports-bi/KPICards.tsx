@@ -32,22 +32,24 @@ function KPICard({ title, value, unit, trend, trendUp, trendColor = "#007A3D", i
         <span className="text-[#98A6A8] text-[15px] font-medium">{unit}</span>
       </div>
 
-      <div className="flex items-center gap-1.5">
-        {trendUp ? (
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M10.6666 4.667H14.6666V8.667" stroke={trendColor} strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M14.6667 4.667L9.00004 10.334L5.66671 7.001L1.33337 11.334" stroke={trendColor} strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        ) : (
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M10.6667 11.333H14.6667V7.333" stroke={trendColor} strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M14.6668 11.334L9.00016 5.667L5.66683 9.001L1.3335 4.667" stroke={trendColor} strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        )}
-        <span className="text-[13px] font-semibold" style={{ color: trendColor }}>
-          {trend}
-        </span>
-      </div>
+      {trend && trend !== "Stable" && !trend.startsWith("-") && (
+        <div className="flex items-center gap-1.5">
+          {trendUp ? (
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M10.6666 4.667H14.6666V8.667" stroke={trendColor} strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M14.6667 4.667L9.00004 10.334L5.66671 7.001L1.33337 11.334" stroke={trendColor} strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M10.6667 11.333H14.6667V7.333" stroke={trendColor} strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M14.6668 11.334L9.00016 5.667L5.66683 9.001L1.3335 4.667" stroke={trendColor} strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          )}
+          <span className="text-[13px] font-semibold" style={{ color: trendColor }}>
+            {trend}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
