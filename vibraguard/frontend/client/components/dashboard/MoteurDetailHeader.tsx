@@ -32,7 +32,7 @@ export function MoteurDetailHeader({ motor }: { motor: any }) {
         ['Localisation', motor.localisation || ''],
       ],
       theme: 'striped',
-      headStyles: { fillStyle: 'fill', fillColor: [0, 122, 61] }
+      headStyles: { fillColor: [0, 122, 61] }
     });
 
     // Save PDF

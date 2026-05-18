@@ -1,5 +1,6 @@
 package com.vibraguard.gateway.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -18,7 +19,10 @@ public class MaintenanceCost {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "cost_month")
     private String month;
+
     private double reel;
     private double budget;
 }
