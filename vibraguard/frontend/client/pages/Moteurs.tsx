@@ -167,7 +167,7 @@ export default function Moteurs() {
   const startIndex = (currentPage - 1) * perPage;
   const paginatedMoteurs = filtered.slice(startIndex, startIndex + perPage);
 
-  const zones = ["Toutes les zones", ...new Set((apiMoteurs || []).map((m: any) => m.zone))];
+  const zones: string[] = ["Toutes les zones", ...Array.from(new Set<string>((apiMoteurs || []).map((m: any) => String(m.zone))))];
   const statuses = ["Tous", "Optimal", "Alerte", "Critique"];
 
   return (

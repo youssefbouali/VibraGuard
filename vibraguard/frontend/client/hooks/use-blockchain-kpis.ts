@@ -17,7 +17,7 @@ export function useBlockchainKPIs() {
       let blockchainReachable = false;
 
       try {
-        const { fetchWorkOrderEvents, getBlockchainStats } = await import("@/lib/blockchain");
+        const { fetchWorkOrderEvents } = await import("@/lib/blockchain");
         events = await fetchWorkOrderEvents() || [];
         blockchainReachable = true;
       } catch (e) {

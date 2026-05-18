@@ -260,13 +260,12 @@ export default function RapportsBI() {
             </div>
           </div>
 
-          {/* Bottom row: Map + MTBF by Site */}
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-6 pb-4">
             <div className="min-h-[380px]">
-              <CartographieSites tab={activeTab} date={selectedDate} />
+              <CartographieSites />
             </div>
             <div className="min-h-[380px]">
-              <MtbfBySiteChart tab={activeTab} date={selectedDate} />
+              <MtbfBySiteChart />
             </div>
           </div>
         </div>

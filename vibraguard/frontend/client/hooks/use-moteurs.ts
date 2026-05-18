@@ -13,6 +13,13 @@ export interface Moteur {
   derniereAlerte: string;
   derniereAlerteType?: string;
   alerteRef?: string;
+  // Dynamic fields added by WebSockets
+  etatPct?: number;
+  etatColor?: string;
+  vibrationColor?: string;
+  trendIcon?: any;
+  power?: string;
+  speed?: string;
   // Legacy fields if still used
   etatLabel?: string;
   vibration?: string;
