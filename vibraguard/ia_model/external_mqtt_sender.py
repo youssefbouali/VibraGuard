@@ -18,6 +18,7 @@ MOTOR_ID = os.getenv("MOTOR_ID", "MTR-Broyeur-04") # Specify the motor ID here
 MQTT_USER = None   # e.g., "my_username"
 MQTT_PASS = None   # e.g., "my_password"
 
+
 # ==========================================
 # DATA GENERATION
 # ==========================================
