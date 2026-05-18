@@ -1,5 +1,6 @@
 package com.vibraguard.gateway.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -15,6 +16,9 @@ import lombok.NoArgsConstructor;
 public class SiteMtbf {
     @Id
     private String name;
+
+    @Column(name = "mtbf_value")
     private int value;
+
     private String color;
 }

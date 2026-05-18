@@ -14,6 +14,12 @@ export interface BIKPIs {
   maintenanceCost: number;
   maintenanceCostTrend: string;
   maintenanceCostUp: boolean;
+  uptime: number | string;
+  uptimeTrend: string;
+  uptimeTrendUp: boolean;
+  totalCost: number;
+  totalCostTrend: string;
+  totalCostUp: boolean;
   sitesConnected: number;
   activeAlerts: number;
 }

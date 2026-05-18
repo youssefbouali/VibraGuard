@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 export type Severite = "Critique" | "Majeur" | "Mineur";
-export type Statut = "Nouveau" | "En cours" | "Résolu";
+export type Statut = "Nouveau" | "En cours" | "Résolu" | "Acquittée" | "Escaladée";
 
 export interface Alerte {
   id: string;
@@ -16,6 +16,7 @@ export interface Alerte {
   temperature?: number;
   scoreConfianceIA?: number;
   depassementSeuil?: number;
+  type?: string;
 }
 
 interface AlertesTableProps {

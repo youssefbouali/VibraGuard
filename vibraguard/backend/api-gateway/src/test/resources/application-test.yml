@@ -20,13 +20,7 @@ spring:
 # Disable auto-configurations that require external services in CI
   autoconfigure:
     exclude:
-      - org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration
-      - org.springframework.boot.autoconfigure.data.elasticsearch.ReactiveElasticsearchRepositoriesAutoConfiguration
-      - org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchClientAutoConfiguration
-      - org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration
-      - org.springframework.boot.autoconfigure.data.mongo.MongoRepositoriesAutoConfiguration
-      - org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration
-      - org.springframework.kafka.annotation.KafkaBootstrapConfiguration
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
 
 ipfs:
   api:
@@ -39,3 +33,9 @@ management:
   otlp:
     tracing:
       endpoint: http://localhost:4318/v1/traces
+
+de:
+  flapdoodle:
+    mongodb:
+      embedded:
+        version: 4.4.0
