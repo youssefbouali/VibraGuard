@@ -1,7 +1,6 @@
-# Hardhat configuration for testing and compilation
-require("@nomicfoundation/hardhat-toolbox");
+import "@nomicfoundation/hardhat-toolbox";
 
-module.exports = {
+export default {
   solidity: {
     version: "0.8.19",
     settings: {

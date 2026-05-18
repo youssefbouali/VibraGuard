@@ -28,7 +28,7 @@ class TestDataProcessing:
         })
         
         # Forward fill
-        filled_data = data.fillna(method='ffill')
+        filled_data = data.ffill()
         assert not filled_data.isna().any().any()
     
     def test_outlier_detection(self):
@@ -101,4 +101,4 @@ class TestAnomalyDetection:
         z_score = abs((test_point - mean) / std)
         
         is_anomaly = z_score > 3
-        assert is_anomaly is True
+        assert is_anomaly
