@@ -8,12 +8,12 @@ export interface BIKPIs {
   mttr: number;
   mttrTrend: string;
   mttrUp: boolean;
-  availability: number;
-  availabilityTrend: string;
-  availabilityUp: boolean;
-  maintenanceCost: number;
-  maintenanceCostTrend: string;
-  maintenanceCostUp: boolean;
+  uptime: number | string;
+  uptimeTrend: string;
+  uptimeTrendUp: boolean;
+  totalCost: number;
+  totalCostTrend: string;
+  totalCostUp: boolean;
   sitesConnected: number;
   activeAlerts: number;
 }

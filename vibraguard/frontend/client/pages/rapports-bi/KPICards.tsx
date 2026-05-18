@@ -118,7 +118,7 @@ export function KPICards({ tab, date }: { tab: string; date: string }) {
         title={`Coût ${date}`}
         value={getSimValue(kpis?.totalCost ?? "0")}
         unit="MAD"
-        trend={kpis?.maintenanceCostTrend ?? "Stable"}
+        trend={kpis?.totalCostTrend ?? "Stable"}
         trendUp={false}
         iconBg="rgba(242, 169, 0, 0.1)"
         icon={

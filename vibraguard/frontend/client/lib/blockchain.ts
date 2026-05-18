@@ -99,6 +99,7 @@ async function getContractData() {
   // Try to load from WorkOrderRegistry.json if localStorage did not yield a valid contract
   if (contractData.address === DEFAULT_ADDRESS || contractData.address === null) {
     try {
+      // @ts-ignore
       const dynamicData = await import("./WorkOrderRegistry.json");
       if (dynamicData.address) {
         console.log("🔍 Loaded contract address from WorkOrderRegistry.json:", dynamicData.address);

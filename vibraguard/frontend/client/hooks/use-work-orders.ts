@@ -6,9 +6,13 @@ export interface WorkOrder {
   title: string;
   asset: string;
   status: string;
-  assignedTo: string;
+  assignedTo: any;
   dueDate: string;
   priority: string;
+  type?: string;
+  cost?: number;
+  duration?: string;
+  parts?: string;
 }
 
 export function useWorkOrders() {
