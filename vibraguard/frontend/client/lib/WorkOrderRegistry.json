@@ -1,8 +1,0 @@
-{
-  "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-  "abi": [
-    "function createWorkOrder(string memory _id, string memory _title, string memory _asset, string memory _priority) public",
-    "function getWorkOrderCount() public view returns (uint)",
-    "event WorkOrderCreated(string indexed id, string title, string asset, string priority, address creator, uint timestamp)"
-  ]
-}
