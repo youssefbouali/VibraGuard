@@ -9,7 +9,7 @@ SCALER_PATH = "vibraguard_scaler.joblib"
 
 # Feature definitions
 FEATURE_COLUMNS = [
-    'rpm', 'vib_rms', 'vib_peak', 'vib_kurtosis', 
+    'vib_rms', 'vib_peak', 'vib_kurtosis', 
     'current_rms', 'current_thd', 'temperature'
 ]
 
@@ -20,7 +20,6 @@ def generate_data(is_anomaly=False):
     """Generates data similar to the precise ranges in mqtt_sensor_simulator."""
     if is_anomaly:
         return {
-            "rpm": random.uniform(1300, 1500),
             "vib_rms": random.uniform(5.0, 10.0),
             "vib_peak": random.uniform(15.0, 25.0),
             "vib_kurtosis": random.uniform(4.0, 8.0),
@@ -30,7 +29,6 @@ def generate_data(is_anomaly=False):
         }
     else:
         return {
-            "rpm": random.uniform(1450, 1490),
             "vib_rms": random.uniform(2.0, 3.0),
             "vib_peak": random.uniform(7.0, 9.0),
             "vib_kurtosis": random.uniform(2.5, 3.5),

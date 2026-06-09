@@ -32,7 +32,7 @@ df = pd.read_csv(data_path)
 print(f"Lignes chargees: {len(df)}")
 
 feature_columns = [
-    'rpm', 'vib_rms', 'vib_peak', 'vib_kurtosis',
+    'vib_rms', 'vib_peak', 'vib_kurtosis',
     'fft_dominant_freq', 'fft_max_amplitude', 'fft_total_power',
     'current_rms', 'current_thd', 'temperature'
 ]
