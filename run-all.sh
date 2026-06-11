@@ -4,6 +4,11 @@
 # This script builds and deploys the entire infrastructure and applications.
 # -----------------------------------------------------------------------------
 
+if [ -z "$BASH_VERSION" ]; then
+  echo "⚠️  Please run this script with bash, not sh. Re-executing with bash..."
+  exec bash "$0" "$@"
+fi
+
 set -e  # Exit on error
 
 # Configuration
@@ -556,6 +561,10 @@ if [ -n "$CONTRACT_ADDRESS" ]; then
     pnpm install
     pnpm run build
     docker build -t vibraguard-frontend:latest .
+
+    # Ensure the frontend deployment picks up the locally built Minikube image
+    echo "🔁 Restarting frontend deployment so Minikube re-creates the pod with the new local image..."
+    kubectl rollout restart deployment/frontend -n $NAMESPACE || true
 
     # Create ConfigMap with contract address
     kubectl create configmap workorder-registry-config \
