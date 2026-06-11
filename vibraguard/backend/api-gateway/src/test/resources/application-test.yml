@@ -26,5 +26,7 @@ spring:
       - org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration
       - org.springframework.boot.autoconfigure.data.mongodb.MongoDataAutoConfiguration
       - org.springframework.boot.autoconfigure.data.mongodb.MongoRepositoriesAutoConfiguration
+      - de.flapdoodle.embed.mongo.spring.autoconfigure.EmbeddedMongoAutoConfiguration
+      - de.flapdoodle.embed.mongo.spring.autoconfigure.EmbeddedMongoReactiveAutoConfiguration
   main:
     allow-bean-definition-overriding: true
