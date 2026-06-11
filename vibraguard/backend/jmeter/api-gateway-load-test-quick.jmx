@@ -84,14 +84,14 @@
           <stringProp name="HTTPSampler.concurrentPool">6</stringProp>
         </HTTPSamplerProxy>
         <hashTree>
-          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert 200" enabled="true">
-            <collectionProp name="Asserion.test_strings">
-              <stringProp name="200">200</stringProp>
-            </collectionProp>
-            <stringProp name="ResponseAssertion.test_field">Assertion.response_code</stringProp>
-            <boolProp name="ResponseAssertion.assume_success">false</boolProp>
-            <intProp name="ResponseAssertion.test_type">2</intProp>
-          </ResponseAssertion>
+          <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Assert Response Code == 200" enabled="true">
+            <stringProp name="cacheKey"></stringProp>
+            <stringProp name="filename"></stringProp>
+            <stringProp name="parameters"></stringProp>
+            <stringProp name="script">if (!prev.getResponseCode().equals('200')) { throw new java.lang.AssertionError('Response code != 200: ' + prev.getResponseCode()); }</stringProp>
+            <stringProp name="scriptLanguage">groovy</stringProp>
+            <boolProp name="resetInterpreter">false</boolProp>
+          </JSR223Assertion>
           <hashTree/>
         </hashTree>
       </hashTree>
