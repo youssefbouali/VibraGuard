@@ -150,7 +150,9 @@ spec:
             - containerPort: 5601
           env:
             - name: ELASTICSEARCH_HOSTS
-              value: "http://elasticsearch-master:9200"
+              value: "https://elasticsearch-master:9200"
+            - name: ELASTICSEARCH_SSL_VERIFICATIONMODE
+              value: "none"
             - name: XPACK_SECURITY_ENABLED
               value: "false"
           resources:
@@ -248,7 +250,7 @@ spec:
                   name: oracle-db-credentials
                   key: password
             - name: ELASTICSEARCH_URL
-              value: "http://elasticsearch-master:9200"
+              value: "https://elasticsearch-master:9200"
 EOF
 
 cat <<EOF > k8s/backend-service.yaml
@@ -606,5 +608,6 @@ echo "🔌 Activating external access for Monitoring & Tracing..."
 kubectl port-forward --address 0.0.0.0 svc/prometheus-server -n $NAMESPACE 30090:80 > /dev/null 2>&1 &
 kubectl port-forward --address 0.0.0.0 svc/jaeger-query -n $NAMESPACE 30086:16686 > /dev/null 2>&1 &
 kubectl port-forward --address 0.0.0.0 svc/kibana -n $NAMESPACE 30001:5601 > /dev/null 2>&1 &
-echo "🚀 Accessibility check: Prometheus (30090), Jaeger (30086), Kibana (30001) are active."
+kubectl port-forward --address 127.0.0.1 svc/elasticsearch-master -n $NAMESPACE 9200:9200 > /dev/null 2>&1 &
+echo "🚀 Accessibility check: Prometheus (30090), Jaeger (30086), Kibana (30001), Elasticsearch local (9200) are active."
 echo "======================================================"
