@@ -606,8 +606,8 @@ echo "======================================================"
 # Safety: Ensure port-forwarding for all observability tools (in case minikube wasn't restarted)
 echo "🔌 Activating external access for Monitoring & Tracing..."
 kubectl port-forward --address 0.0.0.0 svc/prometheus-server -n $NAMESPACE 30090:80 > /dev/null 2>&1 &
-kubectl port-forward --address 0.0.0.0 svc/jaeger-query -n $NAMESPACE 30086:16686 > /dev/null 2>&1 &
+kubectl port-forward --address 127.0.0.1 svc/jaeger-query -n $NAMESPACE 30086:16686 > /dev/null 2>&1 &
 kubectl port-forward --address 0.0.0.0 svc/kibana -n $NAMESPACE 30001:5601 > /dev/null 2>&1 &
 kubectl port-forward --address 127.0.0.1 svc/elasticsearch-master -n $NAMESPACE 9200:9200 > /dev/null 2>&1 &
-echo "🚀 Accessibility check: Prometheus (30090), Jaeger (30086), Kibana (30001), Elasticsearch local (9200) are active."
+echo "🚀 Accessibility check: Prometheus (30090), Jaeger local (30086), Kibana (30001), Elasticsearch local (9200) are active."
 echo "======================================================"
