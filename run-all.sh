@@ -151,6 +151,16 @@ spec:
           env:
             - name: ELASTICSEARCH_HOSTS
               value: "https://elasticsearch-master:9200"
+            - name: ELASTICSEARCH_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: elasticsearch-master-credentials
+                  key: username
+            - name: ELASTICSEARCH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: elasticsearch-master-credentials
+                  key: password
             - name: ELASTICSEARCH_SSL_VERIFICATIONMODE
               value: "none"
             - name: SERVER_PUBLIC_BASE_URL
@@ -193,6 +203,24 @@ helm upgrade --install jaeger jaegertracing/jaeger -n $NAMESPACE \
   --set collector.serviceType=ClusterIP \
   --set query.serviceType=NodePort \
   --set query.service.nodePort=30086
+
+cat <<EOF | kubectl apply -n $NAMESPACE -f -
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger-query-nodeport
+  namespace: $NAMESPACE
+spec:
+  type: NodePort
+  selector:
+    app: jaeger
+  ports:
+    - name: query
+      protocol: TCP
+      port: 16686
+      targetPort: 16686
+      nodePort: 30086
+EOF
 
 # IPFS
 echo "🌐 Deploying IPFS..."
@@ -565,10 +593,13 @@ if [ -n "$CONTRACT_ADDRESS" ]; then
     pnpm install
     pnpm run build
     docker build -t vibraguard-frontend:latest .
+    echo "📦 Loading frontend image into Minikube..."
+    minikube image load vibraguard-frontend:latest
 
     # Ensure the frontend deployment picks up the locally built Minikube image
     echo "🔁 Restarting frontend deployment so Minikube re-creates the pod with the new local image..."
     kubectl rollout restart deployment/frontend -n $NAMESPACE || true
+    kubectl wait --for=condition=ready pod -l app=frontend -n $NAMESPACE --timeout=120s || true
 
     # Create ConfigMap with contract address
     kubectl create configmap workorder-registry-config \
