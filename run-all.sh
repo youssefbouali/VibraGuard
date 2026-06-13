@@ -535,6 +535,7 @@ echo "======================================================"
 kubectl get pods -n $NAMESPACE
 kubectl get svc -n $NAMESPACE
 
+cd "$ROOT_DIR/vibraguard/frontend"
 docker build -t vibraguard-frontend:latest .
 
 docker run -t \
