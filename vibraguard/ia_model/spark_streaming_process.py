@@ -24,7 +24,7 @@ model = joblib.load(MODEL_PATH)
 scaler = joblib.load(SCALER_PATH)
 
 FEATURE_COLUMNS = [
-    'rpm', 'vib_rms', 'vib_peak', 'vib_kurtosis', 
+    'vib_rms', 'vib_peak', 'vib_kurtosis', 
     'current_rms', 'current_thd', 'temperature'
 ]
 
@@ -170,7 +170,6 @@ def write_to_backend(batch_df, epoch_id):
 # Schema for incoming JSON data
 schema = StructType([
     StructField("motor_id", StringType(), True),
-    StructField("rpm", DoubleType()),
     StructField("vib_rms", DoubleType()),
     StructField("vib_peak", DoubleType()),
     StructField("vib_kurtosis", DoubleType()),

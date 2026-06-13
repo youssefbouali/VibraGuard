@@ -82,6 +82,38 @@ pytest tests/ --cov=. --cov-report=html
 - **Key Files**:
   - vitest.config.ts - Vitest configuration
 
+### Frontend (Optional Jest)
+- **Location**: `vibraguard/frontend/client/__tests__/`
+- **Framework**: Jest with `ts-jest`
+- **Key Files**:
+  - jest.config.cjs - Jest configuration
+  - jest.setup.ts - Jest DOM setup
+- **Run**:
+  ```bash
+  cd vibraguard/frontend
+  pnpm test:jest
+  ```
+
+### Frontend E2E (Cypress)
+- **Location**: `vibraguard/frontend/cypress/`
+- **Framework**: Cypress end-to-end testing
+- **Key Files**:
+  - cypress.config.ts - Cypress configuration
+  - cypress/e2e/app.cy.ts - sample smoke test
+- **Run**:
+  ```bash
+  cd vibraguard/frontend
+  pnpm cypress:run
+  ```
+
+### Load Testing (JMeter)
+- **Location**: `vibraguard/backend/jmeter/api-gateway-load-test.jmx`
+- **Purpose**: Simulate load against the API Gateway health endpoint
+- **Run**: Open the `.jmx` file in JMeter or use:
+  ```bash
+  jmeter -n -t vibraguard/backend/jmeter/api-gateway-load-test.jmx -l vibraguard/backend/jmeter/results.jtl
+  ```
+
 ### Blockchain Tests
 - **Location**: `vibraguard/blockchain-net/test/`
 - **Framework**: Hardhat with Chai assertions

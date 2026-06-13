@@ -33,7 +33,6 @@ def generate_sensor_data():
             # DEFAUT_ROULEMENT: High Kurtosis and Peak
             data = {
                 "motor_id": MOTOR_ID,
-                "rpm": random.uniform(1460, 1485),
                 "vib_rms": random.uniform(3.5, 5.0),
                 "vib_peak": random.uniform(20.0, 30.0),
                 "vib_kurtosis": random.uniform(7.0, 12.0),
@@ -46,7 +45,6 @@ def generate_sensor_data():
             # DESEQUILIBRE: Very High RMS, moderate Peak
             data = {
                 "motor_id": MOTOR_ID,
-                "rpm": random.uniform(1350, 1420),
                 "vib_rms": random.uniform(9.0, 14.0),
                 "vib_peak": random.uniform(14.0, 18.0),
                 "vib_kurtosis": random.uniform(2.8, 3.2),
@@ -59,7 +57,6 @@ def generate_sensor_data():
             # DESALIGNEMENT: Moderate RMS and Peak, some temperature rise
             data = {
                 "motor_id": MOTOR_ID,
-                "rpm": random.uniform(1440, 1470),
                 "vib_rms": random.uniform(5.0, 8.0),
                 "vib_peak": random.uniform(10.0, 15.0),
                 "vib_kurtosis": random.uniform(3.0, 4.5),
@@ -72,7 +69,6 @@ def generate_sensor_data():
             # SURCHAUFFE: Extreme Temperature
             data = {
                 "motor_id": MOTOR_ID,
-                "rpm": random.uniform(1470, 1490),
                 "vib_rms": random.uniform(3.0, 4.5),
                 "vib_peak": random.uniform(8.0, 12.0),
                 "vib_kurtosis": random.uniform(2.5, 3.5),
@@ -85,7 +81,6 @@ def generate_sensor_data():
             # SURCHARGE_ELECTRIQUE: High Current and THD
             data = {
                 "motor_id": MOTOR_ID,
-                "rpm": random.uniform(1450, 1480),
                 "vib_rms": random.uniform(2.5, 4.0),
                 "vib_peak": random.uniform(7.0, 10.0),
                 "vib_kurtosis": random.uniform(2.5, 3.5),
@@ -98,7 +93,6 @@ def generate_sensor_data():
         # NORMAL / NONE
         data = {
             "motor_id": MOTOR_ID,
-            "rpm": random.uniform(1450, 1490),
             "vib_rms": random.uniform(2.0, 3.0),
             "vib_peak": random.uniform(7.0, 9.0),
             "vib_kurtosis": random.uniform(2.5, 3.5),

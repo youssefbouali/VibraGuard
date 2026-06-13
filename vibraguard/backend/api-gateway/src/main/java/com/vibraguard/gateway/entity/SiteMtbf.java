@@ -15,6 +15,9 @@ import lombok.NoArgsConstructor;
 public class SiteMtbf {
     @Id
     private String name;
+
+    @jakarta.persistence.Column(name = "SITE_MTBF_VALUE")
     private int value;
+
     private String color;
 }

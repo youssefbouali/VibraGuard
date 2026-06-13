@@ -222,7 +222,6 @@ def generate_dataset(num_samples=200):
             'timestamp': int((timestamp + timedelta(seconds=i*10)).timestamp()),
             'sample_id': sample_id,
             'moteur_id': f'MOT_{random.randint(1, 10):03d}',
-            'rpm': rpm,
             'vib_rms': vib_rms,
             'vib_peak': vib_peak,
             'vib_kurtosis': kurtosis,
@@ -266,7 +265,6 @@ def generate_dataset(num_samples=200):
                 'timestamp': int((timestamp + timedelta(seconds=(num_normal + i)*10)).timestamp()),
                 'sample_id': sample_id,
                 'moteur_id': f'MOT_{random.randint(1, 10):03d}',
-                'rpm': rpm,
                 'vib_rms': vib_rms,
                 'vib_peak': vib_peak,
                 'vib_kurtosis': kurtosis,
@@ -283,7 +281,7 @@ def generate_dataset(num_samples=200):
     
     # --- INJECTION DE DONNÉES "SALES" POUR LE NETTOYAGE ---
     # 1. Injection de valeurs manquantes (NaN) - environ 3% par colonne numérique
-    cols_to_dirty = ['rpm', 'vib_rms', 'vib_peak', 'current_rms', 'temperature']
+    cols_to_dirty = ['vib_rms', 'vib_peak', 'current_rms', 'temperature']
     for col in cols_to_dirty:
         mask = np.random.random(len(df)) < 0.03
         df.loc[mask, col] = np.nan

@@ -16,6 +16,9 @@ public class Intervention {
     @Id
     @jakarta.persistence.Column(name = "INTER_TYPE")
     private String type;
+
+    @jakarta.persistence.Column(name = "INTERVENTION_VALUE")
     private int value;
+
     private String color;
 }

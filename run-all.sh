@@ -4,12 +4,21 @@
 # This script builds and deploys the entire infrastructure and applications.
 # -----------------------------------------------------------------------------
 
+if [ -z "$BASH_VERSION" ]; then
+  echo "⚠️  Please run this script with bash, not sh. Re-executing with bash..."
+  exec bash "$0" "$@"
+fi
+
 set -e  # Exit on error
 
 # Configuration
 NAMESPACE="vibraguard"
 ROOT_DIR=$(pwd)
+EXTERNAL_HOST="${EXTERNAL_HOST:-vibraguard.mywire.org}"
+SONAR_NODE_PORT="${SONAR_NODE_PORT:-30091}"
+SONAR_HOST_URL="${SONAR_HOST_URL:-http://${EXTERNAL_HOST}:${SONAR_NODE_PORT}}"
 echo "🚀 Starting VibraGuard Platform Deployment from: $ROOT_DIR"
+echo "🌐 SonarQube will be exposed at: $SONAR_HOST_URL"
 
 # 1. Verify/Start Minikube
 if ! minikube status > /dev/null 2>&1; then
@@ -107,83 +116,31 @@ cd "$ROOT_DIR"
 # helm upgrade --install spark-operator spark/spark-kubernetes-operator -n $NAMESPACE
 # helm upgrade --install redis bitnami/redis -n $NAMESPACE --set architecture=standalone
 
-echo "🔍 Deploying Elasticsearch (Single Node for Dev)..."
-# Using a lighter single-node setup instead of the full Helm chart if possible, 
-# but for consistency with your script style, I'll use the Helm chart with dev settings.
-helm upgrade --install elasticsearch elastic/elasticsearch -n $NAMESPACE \
-  --set replicas=1 \
-  --set minimumMasterNodes=1 \
-  --set xpack.security.enabled=false \
-  --set xpack.security.http.ssl.enabled=false \
-  --set resources.requests.cpu=100m \
-  --set resources.requests.memory=512Mi
-
-echo "⏳ Waiting for Elasticsearch to be ready..."
-kubectl wait --for=condition=Ready pod -l app=elasticsearch-master -n $NAMESPACE --timeout=300s || true
-
-echo "📊 Deploying Kibana (Visualization via manifest)..."
-kubectl apply -n $NAMESPACE -f - <<EOF
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: kibana
-  namespace: $NAMESPACE
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: kibana
-  template:
-    metadata:
-      labels:
-        app: kibana
-    spec:
-      containers:
-        - name: kibana
-          image: docker.elastic.co/kibana/kibana:8.5.1
-          ports:
-            - containerPort: 5601
-          env:
-            - name: ELASTICSEARCH_HOSTS
-              value: "http://elasticsearch-master:9200"
-            - name: XPACK_SECURITY_ENABLED
-              value: "false"
-          resources:
-            requests:
-              cpu: 100m
-              memory: 512Mi
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: kibana
-  namespace: $NAMESPACE
-spec:
-  type: NodePort
-  selector:
-    app: kibana
-  ports:
-    - port: 5601
-      targetPort: 5601
-      nodePort: 30001
-EOF
-
-echo "📈 Deploying Prometheus (Monitoring)..."
+echo " Deploying Prometheus (Monitoring)..."
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo add sonarsource https://SonarSource.github.io/helm-chart-sonarqube
 helm repo update
 helm upgrade --install prometheus prometheus-community/prometheus -n $NAMESPACE \
   --set server.service.type=NodePort \
   --set server.service.nodePort=30090
 
-echo "🕵️  Deploying Jaeger (Tracing)..."
-helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
-helm repo update
-helm upgrade --install jaeger jaegertracing/jaeger -n $NAMESPACE \
-  --set allInOne.enabled=true \
-  --set agent.enabled=false \
-  --set collector.serviceType=ClusterIP \
-  --set query.serviceType=NodePort \
-  --set query.service.nodePort=30086
+echo "📊 Deploying Grafana in Kubernetes..."
+helm upgrade --install grafana grafana/grafana -n $NAMESPACE \
+  --set service.type=NodePort \
+  --set service.nodePort=30092 \
+  --set persistence.enabled=false \
+  --set adminUser=admin \
+  --set adminPassword="${GRAFANA_ADMIN_PASSWORD:-admin}" || true
+
+echo "🔎 Deploying SonarQube in Kubernetes..."
+helm upgrade --install sonarqube sonarsource/sonarqube -n $NAMESPACE \
+  --set service.type=NodePort \
+  --set service.nodePort=$SONAR_NODE_PORT \
+  --set persistence.enabled=false \
+  --set postgresql.enabled=true \
+  --set postgresql.persistence.enabled=false \
+  --set sonarqubeProperties.sonar.web.javaAdditionalOpts='-Xms512m -Xmx1024m' || true
 
 # IPFS
 echo "🌐 Deploying IPFS..."
@@ -242,8 +199,6 @@ spec:
                 secretKeyRef:
                   name: oracle-db-credentials
                   key: password
-            - name: ELASTICSEARCH_URL
-              value: "http://elasticsearch-master:9200"
 EOF
 
 cat <<EOF > k8s/backend-service.yaml
@@ -555,7 +510,16 @@ if [ -n "$CONTRACT_ADDRESS" ]; then
     fi
     pnpm install
     pnpm run build
+    echo "🐳 Building frontend image inside Minikube Docker daemon..."
+    eval $(minikube docker-env)
     docker build -t vibraguard-frontend:latest .
+    #echo "📦 Loading frontend image into Minikube (fallback)..."
+    #minikube image load vibraguard-frontend:latest || true
+
+    # Ensure the frontend deployment picks up the locally built Minikube image
+    echo "🔁 Restarting frontend deployment so Minikube re-creates the pod with the new local image..."
+    kubectl rollout restart deployment/frontend -n $NAMESPACE || true
+    #kubectl wait --for=condition=ready pod -l app=frontend -n $NAMESPACE --timeout=120s || true
 
     # Create ConfigMap with contract address
     kubectl create configmap workorder-registry-config \
@@ -577,7 +541,35 @@ fi
 
 cd "$ROOT_DIR"
 
-# 6. Status Summary
+# 7. Optional Security & Quality Scans
+MINIKUBE_IP=$(minikube ip || true)
+SONAR_HOST_URL="${SONAR_HOST_URL:-http://${EXTERNAL_HOST}:${SONAR_NODE_PORT}}"
+if [ -n "$MINIKUBE_IP" ]; then
+    echo "🧪 Running optional SonarQube checks..."
+    echo "   SonarQube UI: $SONAR_HOST_URL"
+
+    if command -v sonar-scanner >/dev/null 2>&1; then
+        echo "🔎 Running SonarQube analysis with local sonar-scanner..."
+        sonar-scanner \
+            -Dsonar.projectKey="${SONAR_PROJECT_KEY:-VibraGuard}" \
+            -Dsonar.sources="$ROOT_DIR" \
+            -Dsonar.host.url="$SONAR_HOST_URL" \
+            -Dsonar.login="${SONAR_LOGIN:-}" || echo "⚠️ SonarQube analysis finished with warnings or errors."
+    elif command -v docker >/dev/null 2>&1; then
+        echo "🔎 Running SonarQube analysis using Docker sonar-scanner..."
+        docker run --rm -v "$ROOT_DIR:/usr/src" -w /usr/src sonarsource/sonar-scanner-cli \
+            -Dsonar.projectKey="${SONAR_PROJECT_KEY:-VibraGuard}" \
+            -Dsonar.sources="/usr/src" \
+            -Dsonar.host.url="$SONAR_HOST_URL" \
+            -Dsonar.login="${SONAR_LOGIN:-}" || echo "⚠️ SonarQube analysis finished with warnings or errors."
+    else
+        echo "⚠️ sonar-scanner not installed and Docker unavailable; skipping SonarQube analysis."
+    fi
+else
+    echo "⚠️ Minikube IP unavailable; skipping SonarQube scans."
+fi
+
+# 8. Status Summary
 echo "======================================================"
 echo "✨ VibraGuard Platform is now running!"
 echo "======================================================"
@@ -589,13 +581,14 @@ echo ""
 echo "Access points:"
 echo "Frontend: http://$MINIKUBE_IP:30008"
 echo "Backend:  http://$MINIKUBE_IP:30007"
+echo "Prometheus: http://127.0.0.1:30090 or http://<host-ip>:30090"
+echo "SonarQube: $SONAR_HOST_URL"
 #echo "IPFS API: http://$MINIKUBE_IP:$(kubectl get svc -n $NAMESPACE ipfs -o jsonpath='{.spec.ports[0].nodePort}')"
 echo "======================================================"
 
-# Safety: Ensure port-forwarding for all observability tools (in case minikube wasn't restarted)
-echo "🔌 Activating external access for Monitoring & Tracing..."
+# Safety: Ensure monitoring UIs are accessible externally (in case minikube wasn't restarted)
+echo "🔌 Activating external access for Monitoring and Dashboards..."
 kubectl port-forward --address 0.0.0.0 svc/prometheus-server -n $NAMESPACE 30090:80 > /dev/null 2>&1 &
-kubectl port-forward --address 0.0.0.0 svc/jaeger-query -n $NAMESPACE 30086:16686 > /dev/null 2>&1 &
-kubectl port-forward --address 0.0.0.0 svc/kibana -n $NAMESPACE 30001:5601 > /dev/null 2>&1 &
-echo "🚀 Accessibility check: Prometheus (30090), Jaeger (30086), Kibana (30001) are active."
+kubectl port-forward --address 0.0.0.0 svc/grafana -n $NAMESPACE 30092:80 > /dev/null 2>&1 || true
+echo "🚀 Accessibility check: Prometheus (30090) and Grafana (30092) attempted."
 echo "======================================================"

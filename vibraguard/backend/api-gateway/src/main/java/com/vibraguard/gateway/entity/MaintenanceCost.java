@@ -18,7 +18,10 @@ public class MaintenanceCost {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @jakarta.persistence.Column(name = "COST_MONTH")
     private String month;
+
     private double reel;
     private double budget;
 }

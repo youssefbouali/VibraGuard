@@ -4,7 +4,7 @@
 
 ### 📋 Test Infrastructure
 
-#### Backend Tests (Java/Spring Boot)
+#### Backend Tests (Java/Spring Boot) with JaCoCo
 - ✅ JUnit 5 test framework configured
 - ✅ Spring Boot Test dependencies added to `pom.xml`
 - ✅ Test classes created:
@@ -12,27 +12,49 @@
   - `SecurityConfigTests.java` - Security configuration tests
   - `GatewayRouteConfigTests.java` - Gateway routing tests
 - ✅ Maven Surefire plugin configured for test execution
-- ✅ Coverage reporting setup
+- ✅ **JaCoCo code coverage analysis** - generates detailed coverage reports
+  - Line and branch coverage metrics
+  - HTML and XML report generation
+  - Codecov integration for coverage tracking
+  - Reports archived in GitHub Actions artifacts
 
-**Run tests:**
+**Run tests locally:**
 ```bash
 cd vibraguard/backend && mvn test
+# Generate JaCoCo coverage report
+mvn jacoco:report
+# View report: target/site/jacoco/index.html
 ```
 
-#### Frontend Tests (React/TypeScript)
-- ✅ Vitest configured with React Testing Library
-- ✅ `vitest.config.ts` created with jsdom environment
+#### Frontend Tests (React/TypeScript) with Jest & Cypress
+- ✅ **Vitest** - Fast unit testing framework with jsdom
+- ✅ **Jest** - JavaScript testing framework with TypeScript support
+- ✅ **Cypress** - E2E testing framework for user interactions
 - ✅ Test files created:
   - `setup.test.tsx` - Component rendering tests
   - `utils.test.ts` - Utility function tests
-- ✅ Testing libraries added to `package.json`:
-  - @testing-library/react
-  - @testing-library/jest-dom
+- ✅ Testing libraries in `package.json`:
+  - @testing-library/react & @testing-library/jest-dom
   - @vitest/ui
+  - cypress (for E2E testing)
+  - jest & ts-jest (for unit tests)
+- ✅ Coverage reports from both Vitest and Jest
+- ✅ E2E test results and screenshots archived
 
-**Run tests:**
+**Run tests locally:**
 ```bash
-cd vibraguard/frontend && pnpm test
+cd vibraguard/frontend
+
+# Unit tests (Vitest)
+pnpm test
+pnpm test:coverage
+
+# Jest tests
+pnpm test:jest
+
+# E2E tests (Cypress)
+pnpm cypress:open  # Interactive mode
+pnpm cypress:run   # Headless mode
 ```
 
 #### Blockchain Tests (Hardhat/Solidity)

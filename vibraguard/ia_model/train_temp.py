@@ -5,7 +5,7 @@ from sklearn.preprocessing import StandardScaler
 
 print("Loading data...")
 df = pd.read_csv('sensor_data_training.csv')
-features = ['rpm','vib_rms','vib_peak','vib_kurtosis','current_rms','current_thd','temperature']
+features = ['vib_rms','vib_peak','vib_kurtosis','current_rms','current_thd','temperature']
 X = df[features].fillna(df[features].mean())
 
 # Handling outliers by clipping

@@ -67,7 +67,7 @@ Les messages envoyés par les capteurs respectent la structure suivante :
 ### Démarrage Rapide
 1.  **Lancer l'infrastructure** :
     ```bash
-    sh run-all.sh
+    bash run-all.sh
     ```
 2.  **Frontend** :
     ```bash

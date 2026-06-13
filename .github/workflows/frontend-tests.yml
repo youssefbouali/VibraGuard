@@ -52,20 +52,40 @@ jobs:
     - name: Run Type Check
       run: cd vibraguard/frontend && pnpm typecheck
     
-    - name: Run Tests
+    - name: Run Vitest Unit Tests
       run: cd vibraguard/frontend && pnpm test
     
-    - name: Run Test Coverage
+    - name: Run Vitest Coverage
       run: cd vibraguard/frontend && pnpm test:coverage
       continue-on-error: true
     
-    - name: Upload Coverage to Codecov
+    - name: Run Jest Tests
+      run: cd vibraguard/frontend && pnpm test:jest || true
+      continue-on-error: true
+    
+    - name: Run Cypress E2E Tests
+      run: cd vibraguard/frontend && pnpm cypress:run
+      continue-on-error: true
+    
+    - name: Upload Vitest Coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
         files: ./vibraguard/frontend/coverage/coverage-final.json
-        flags: frontend
-        name: frontend-coverage
+        flags: frontend,vitest
+        name: frontend-vitest-coverage
+        fail_ci_if_error: false
       continue-on-error: true
+    
+    - name: Archive Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-test-results-${{ matrix.node-version }}
+        path: |
+          vibraguard/frontend/coverage/
+          vibraguard/frontend/cypress/screenshots/
+          vibraguard/frontend/cypress/videos/
+        retention-days: 7
     
     - name: Archive Coverage Report
       if: always()
@@ -73,3 +93,14 @@ jobs:
       with:
         name: frontend-coverage-${{ matrix.node-version }}
         path: vibraguard/frontend/coverage/
+        retention-days: 30
+    
+    - name: Archive Cypress E2E Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: cypress-e2e-results-${{ matrix.node-version }}
+        path: |
+          vibraguard/frontend/cypress/screenshots/
+          vibraguard/frontend/cypress/videos/
+        retention-days: 7

@@ -28,7 +28,6 @@ def generate_mock_data():
     if is_anomaly:
         # Generate anomaly data
         data = {
-            "rpm": 1400 + random.uniform(-100, 100),
             "vib_rms": 5.0 + random.uniform(0, 5),
             "vib_peak": 15.0 + random.uniform(0, 10),
             "vib_kurtosis": 4.0 + random.uniform(0, 4),
@@ -39,7 +38,6 @@ def generate_mock_data():
     else:
         # Generate normal data
         data = {
-            "rpm": 1470 + random.uniform(-20, 20),
             "vib_rms": 2.5 + random.uniform(-0.5, 0.5),
             "vib_peak": 8.0 + random.uniform(-1, 1),
             "vib_kurtosis": 3.0 + random.uniform(-0.5, 0.5),

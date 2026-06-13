@@ -39,6 +39,11 @@
             <version>21.1.0.0</version>
         </dependency>
         <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
             <version>0.11.5</version>
@@ -125,6 +130,9 @@
                     <include>**/*Test.java</include>
                     <include>**/*Tests.java</include>
                 </includes>
+                <systemPropertyVariables>
+                    <spring.profiles.active>test</spring.profiles.active>
+                </systemPropertyVariables>
             </configuration>
         </plugin>
         <plugin>
