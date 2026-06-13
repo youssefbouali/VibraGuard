@@ -13,6 +13,7 @@ set -e  # Exit on error
 
 # Configuration
 NAMESPACE="vibraguard"
+ELASTICSEARCH_SECURITY_ENABLED="false"
 ROOT_DIR=$(pwd)
 echo "🚀 Starting VibraGuard Platform Deployment from: $ROOT_DIR"
 
@@ -118,7 +119,7 @@ echo "🔍 Deploying Elasticsearch (Single Node for Dev)..."
 helm upgrade --install elasticsearch elastic/elasticsearch -n $NAMESPACE \
   --set replicas=1 \
   --set minimumMasterNodes=1 \
-  --set xpack.security.enabled=false \
+  --set xpack.security.enabled=$ELASTICSEARCH_SECURITY_ENABLED \
   --set xpack.security.http.ssl.enabled=false \
   --set resources.requests.cpu=100m \
   --set resources.requests.memory=512Mi
@@ -150,17 +151,7 @@ spec:
             - containerPort: 5601
           env:
             - name: ELASTICSEARCH_HOSTS
-              value: "https://elasticsearch-master:9200"
-            - name: ELASTICSEARCH_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: elasticsearch-master-credentials
-                  key: username
-            - name: ELASTICSEARCH_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: elasticsearch-master-credentials
-                  key: password
+              value: "http://elasticsearch-master:9200"
             - name: ELASTICSEARCH_SSL_VERIFICATIONMODE
               value: "none"
             - name: SERVER_PUBLIC_BASE_URL
@@ -199,8 +190,8 @@ else
   echo "No elasticsearch-master-credentials secret found; will attempt best-effort configuration."
 fi
 
-# Only attempt to create a kibana_system user if we have admin credentials
-if [ -n "$ELASTIC_PASSWORD" ]; then
+# Only attempt to create a kibana_system user when Elasticsearch security is enabled
+if [ "$ELASTICSEARCH_SECURITY_ENABLED" = "true" ] && [ -n "$ELASTIC_PASSWORD" ]; then
   KIBANA_SYS_PASS=$(openssl rand -base64 18 || head -c 18 /dev/urandom | base64)
   echo "Creating/updating kibana_system user in Elasticsearch..."
   set +e
@@ -223,7 +214,7 @@ if [ -n "$ELASTIC_PASSWORD" ]; then
     kubectl rollout status deployment/kibana -n $NAMESPACE --timeout=120s || true
   fi
 else
-  echo "Skipping kibana_system creation because admin Elasticsearch password is unavailable."
+  echo "Skipping kibana_system creation because Elasticsearch security is disabled or admin password is unavailable."
 fi
 
 echo "📈 Deploying Prometheus (Monitoring)..."
@@ -634,13 +625,13 @@ if [ -n "$CONTRACT_ADDRESS" ]; then
     echo "🐳 Building frontend image inside Minikube Docker daemon..."
     eval $(minikube docker-env)
     docker build -t vibraguard-frontend:latest .
-    echo "📦 Loading frontend image into Minikube (fallback)..."
-    minikube image load vibraguard-frontend:latest || true
+    #echo "📦 Loading frontend image into Minikube (fallback)..."
+    #minikube image load vibraguard-frontend:latest || true
 
     # Ensure the frontend deployment picks up the locally built Minikube image
     echo "🔁 Restarting frontend deployment so Minikube re-creates the pod with the new local image..."
     kubectl rollout restart deployment/frontend -n $NAMESPACE || true
-    kubectl wait --for=condition=ready pod -l app=frontend -n $NAMESPACE --timeout=120s || true
+    #kubectl wait --for=condition=ready pod -l app=frontend -n $NAMESPACE --timeout=120s || true
 
     # Create ConfigMap with contract address
     kubectl create configmap workorder-registry-config \
@@ -674,13 +665,16 @@ echo ""
 echo "Access points:"
 echo "Frontend: http://$MINIKUBE_IP:30008"
 echo "Backend:  http://$MINIKUBE_IP:30007"
+echo "Kibana:   http://127.0.0.1:30001 or http://<host-ip>:30001"
+echo "Jaeger:   http://127.0.0.1:30086 or http://<host-ip>:30086"
+echo "Prometheus: http://127.0.0.1:30090 or http://<host-ip>:30090"
 #echo "IPFS API: http://$MINIKUBE_IP:$(kubectl get svc -n $NAMESPACE ipfs -o jsonpath='{.spec.ports[0].nodePort}')"
 echo "======================================================"
 
 # Safety: Ensure port-forwarding for all observability tools (in case minikube wasn't restarted)
 echo "🔌 Activating external access for Monitoring & Tracing..."
 kubectl port-forward --address 0.0.0.0 svc/prometheus-server -n $NAMESPACE 30090:80 > /dev/null 2>&1 &
-kubectl port-forward --address 0.0.0.0 svc/jaeger -n $NAMESPACE 30086:16686 > /dev/null 2>&1 &
+kubectl port-forward --address 0.0.0.0 svc/jaeger-query -n $NAMESPACE 30086:16686 > /dev/null 2>&1 &
 kubectl port-forward --address 0.0.0.0 svc/kibana -n $NAMESPACE 30001:5601 > /dev/null 2>&1 &
 kubectl port-forward --address 127.0.0.1 svc/elasticsearch-master -n $NAMESPACE 9200:9200 > /dev/null 2>&1 &
 echo "🚀 Accessibility check: Prometheus (30090), Jaeger (30086), Kibana (30001), Elasticsearch local (9200) are active."
