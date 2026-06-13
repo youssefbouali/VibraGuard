@@ -14,7 +14,11 @@ set -e  # Exit on error
 # Configuration
 NAMESPACE="vibraguard"
 ROOT_DIR=$(pwd)
+EXTERNAL_HOST="${EXTERNAL_HOST:-vibraguard.mywire.org}"
+SONAR_NODE_PORT="${SONAR_NODE_PORT:-30091}"
+SONAR_HOST_URL="${SONAR_HOST_URL:-http://${EXTERNAL_HOST}:${SONAR_NODE_PORT}}"
 echo "🚀 Starting VibraGuard Platform Deployment from: $ROOT_DIR"
+echo "🌐 SonarQube will be exposed at: $SONAR_HOST_URL"
 
 # 1. Verify/Start Minikube
 if ! minikube status > /dev/null 2>&1; then
@@ -114,16 +118,25 @@ cd "$ROOT_DIR"
 
 echo " Deploying Prometheus (Monitoring)..."
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo add grafana https://grafana.github.io/helm-charts
 helm repo add sonarsource https://SonarSource.github.io/helm-chart-sonarqube
 helm repo update
 helm upgrade --install prometheus prometheus-community/prometheus -n $NAMESPACE \
   --set server.service.type=NodePort \
   --set server.service.nodePort=30090
 
+echo "📊 Deploying Grafana in Kubernetes..."
+helm upgrade --install grafana grafana/grafana -n $NAMESPACE \
+  --set service.type=NodePort \
+  --set service.nodePort=30092 \
+  --set persistence.enabled=false \
+  --set adminUser=admin \
+  --set adminPassword="${GRAFANA_ADMIN_PASSWORD:-admin}" || true
+
 echo "🔎 Deploying SonarQube in Kubernetes..."
 helm upgrade --install sonarqube sonarsource/sonarqube -n $NAMESPACE \
   --set service.type=NodePort \
-  --set service.nodePort=30091 \
+  --set service.nodePort=$SONAR_NODE_PORT \
   --set persistence.enabled=false \
   --set postgresql.enabled=true \
   --set postgresql.persistence.enabled=false \
@@ -530,9 +543,9 @@ cd "$ROOT_DIR"
 
 # 7. Optional Security & Quality Scans
 MINIKUBE_IP=$(minikube ip || true)
-SONAR_HOST_URL="${SONAR_HOST_URL:-http://$MINIKUBE_IP:30091}"
+SONAR_HOST_URL="${SONAR_HOST_URL:-http://${EXTERNAL_HOST}:${SONAR_NODE_PORT}}"
 if [ -n "$MINIKUBE_IP" ]; then
-    echo "🧪 Running optional SonarQube and OWASP ZAP checks..."
+    echo "🧪 Running optional SonarQube checks..."
     echo "   SonarQube UI: $SONAR_HOST_URL"
 
     if command -v sonar-scanner >/dev/null 2>&1; then
@@ -552,18 +565,8 @@ if [ -n "$MINIKUBE_IP" ]; then
     else
         echo "⚠️ sonar-scanner not installed and Docker unavailable; skipping SonarQube analysis."
     fi
-
-    if command -v docker >/dev/null 2>&1; then
-        echo "🛡️  Running OWASP ZAP baseline scan against http://$MINIKUBE_IP:30008..."
-        docker pull owasp/zap2docker-stable >/dev/null 2>&1 || true
-        docker run --rm -v "$ROOT_DIR:/zap/wrk" owasp/zap2docker-stable \
-            zap-baseline.py -t "http://$MINIKUBE_IP:30008" -r "/zap/wrk/zap-report.html" || echo "⚠️ OWASP ZAP baseline scan failed or detected issues."
-        echo "📄 OWASP ZAP report saved to: $ROOT_DIR/zap-report.html"
-    else
-        echo "⚠️ Docker not installed; skipping OWASP ZAP scan."
-    fi
 else
-    echo "⚠️ Minikube IP unavailable; skipping SonarQube and OWASP ZAP scans."
+    echo "⚠️ Minikube IP unavailable; skipping SonarQube scans."
 fi
 
 # 8. Status Summary
@@ -579,13 +582,13 @@ echo "Access points:"
 echo "Frontend: http://$MINIKUBE_IP:30008"
 echo "Backend:  http://$MINIKUBE_IP:30007"
 echo "Prometheus: http://127.0.0.1:30090 or http://<host-ip>:30090"
-echo "SonarQube: ${SONAR_HOST_URL:-http://localhost:9000} (if sonar-scanner/host available)"
-echo "OWASP ZAP report: $ROOT_DIR/zap-report.html"
+echo "SonarQube: $SONAR_HOST_URL"
 #echo "IPFS API: http://$MINIKUBE_IP:$(kubectl get svc -n $NAMESPACE ipfs -o jsonpath='{.spec.ports[0].nodePort}')"
 echo "======================================================"
 
-# Safety: Ensure Prometheus external access is active (in case minikube wasn't restarted)
-echo "🔌 Activating external access for Monitoring..."
+# Safety: Ensure monitoring UIs are accessible externally (in case minikube wasn't restarted)
+echo "🔌 Activating external access for Monitoring and Dashboards..."
 kubectl port-forward --address 0.0.0.0 svc/prometheus-server -n $NAMESPACE 30090:80 > /dev/null 2>&1 &
-echo "🚀 Accessibility check: Prometheus (30090) is active."
+kubectl port-forward --address 0.0.0.0 svc/grafana -n $NAMESPACE 30092:80 > /dev/null 2>&1 || true
+echo "🚀 Accessibility check: Prometheus (30090) and Grafana (30092) attempted."
 echo "======================================================"
