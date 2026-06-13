@@ -1,0 +1,162 @@
+name: JMeter Load Tests
+
+on:
+  schedule:
+    # Run load tests daily at 2 AM UTC (optional)
+    - cron: '0 2 * * *'
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'vibraguard/backend/jmeter/**'
+      - '.github/workflows/jmeter-load-test.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'vibraguard/backend/jmeter/**'
+  workflow_dispatch:
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      backend:
+        image: vibraguard-backend:latest
+        ports:
+          - 8080:8080
+        options: >-
+          --health-cmd="curl -f http://localhost:8080/actuator/health || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up JMeter
+      uses: KaplanTestAutomation/setup-jmeter@v4
+      with:
+        jmeter-version: 5.6.3
+    
+    - name: Wait for Backend Service
+      run: |
+        echo "Waiting for backend service to be ready..."
+        for i in {1..30}; do
+          if curl -f http://localhost:8080/actuator/health > /dev/null 2>&1; then
+            echo "Backend service is ready"
+            exit 0
+          fi
+          echo "Attempt $i/30 - Waiting for backend..."
+          sleep 2
+        done
+        echo "Backend service did not become ready"
+        exit 1
+    
+    - name: Run JMeter Quick Load Test
+      run: |
+        echo "🚀 Starting quick JMeter load test..."
+        jmeter -n \
+          -t vibraguard/backend/jmeter/api-gateway-load-test-quick.jmx \
+          -l results-quick.jtl \
+          -j jmeter-quick.log \
+          -Jjmeter.save.saveall=true \
+          -Jjmeter.resultfile.format=csv
+      continue-on-error: true
+    
+    - name: Run JMeter Full Load Test
+      run: |
+        echo "🚀 Starting full JMeter load test..."
+        jmeter -n \
+          -t vibraguard/backend/jmeter/api-gateway-load-test.jmx \
+          -l results-full.jtl \
+          -j jmeter-full.log \
+          -Jjmeter.save.saveall=true \
+          -Jjmeter.resultfile.format=csv
+      continue-on-error: true
+    
+    - name: Generate JMeter HTML Report (Quick)
+      if: always()
+      run: |
+        jmeter -g results-quick.jtl \
+          -o jmeter-report-quick \
+          -l jmeter-report-quick.csv || true
+        echo "✅ Quick load test HTML report generated"
+    
+    - name: Generate JMeter HTML Report (Full)
+      if: always()
+      run: |
+        jmeter -g results-full.jtl \
+          -o jmeter-report-full \
+          -l jmeter-report-full.csv || true
+        echo "✅ Full load test HTML report generated"
+    
+    - name: Analyze Load Test Results
+      if: always()
+      run: |
+        echo "📊 Load Test Summary:"
+        echo ""
+        echo "Quick Test Results:"
+        if [ -f "results-quick.jtl" ]; then
+          # Count successful and failed requests
+          SUCCESS=$(grep -c '"true"' results-quick.jtl || echo "0")
+          FAILED=$(grep -c '"false"' results-quick.jtl || echo "0")
+          echo "  Successful requests: $SUCCESS"
+          echo "  Failed requests: $FAILED"
+        fi
+        echo ""
+        echo "Full Test Results:"
+        if [ -f "results-full.jtl" ]; then
+          SUCCESS=$(grep -c '"true"' results-full.jtl || echo "0")
+          FAILED=$(grep -c '"false"' results-full.jtl || echo "0")
+          echo "  Successful requests: $SUCCESS"
+          echo "  Failed requests: $FAILED"
+        fi
+    
+    - name: Archive JMeter Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: jmeter-results
+        path: |
+          results-*.jtl
+          jmeter-*.log
+          jmeter-*.csv
+        retention-days: 30
+    
+    - name: Archive JMeter HTML Reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: jmeter-html-reports
+        path: |
+          jmeter-report-quick/
+          jmeter-report-full/
+        retention-days: 30
+    
+    - name: Comment PR with Load Test Results
+      if: github.event_name == 'pull_request' && always()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          let comment = '## 📊 JMeter Load Test Results\n\n';
+          
+          if (fs.existsSync('jmeter-quick.log')) {
+            const log = fs.readFileSync('jmeter-quick.log', 'utf8');
+            comment += '### Quick Test\n```\n' + log.slice(-500) + '\n```\n\n';
+          }
+          
+          if (fs.existsSync('jmeter-full.log')) {
+            const log = fs.readFileSync('jmeter-full.log', 'utf8');
+            comment += '### Full Test\n```\n' + log.slice(-500) + '\n```\n\n';
+          }
+          
+          comment += '📈 Full reports available in workflow artifacts.\n';
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+      continue-on-error: true
