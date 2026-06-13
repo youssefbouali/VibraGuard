@@ -114,18 +114,42 @@ cd "$ROOT_DIR"
 # helm upgrade --install redis bitnami/redis -n $NAMESPACE --set architecture=standalone
 
 echo "🔍 Deploying Elasticsearch (Single Node for Dev)..."
-# Using a lighter single-node setup instead of the full Helm chart if possible, 
-# but for consistency with your script style, I'll use the Helm chart with dev settings.
+# Using the Helm chart but forcing all HTTP and transport TLS settings off.
 helm upgrade --install elasticsearch elastic/elasticsearch -n $NAMESPACE \
   --set replicas=1 \
   --set minimumMasterNodes=1 \
   --set xpack.security.enabled=$ELASTICSEARCH_SECURITY_ENABLED \
   --set xpack.security.http.ssl.enabled=false \
+  --set xpack.security.transport.ssl.enabled=false \
+  --set esConfig.elasticsearch.yml.xpack.security.enabled=$ELASTICSEARCH_SECURITY_ENABLED \
+  --set esConfig.elasticsearch.yml.xpack.security.http.ssl.enabled=false \
+  --set esConfig.elasticsearch.yml.xpack.security.transport.ssl.enabled=false \
   --set resources.requests.cpu=100m \
   --set resources.requests.memory=512Mi
 
-echo "⏳ Waiting for Elasticsearch to be ready..."
+echo "⏳ Waiting for Elasticsearch pod readiness..."
 kubectl wait --for=condition=Ready pod -l app=elasticsearch-master -n $NAMESPACE --timeout=300s || true
+
+echo "⏳ Waiting for Elasticsearch HTTP service to be available..."
+set +e
+kubectl run --rm -n $NAMESPACE es-http-wait --image=curlimages/curl --restart=Never --command -- sh -c '
+  for i in $(seq 1 60); do
+    if curl -sSf http://elasticsearch-master:9200 > /dev/null 2>&1; then
+      echo "✅ Elasticsearch HTTP is available"
+      exit 0
+    fi
+    echo "   Waiting for Elasticsearch HTTP... ($i/60)"
+    sleep 5
+  done
+  echo "❌ Elasticsearch did not become available on http://elasticsearch-master:9200 within 5 minutes"
+  exit 1
+'
+wait_rc=$?
+set -e
+if [ "$wait_rc" -ne 0 ]; then
+  echo "❌ Elasticsearch HTTP health check failed. Please inspect Elasticsearch logs and cluster state."
+  exit 1
+fi
 
 echo "📊 Deploying Kibana (Visualization via manifest)..."
 kubectl apply -n $NAMESPACE -f - <<EOF
@@ -177,6 +201,11 @@ spec:
       targetPort: 5601
       nodePort: 30001
 EOF
+
+echo "🧹 Removing stale Kibana Elasticsearch credentials from the deployment..."
+kubectl set env deployment/kibana -n $NAMESPACE ELASTICSEARCH_USERNAME- ELASTICSEARCH_PASSWORD- || true
+kubectl rollout restart deployment/kibana -n $NAMESPACE || true
+kubectl rollout status deployment/kibana -n $NAMESPACE --timeout=120s || true
 
 echo "🔐 Configuring Kibana credentials (ensure Kibana uses a non-superuser)..."
 # Try to read existing elastic user credentials from the Elasticsearch secret if available
