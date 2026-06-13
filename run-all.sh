@@ -114,10 +114,20 @@ cd "$ROOT_DIR"
 
 echo " Deploying Prometheus (Monitoring)..."
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo add sonarsource https://SonarSource.github.io/helm-chart-sonarqube
 helm repo update
 helm upgrade --install prometheus prometheus-community/prometheus -n $NAMESPACE \
   --set server.service.type=NodePort \
   --set server.service.nodePort=30090
+
+echo "🔎 Deploying SonarQube in Kubernetes..."
+helm upgrade --install sonarqube sonarsource/sonarqube -n $NAMESPACE \
+  --set service.type=NodePort \
+  --set service.nodePort=30091 \
+  --set persistence.enabled=false \
+  --set postgresql.enabled=true \
+  --set postgresql.persistence.enabled=false \
+  --set sonarqubeProperties.sonar.web.javaAdditionalOpts='-Xms512m -Xmx1024m' || true
 
 # IPFS
 echo "🌐 Deploying IPFS..."
@@ -518,7 +528,45 @@ fi
 
 cd "$ROOT_DIR"
 
-# 6. Status Summary
+# 7. Optional Security & Quality Scans
+MINIKUBE_IP=$(minikube ip || true)
+SONAR_HOST_URL="${SONAR_HOST_URL:-http://$MINIKUBE_IP:30091}"
+if [ -n "$MINIKUBE_IP" ]; then
+    echo "🧪 Running optional SonarQube and OWASP ZAP checks..."
+    echo "   SonarQube UI: $SONAR_HOST_URL"
+
+    if command -v sonar-scanner >/dev/null 2>&1; then
+        echo "🔎 Running SonarQube analysis with local sonar-scanner..."
+        sonar-scanner \
+            -Dsonar.projectKey="${SONAR_PROJECT_KEY:-VibraGuard}" \
+            -Dsonar.sources="$ROOT_DIR" \
+            -Dsonar.host.url="$SONAR_HOST_URL" \
+            -Dsonar.login="${SONAR_LOGIN:-}" || echo "⚠️ SonarQube analysis finished with warnings or errors."
+    elif command -v docker >/dev/null 2>&1; then
+        echo "🔎 Running SonarQube analysis using Docker sonar-scanner..."
+        docker run --rm -v "$ROOT_DIR:/usr/src" -w /usr/src sonarsource/sonar-scanner-cli \
+            -Dsonar.projectKey="${SONAR_PROJECT_KEY:-VibraGuard}" \
+            -Dsonar.sources="/usr/src" \
+            -Dsonar.host.url="$SONAR_HOST_URL" \
+            -Dsonar.login="${SONAR_LOGIN:-}" || echo "⚠️ SonarQube analysis finished with warnings or errors."
+    else
+        echo "⚠️ sonar-scanner not installed and Docker unavailable; skipping SonarQube analysis."
+    fi
+
+    if command -v docker >/dev/null 2>&1; then
+        echo "🛡️  Running OWASP ZAP baseline scan against http://$MINIKUBE_IP:30008..."
+        docker pull owasp/zap2docker-stable >/dev/null 2>&1 || true
+        docker run --rm -v "$ROOT_DIR:/zap/wrk" owasp/zap2docker-stable \
+            zap-baseline.py -t "http://$MINIKUBE_IP:30008" -r "/zap/wrk/zap-report.html" || echo "⚠️ OWASP ZAP baseline scan failed or detected issues."
+        echo "📄 OWASP ZAP report saved to: $ROOT_DIR/zap-report.html"
+    else
+        echo "⚠️ Docker not installed; skipping OWASP ZAP scan."
+    fi
+else
+    echo "⚠️ Minikube IP unavailable; skipping SonarQube and OWASP ZAP scans."
+fi
+
+# 8. Status Summary
 echo "======================================================"
 echo "✨ VibraGuard Platform is now running!"
 echo "======================================================"
@@ -531,6 +579,8 @@ echo "Access points:"
 echo "Frontend: http://$MINIKUBE_IP:30008"
 echo "Backend:  http://$MINIKUBE_IP:30007"
 echo "Prometheus: http://127.0.0.1:30090 or http://<host-ip>:30090"
+echo "SonarQube: ${SONAR_HOST_URL:-http://localhost:9000} (if sonar-scanner/host available)"
+echo "OWASP ZAP report: $ROOT_DIR/zap-report.html"
 #echo "IPFS API: http://$MINIKUBE_IP:$(kubectl get svc -n $NAMESPACE ipfs -o jsonpath='{.spec.ports[0].nodePort}')"
 echo "======================================================"
 
