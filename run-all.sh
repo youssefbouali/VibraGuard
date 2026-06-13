@@ -187,6 +187,45 @@ spec:
       nodePort: 30001
 EOF
 
+echo "🔐 Configuring Kibana credentials (ensure Kibana uses a non-superuser)..."
+# Try to read existing elastic user credentials from the Elasticsearch secret if available
+if kubectl get secret elasticsearch-master-credentials -n $NAMESPACE > /dev/null 2>&1; then
+  ELASTIC_USER=$(kubectl get secret elasticsearch-master-credentials -n $NAMESPACE -o jsonpath='{.data.username}' | base64 --decode)
+  ELASTIC_PASSWORD=$(kubectl get secret elasticsearch-master-credentials -n $NAMESPACE -o jsonpath='{.data.password}' | base64 --decode)
+  echo "Found Elasticsearch admin user: $ELASTIC_USER"
+else
+  ELASTIC_USER="elastic"
+  ELASTIC_PASSWORD=""
+  echo "No elasticsearch-master-credentials secret found; will attempt best-effort configuration."
+fi
+
+# Only attempt to create a kibana_system user if we have admin credentials
+if [ -n "$ELASTIC_PASSWORD" ]; then
+  KIBANA_SYS_PASS=$(openssl rand -base64 18 || head -c 18 /dev/urandom | base64)
+  echo "Creating/updating kibana_system user in Elasticsearch..."
+  set +e
+  resp=$(curl -s -o /dev/stderr -w "%{http_code}" -k -u "$ELASTIC_USER:$ELASTIC_PASSWORD" \
+    -H 'Content-Type: application/json' -XPUT "https://localhost:9200/_security/user/kibana_system" \
+    -d '{"password":"'"$KIBANA_SYS_PASS"'","roles":["kibana_system"],"full_name":"Kibana System user","enabled":true}')
+  curl_rc=$?
+  set -e
+  if [ "$curl_rc" -ne 0 ] || [ "$resp" != "200" -a "$resp" != "201" -a "$resp" != "409" ]; then
+    echo "⚠️  Could not create kibana_system user (curl exit=$curl_rc http=$resp). Will not override Kibana credentials automatically."
+  else
+    echo "✅ Created/updated kibana_system user (or it already exists). Storing credentials in Kubernetes secret 'kibana-credentials'."
+    kubectl create secret generic kibana-credentials -n $NAMESPACE \
+      --from-literal=username=kibana_system \
+      --from-literal=password="$KIBANA_SYS_PASS" --dry-run=client -o yaml | kubectl apply -f -
+
+    echo "Patching Kibana deployment to use kibana-credentials..."
+    kubectl set env deployment/kibana -n $NAMESPACE ELASTICSEARCH_USERNAME=kibana_system ELASTICSEARCH_PASSWORD=$KIBANA_SYS_PASS || true
+    kubectl rollout restart deployment/kibana -n $NAMESPACE || true
+    kubectl rollout status deployment/kibana -n $NAMESPACE --timeout=120s || true
+  fi
+else
+  echo "Skipping kibana_system creation because admin Elasticsearch password is unavailable."
+fi
+
 echo "📈 Deploying Prometheus (Monitoring)..."
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
@@ -592,9 +631,11 @@ if [ -n "$CONTRACT_ADDRESS" ]; then
     fi
     pnpm install
     pnpm run build
+    echo "🐳 Building frontend image inside Minikube Docker daemon..."
+    eval $(minikube docker-env)
     docker build -t vibraguard-frontend:latest .
-    echo "📦 Loading frontend image into Minikube..."
-    minikube image load vibraguard-frontend:latest
+    echo "📦 Loading frontend image into Minikube (fallback)..."
+    minikube image load vibraguard-frontend:latest || true
 
     # Ensure the frontend deployment picks up the locally built Minikube image
     echo "🔁 Restarting frontend deployment so Minikube re-creates the pod with the new local image..."
