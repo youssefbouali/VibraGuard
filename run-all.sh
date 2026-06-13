@@ -13,7 +13,6 @@ set -e  # Exit on error
 
 # Configuration
 NAMESPACE="vibraguard"
-ELASTICSEARCH_SECURITY_ENABLED="false"
 ROOT_DIR=$(pwd)
 echo "🚀 Starting VibraGuard Platform Deployment from: $ROOT_DIR"
 
@@ -113,173 +112,12 @@ cd "$ROOT_DIR"
 # helm upgrade --install spark-operator spark/spark-kubernetes-operator -n $NAMESPACE
 # helm upgrade --install redis bitnami/redis -n $NAMESPACE --set architecture=standalone
 
-echo "🔍 Deploying Elasticsearch (Single Node for Dev)..."
-# Using the Helm chart but forcing all HTTP and transport TLS settings off.
-helm upgrade --install elasticsearch elastic/elasticsearch -n $NAMESPACE \
-  --set replicas=1 \
-  --set minimumMasterNodes=1 \
-  --set xpack.security.enabled=$ELASTICSEARCH_SECURITY_ENABLED \
-  --set xpack.security.http.ssl.enabled=false \
-  --set xpack.security.transport.ssl.enabled=false \
-  --set esConfig.elasticsearch.yml.xpack.security.enabled=$ELASTICSEARCH_SECURITY_ENABLED \
-  --set esConfig.elasticsearch.yml.xpack.security.http.ssl.enabled=false \
-  --set esConfig.elasticsearch.yml.xpack.security.transport.ssl.enabled=false \
-  --set resources.requests.cpu=100m \
-  --set resources.requests.memory=512Mi
-
-echo "⏳ Waiting for Elasticsearch pod readiness..."
-kubectl wait --for=condition=Ready pod -l app=elasticsearch-master -n $NAMESPACE --timeout=300s || true
-
-echo "⏳ Waiting for Elasticsearch HTTP service to be available..."
-set +e
-kubectl run --rm -n $NAMESPACE es-http-wait --image=curlimages/curl --restart=Never --command -- sh -c '
-  for i in $(seq 1 60); do
-    if curl -sSf http://elasticsearch-master:9200 > /dev/null 2>&1; then
-      echo "✅ Elasticsearch HTTP is available"
-      exit 0
-    fi
-    echo "   Waiting for Elasticsearch HTTP... ($i/60)"
-    sleep 5
-  done
-  echo "❌ Elasticsearch did not become available on http://elasticsearch-master:9200 within 5 minutes"
-  exit 1
-'
-wait_rc=$?
-set -e
-if [ "$wait_rc" -ne 0 ]; then
-  echo "❌ Elasticsearch HTTP health check failed. Please inspect Elasticsearch logs and cluster state."
-  exit 1
-fi
-
-echo "📊 Deploying Kibana (Visualization via manifest)..."
-kubectl apply -n $NAMESPACE -f - <<EOF
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: kibana
-  namespace: $NAMESPACE
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: kibana
-  template:
-    metadata:
-      labels:
-        app: kibana
-    spec:
-      containers:
-        - name: kibana
-          image: docker.elastic.co/kibana/kibana:8.5.1
-          ports:
-            - containerPort: 5601
-          env:
-            - name: ELASTICSEARCH_HOSTS
-              value: "http://elasticsearch-master:9200"
-            - name: ELASTICSEARCH_SSL_VERIFICATIONMODE
-              value: "none"
-            - name: SERVER_PUBLIC_BASE_URL
-              value: "http://vibraguard.mywire.org:30001"
-            - name: XPACK_SECURITY_ENABLED
-              value: "false"
-          resources:
-            requests:
-              cpu: 100m
-              memory: 512Mi
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: kibana
-  namespace: $NAMESPACE
-spec:
-  type: NodePort
-  selector:
-    app: kibana
-  ports:
-    - port: 5601
-      targetPort: 5601
-      nodePort: 30001
-EOF
-
-echo "🧹 Removing stale Kibana Elasticsearch credentials from the deployment..."
-kubectl set env deployment/kibana -n $NAMESPACE ELASTICSEARCH_USERNAME- ELASTICSEARCH_PASSWORD- || true
-kubectl rollout restart deployment/kibana -n $NAMESPACE || true
-kubectl rollout status deployment/kibana -n $NAMESPACE --timeout=120s || true
-
-echo "🔐 Configuring Kibana credentials (ensure Kibana uses a non-superuser)..."
-# Try to read existing elastic user credentials from the Elasticsearch secret if available
-if kubectl get secret elasticsearch-master-credentials -n $NAMESPACE > /dev/null 2>&1; then
-  ELASTIC_USER=$(kubectl get secret elasticsearch-master-credentials -n $NAMESPACE -o jsonpath='{.data.username}' | base64 --decode)
-  ELASTIC_PASSWORD=$(kubectl get secret elasticsearch-master-credentials -n $NAMESPACE -o jsonpath='{.data.password}' | base64 --decode)
-  echo "Found Elasticsearch admin user: $ELASTIC_USER"
-else
-  ELASTIC_USER="elastic"
-  ELASTIC_PASSWORD=""
-  echo "No elasticsearch-master-credentials secret found; will attempt best-effort configuration."
-fi
-
-# Only attempt to create a kibana_system user when Elasticsearch security is enabled
-if [ "$ELASTICSEARCH_SECURITY_ENABLED" = "true" ] && [ -n "$ELASTIC_PASSWORD" ]; then
-  KIBANA_SYS_PASS=$(openssl rand -base64 18 || head -c 18 /dev/urandom | base64)
-  echo "Creating/updating kibana_system user in Elasticsearch..."
-  set +e
-  resp=$(curl -s -o /dev/stderr -w "%{http_code}" -k -u "$ELASTIC_USER:$ELASTIC_PASSWORD" \
-    -H 'Content-Type: application/json' -XPUT "https://localhost:9200/_security/user/kibana_system" \
-    -d '{"password":"'"$KIBANA_SYS_PASS"'","roles":["kibana_system"],"full_name":"Kibana System user","enabled":true}')
-  curl_rc=$?
-  set -e
-  if [ "$curl_rc" -ne 0 ] || [ "$resp" != "200" -a "$resp" != "201" -a "$resp" != "409" ]; then
-    echo "⚠️  Could not create kibana_system user (curl exit=$curl_rc http=$resp). Will not override Kibana credentials automatically."
-  else
-    echo "✅ Created/updated kibana_system user (or it already exists). Storing credentials in Kubernetes secret 'kibana-credentials'."
-    kubectl create secret generic kibana-credentials -n $NAMESPACE \
-      --from-literal=username=kibana_system \
-      --from-literal=password="$KIBANA_SYS_PASS" --dry-run=client -o yaml | kubectl apply -f -
-
-    echo "Patching Kibana deployment to use kibana-credentials..."
-    kubectl set env deployment/kibana -n $NAMESPACE ELASTICSEARCH_USERNAME=kibana_system ELASTICSEARCH_PASSWORD=$KIBANA_SYS_PASS || true
-    kubectl rollout restart deployment/kibana -n $NAMESPACE || true
-    kubectl rollout status deployment/kibana -n $NAMESPACE --timeout=120s || true
-  fi
-else
-  echo "Skipping kibana_system creation because Elasticsearch security is disabled or admin password is unavailable."
-fi
-
-echo "📈 Deploying Prometheus (Monitoring)..."
+echo " Deploying Prometheus (Monitoring)..."
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
 helm upgrade --install prometheus prometheus-community/prometheus -n $NAMESPACE \
   --set server.service.type=NodePort \
   --set server.service.nodePort=30090
-
-echo "🕵️  Deploying Jaeger (Tracing)..."
-helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
-helm repo update
-helm upgrade --install jaeger jaegertracing/jaeger -n $NAMESPACE \
-  --set allInOne.enabled=true \
-  --set agent.enabled=false \
-  --set collector.serviceType=ClusterIP \
-  --set query.serviceType=NodePort \
-  --set query.service.nodePort=30086
-
-cat <<EOF | kubectl apply -n $NAMESPACE -f -
-apiVersion: v1
-kind: Service
-metadata:
-  name: jaeger-query-nodeport
-  namespace: $NAMESPACE
-spec:
-  type: NodePort
-  selector:
-    app: jaeger
-  ports:
-    - name: query
-      protocol: TCP
-      port: 16686
-      targetPort: 16686
-      nodePort: 30086
-EOF
 
 # IPFS
 echo "🌐 Deploying IPFS..."
@@ -338,8 +176,6 @@ spec:
                 secretKeyRef:
                   name: oracle-db-credentials
                   key: password
-            - name: ELASTICSEARCH_URL
-              value: "https://elasticsearch-master:9200"
 EOF
 
 cat <<EOF > k8s/backend-service.yaml
@@ -694,17 +530,12 @@ echo ""
 echo "Access points:"
 echo "Frontend: http://$MINIKUBE_IP:30008"
 echo "Backend:  http://$MINIKUBE_IP:30007"
-echo "Kibana:   http://127.0.0.1:30001 or http://<host-ip>:30001"
-echo "Jaeger:   http://127.0.0.1:30086 or http://<host-ip>:30086"
 echo "Prometheus: http://127.0.0.1:30090 or http://<host-ip>:30090"
 #echo "IPFS API: http://$MINIKUBE_IP:$(kubectl get svc -n $NAMESPACE ipfs -o jsonpath='{.spec.ports[0].nodePort}')"
 echo "======================================================"
 
-# Safety: Ensure port-forwarding for all observability tools (in case minikube wasn't restarted)
-echo "🔌 Activating external access for Monitoring & Tracing..."
+# Safety: Ensure Prometheus external access is active (in case minikube wasn't restarted)
+echo "🔌 Activating external access for Monitoring..."
 kubectl port-forward --address 0.0.0.0 svc/prometheus-server -n $NAMESPACE 30090:80 > /dev/null 2>&1 &
-kubectl port-forward --address 0.0.0.0 svc/jaeger-query -n $NAMESPACE 30086:16686 > /dev/null 2>&1 &
-kubectl port-forward --address 0.0.0.0 svc/kibana -n $NAMESPACE 30001:5601 > /dev/null 2>&1 &
-kubectl port-forward --address 127.0.0.1 svc/elasticsearch-master -n $NAMESPACE 9200:9200 > /dev/null 2>&1 &
-echo "🚀 Accessibility check: Prometheus (30090), Jaeger (30086), Kibana (30001), Elasticsearch local (9200) are active."
+echo "🚀 Accessibility check: Prometheus (30090) is active."
 echo "======================================================"
