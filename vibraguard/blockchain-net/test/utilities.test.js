@@ -1,4 +1,5 @@
-const { expect } = require("chai");
+import { expect } from "chai";
+import { ethers } from "ethers";
 
 describe("Smart Contract Utilities", function () {
   describe("Address Validation", function () {

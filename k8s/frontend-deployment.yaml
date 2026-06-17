@@ -21,4 +21,10 @@ spec:
             - containerPort: 3000
           env:
             - name: BACKEND_URL
-              value: "http://backend:80"
+              value: "http://backend"
+            - name: VITE_WORKORDER_REGISTRY_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: workorder-registry-config
+                  key: CONTRACT_ADDRESS
+                  optional: true

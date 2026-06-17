@@ -3,6 +3,7 @@ package com.vibraguard.gateway.controller;
 import com.vibraguard.gateway.entity.*;
 import com.vibraguard.gateway.repository.*;
 import com.vibraguard.gateway.auth.model.User;
+import com.vibraguard.gateway.service.BlockchainReportService;
 import com.vibraguard.gateway.service.IpfsService;
 import com.vibraguard.gateway.util.ControllerUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,8 @@ public class ReportController {
     private ReportRepository reportRepository;
     @Autowired
     private IpfsService ipfsService;
+    @Autowired
+    private BlockchainReportService blockchainReportService;
     @Autowired
     private ControllerUtils utils;
 
@@ -60,20 +63,23 @@ public class ReportController {
             try {
                 String fileName = "report-" + System.currentTimeMillis() + "." + type;
                 String ipfsHash = ipfsService.uploadFile(fileContentBytes, fileName);
+                String reportId = "RPT-" + UUID.randomUUID().toString().substring(0, 8);
+                String blockchainTxHash = blockchainReportService.storeReportCid(reportId, ipfsHash);
 
                 Report report = new Report();
-                report.setId("RPT-" + UUID.randomUUID().toString().substring(0, 8));
+                report.setId(reportId);
                 report.setTitle("Rapport " + frequency + " - " + new Date());
                 report.setType(type);
                 report.setFrequency(frequency);
                 report.setIpfsHash(ipfsHash);
+                report.setBlockchainTxHash(blockchainTxHash);
                 report.setCreatedBy(user.get().getFullName());
                 report.setCreatedByEmail(user.get().getEmail());
                 report.setCreatedAt(System.currentTimeMillis());
                 report.setShareLink("/reports/share/" + report.getId());
                 report.setPublic(true);
                 report.setDownloadCount(0);
-                report.setStatus("stored");
+                report.setStatus("anchored");
 
                 return reportRepository.save(report);
             } catch (Exception e) {

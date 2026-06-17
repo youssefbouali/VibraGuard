@@ -2,15 +2,17 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Download, ExternalLink, AlertCircle } from "lucide-react";
+import { FileText, Download, ExternalLink, AlertCircle, ShieldCheck, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
-import { api } from "@/lib/api";
+import { verifyReportIntegrity, type ReportIntegrityResult } from "@/lib/blockchain";
 
 export default function ReportShare() {
   const { id } = useParams<{ id: string }>();
   const [report, setReport] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [integrityResult, setIntegrityResult] = useState<ReportIntegrityResult | null>(null);
 
   useEffect(() => {
     const fetchReport = async () => {
@@ -57,6 +59,27 @@ export default function ReportShare() {
     } catch (error) {
       console.error(error);
       toast.error("Une erreur est survenue");
+    }
+  };
+
+  const handleVerifyIntegrity = async () => {
+    if (!report?.id || !report?.ipfsHash) return;
+
+    try {
+      setVerifying(true);
+      const result = await verifyReportIntegrity(report.id, report.ipfsHash, report.blockchainTxHash);
+      setIntegrityResult(result);
+
+      if (result.ok) {
+        toast.success("Integrity verified successfully");
+      } else {
+        toast.error(result.reason || "Integrity verification failed");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Unable to verify report integrity");
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -147,8 +170,37 @@ export default function ReportShare() {
                   <p className="mt-2 text-[10px] font-mono text-vibraguard-500 break-all bg-black/30 p-1.5 rounded">
                     {report.ipfsHash}
                   </p>
+                  {report.blockchainTxHash && (
+                    <p className="mt-2 text-[10px] font-mono text-vibraguard-300 break-all bg-black/30 p-1.5 rounded">
+                      Blockchain TX: {report.blockchainTxHash}
+                    </p>
+                  )}
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium text-vibraguard-300">Vérification d'intégrité</h3>
+            <div className="bg-vibraguard-800/20 p-4 rounded-xl border border-dashed border-vibraguard-700 text-sm">
+              {integrityResult ? (
+                <div className="space-y-3">
+                  <div className={`flex items-center gap-2 font-medium ${integrityResult.ok ? "text-emerald-400" : "text-red-400"}`}>
+                    {integrityResult.ok ? <ShieldCheck className="w-4 h-4" /> : <ShieldAlert className="w-4 h-4" />}
+                    <span>{integrityResult.ok ? "Intégrité vérifiée" : "Intégrité non vérifiée"}</span>
+                  </div>
+                  <p className="text-vibraguard-400 text-xs">{integrityResult.reason}</p>
+                  {integrityResult.onChainCid && (
+                    <p className="text-[10px] font-mono text-vibraguard-300 break-all bg-black/30 p-1.5 rounded">
+                      Blockchain CID: {integrityResult.onChainCid}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-vibraguard-400 text-xs">
+                  Vérifiez que le CID IPFS de ce rapport correspond bien au CID enregistré sur la blockchain.
+                </p>
+              )}
             </div>
           </div>
         </CardContent>
@@ -166,6 +218,14 @@ export default function ReportShare() {
             onClick={() => window.open(`https://ipfs.io/ipfs/${report.ipfsHash}`, '_blank')}
           >
             Voir sur IPFS
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full sm:w-auto border-vibraguard-700 text-vibraguard-300 hover:bg-vibraguard-800 h-12 px-6"
+            onClick={handleVerifyIntegrity}
+            disabled={verifying}
+          >
+            {verifying ? "Vérification..." : "Vérifier l'intégrité"}
           </Button>
         </CardFooter>
       </Card>

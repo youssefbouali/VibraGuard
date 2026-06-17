@@ -3,7 +3,11 @@ import { ethers } from "ethers";
 // Fallback ABI in case the deployment script hasn't generated the JSON yet
 const DEFAULT_ABI = [
   "function createWorkOrder(string memory _id, string memory _title, string memory _asset, string memory _priority) public",
+  "function storeReport(string memory _reportId, string memory _ipfsCid) public",
+  "function getReport(string memory _reportId) public view returns ((string reportId,string ipfsCid,address creator,uint256 timestamp))",
+  "function getReportCount() public view returns (uint)",
   "function getWorkOrderCount() public view returns (uint)",
+  "event ReportStored(string indexed reportId, string ipfsCid, address creator, uint timestamp)",
   "event WorkOrderCreated(string indexed id, string title, string asset, string priority, address creator, uint timestamp)"
 ];
 
@@ -147,6 +151,107 @@ async function getContractData() {
   }
 
   return contractData;
+}
+
+export interface BlockchainReportRecord {
+  reportId: string;
+  ipfsCid: string;
+  creator: string;
+  timestamp: number;
+}
+
+export interface ReportIntegrityResult {
+  ok: boolean;
+  reason: string;
+  reportId: string;
+  expectedCid: string;
+  onChainCid?: string;
+  expectedTxHash?: string | null;
+  txHashReachable?: boolean;
+  blockchainRecord?: BlockchainReportRecord | null;
+}
+
+export async function fetchReportRecordFromBlockchain(reportId: string): Promise<BlockchainReportRecord | null> {
+  try {
+    const contractData = await getContractData();
+    const providerUrl = typeof window !== 'undefined' ? `${window.location.origin}/blockchain-rpc` : "http://127.0.0.1:8545";
+    const provider = new ethers.JsonRpcProvider(providerUrl);
+
+    const addressCode = await provider.getCode(contractData.address);
+    if (!addressCode || addressCode === "0x") {
+      throw new Error(`No deployed contract found at ${contractData.address}.`);
+    }
+
+    const contract = new ethers.Contract(contractData.address, contractData.abi, provider);
+    const record = await contract.getReport(reportId);
+
+    return {
+      reportId: record.reportId?.toString?.() ?? record[0]?.toString?.() ?? reportId,
+      ipfsCid: record.ipfsCid?.toString?.() ?? record[1]?.toString?.() ?? "",
+      creator: record.creator?.toString?.() ?? record[2]?.toString?.() ?? "",
+      timestamp: Number(record.timestamp ?? record[3] ?? 0),
+    };
+  } catch (error) {
+    console.error("❌ Report blockchain fetch error:", error);
+    return null;
+  }
+}
+
+export async function verifyReportIntegrity(
+  reportId: string,
+  expectedCid: string,
+  expectedTxHash?: string | null,
+): Promise<ReportIntegrityResult> {
+  try {
+    const contractData = await getContractData();
+    const providerUrl = typeof window !== 'undefined' ? `${window.location.origin}/blockchain-rpc` : "http://127.0.0.1:8545";
+    const provider = new ethers.JsonRpcProvider(providerUrl);
+
+    const blockchainRecord = await fetchReportRecordFromBlockchain(reportId);
+    if (!blockchainRecord) {
+      return {
+        ok: false,
+        reason: "No blockchain record found for this report.",
+        reportId,
+        expectedCid,
+        expectedTxHash,
+        blockchainRecord: null,
+      };
+    }
+
+    let txHashReachable = false;
+    if (expectedTxHash) {
+      const receipt = await provider.getTransactionReceipt(expectedTxHash);
+      txHashReachable = !!receipt && receipt.to?.toLowerCase() === contractData.address.toLowerCase();
+    }
+
+    const ok = blockchainRecord.ipfsCid === expectedCid && (!expectedTxHash || txHashReachable);
+
+    return {
+      ok,
+      reason: ok
+        ? "The IPFS CID matches the blockchain record."
+        : blockchainRecord.ipfsCid !== expectedCid
+          ? "The IPFS CID does not match the blockchain record."
+          : "The blockchain transaction hash is missing or unreachable.",
+      reportId,
+      expectedCid,
+      onChainCid: blockchainRecord.ipfsCid,
+      expectedTxHash,
+      txHashReachable,
+      blockchainRecord,
+    };
+  } catch (error) {
+    console.error("❌ Report integrity verification error:", error);
+    return {
+      ok: false,
+      reason: error instanceof Error ? error.message : "Unknown verification error",
+      reportId,
+      expectedCid,
+      expectedTxHash,
+      blockchainRecord: null,
+    };
+  }
 }
 
 export async function submitWorkOrderToBlockchain(order: any) {

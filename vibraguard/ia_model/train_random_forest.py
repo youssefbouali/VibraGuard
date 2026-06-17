@@ -6,6 +6,8 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
 from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import label_binarize
+from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -19,7 +21,6 @@ print("Chargement des donnees...")
 data_path = 'sensor_data_training.csv'
 if not os.path.exists(data_path):
     data_path = 'sensor_data_training.csv'
-
 df = pd.read_csv(data_path)
 print(f"Loaded {len(df)} samples")
 
@@ -45,7 +46,6 @@ X_train, X_test, y_train, y_test = train_test_split(
 np.random.seed(42)
 noise_rate = 0.08
 unique_labels = list(y.unique())
-
 y_train = y_train.copy()
 y_test = y_test.copy()
 
@@ -55,7 +55,7 @@ train_flip_indices = np.random.choice(y_train.index, size=n_train_flip, replace=
 for idx in train_flip_indices:
     choices = [l for l in unique_labels if l != y_train.loc[idx]]
     y_train.loc[idx] = np.random.choice(choices)
-    
+   
 # Flip testing labels
 n_test_flip = int(len(y_test) * noise_rate)
 test_flip_indices = np.random.choice(y_test.index, size=n_test_flip, replace=False)
@@ -73,7 +73,6 @@ X_train = pd.DataFrame(imputer.fit_transform(X_train), columns=feature_columns)
 X_test = pd.DataFrame(imputer.transform(X_test), columns=feature_columns)
 
 # 2. Gestion des outliers (Clipping aux percentiles 1% et 99%)
-# On limite les valeurs extrêmes pour stabiliser l'apprentissage
 X_train = X_train.clip(lower=X_train.quantile(0.01), upper=X_train.quantile(0.99), axis=1)
 X_test = X_test.clip(lower=X_train.quantile(0.01), upper=X_train.quantile(0.99), axis=1)
 
@@ -92,7 +91,6 @@ rf_model = RandomForestClassifier(
     random_state=42,
     n_jobs=-1
 )
-
 rf_model.fit(X_train_scaled, y_train)
 print("Model trained!")
 
@@ -106,7 +104,6 @@ print("vibraguard_scaler.joblib saved")
 # Predictions et evaluation
 y_train_pred = rf_model.predict(X_train_scaled)
 train_accuracy = accuracy_score(y_train, y_train_pred)
-
 y_pred = rf_model.predict(X_test_scaled)
 test_accuracy = accuracy_score(y_test, y_pred)
 precision = precision_score(y_test, y_pred, average='weighted')
@@ -130,7 +127,7 @@ feature_importance = pd.DataFrame({
     'importance': rf_model.feature_importances_
 }).sort_values('importance', ascending=False)
 
-# Visualisation
+# Visualisation - Feature Importance
 plt.figure(figsize=(10, 6))
 plt.barh(feature_importance['feature'], feature_importance['importance'])
 plt.xlabel('Importance')
@@ -141,7 +138,7 @@ plt.savefig('feature_importance.png', dpi=150, bbox_inches='tight')
 # Matrice de confusion
 cm = confusion_matrix(y_test, y_pred)
 plt.figure(figsize=(10, 8))
-sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
             xticklabels=rf_model.classes_,
             yticklabels=rf_model.classes_)
 plt.ylabel('True Class')
@@ -149,6 +146,42 @@ plt.xlabel('Predicted Class')
 plt.title('Confusion Matrix')
 plt.tight_layout()
 plt.savefig('confusion_matrix.png', dpi=150, bbox_inches='tight')
+
+# ================ NEW: ROC CURVE (One-vs-Rest) ================
+print("Generating ROC curves (One-vs-Rest)...")
+
+# Binarize the output for multi-class ROC
+y_test_bin = label_binarize(y_test, classes=rf_model.classes_)
+n_classes = y_test_bin.shape[1]
+
+# Get probability predictions
+y_score = rf_model.predict_proba(X_test_scaled)
+
+# Compute ROC curve and ROC area for each class
+fpr = dict()
+tpr = dict()
+roc_auc = dict()
+
+plt.figure(figsize=(10, 8))
+
+for i in range(n_classes):
+    fpr[i], tpr[i], _ = roc_curve(y_test_bin[:, i], y_score[:, i])
+    roc_auc[i] = auc(fpr[i], tpr[i])
+    plt.plot(fpr[i], tpr[i], lw=2,
+             label=f'Class {rf_model.classes_[i]} (AUC = {roc_auc[i]:.2f})')
+
+# Plot random guessing line
+plt.plot([0, 1], [0, 1], 'k--', lw=2, label='Random Guessing')
+
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Multi-class ROC Curve (One-vs-Rest)')
+plt.legend(loc="lower right")
+plt.tight_layout()
+plt.savefig('ROC.png', dpi=150, bbox_inches='tight')
+print("ROC.png saved successfully!")
 
 print("="*80)
 print("TRAINING COMPLETE!")

@@ -1,26 +1,20 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
+import { expect } from "chai";
+import hre from "hardhat";
+
+const { ethers } = hre;
 
 describe("WorkOrderRegistry", function () {
   let workOrderRegistry;
-  let owner;
-  let addr1;
 
   beforeEach(async function () {
     const WorkOrderRegistry = await ethers.getContractFactory("WorkOrderRegistry");
     workOrderRegistry = await WorkOrderRegistry.deploy();
     await workOrderRegistry.waitForDeployment();
-
-    [owner, addr1] = await ethers.getSigners();
   });
 
   describe("Deployment", function () {
     it("Should deploy successfully", async function () {
       expect(workOrderRegistry.target).to.not.equal(ethers.ZeroAddress);
-    });
-
-    it("Should set the right owner", async function () {
-      expect(await workOrderRegistry.owner()).to.equal(owner.address);
     });
   });
 
@@ -29,54 +23,53 @@ describe("WorkOrderRegistry", function () {
       const tx = await workOrderRegistry.createWorkOrder(
         "WO-001",
         "Maintenance",
-        "Engine maintenance"
+        "MOTOR-01",
+        "high"
       );
       await tx.wait();
 
-      const workOrder = await workOrderRegistry.getWorkOrder("WO-001");
+      const workOrder = await workOrderRegistry.workOrders("WO-001");
       expect(workOrder.id).to.equal("WO-001");
-      expect(workOrder.status).to.equal("CREATED");
+      expect(workOrder.title).to.equal("Maintenance");
+      expect(workOrder.asset).to.equal("MOTOR-01");
+      expect(workOrder.priority).to.equal("high");
     });
 
-    it("Should update work order status", async function () {
-      await workOrderRegistry.createWorkOrder(
-        "WO-002",
-        "Inspection",
-        "Vibration inspection"
-      );
+    it("Should increment work order count", async function () {
+      await workOrderRegistry.createWorkOrder("WO-002", "Inspection", "MOTOR-02", "medium");
+      expect(await workOrderRegistry.getWorkOrderCount()).to.equal(1n);
+    });
+  });
 
-      const tx = await workOrderRegistry.updateWorkOrderStatus("WO-002", "IN_PROGRESS");
-      await tx.wait();
+  describe("Report Storage", function () {
+    it("Should store an IPFS CID for a report", async function () {
+      await workOrderRegistry.storeReport("RPT-001", "bafy-report-cid");
 
-      const workOrder = await workOrderRegistry.getWorkOrder("WO-002");
-      expect(workOrder.status).to.equal("IN_PROGRESS");
+      const report = await workOrderRegistry.getReport("RPT-001");
+      expect(report.reportId).to.equal("RPT-001");
+      expect(report.ipfsCid).to.equal("bafy-report-cid");
     });
 
-    it("Should track work order history", async function () {
-      await workOrderRegistry.createWorkOrder(
-        "WO-003",
-        "Repair",
-        "Bearing replacement"
-      );
+    it("Should reject duplicate report IDs", async function () {
+      await workOrderRegistry.storeReport("RPT-002", "bafy-first-cid");
 
-      const history = await workOrderRegistry.getWorkOrderHistory("WO-003");
-      expect(history.length).to.be.greaterThan(0);
+      await expect(
+        workOrderRegistry.storeReport("RPT-002", "bafy-second-cid")
+      ).to.be.revertedWith("Report already stored");
     });
   });
 
   describe("Events", function () {
     it("Should emit WorkOrderCreated event", async function () {
       await expect(
-        workOrderRegistry.createWorkOrder("WO-004", "Service", "Regular service")
+        workOrderRegistry.createWorkOrder("WO-004", "Service", "MOTOR-04", "low")
       ).to.emit(workOrderRegistry, "WorkOrderCreated");
     });
 
-    it("Should emit WorkOrderStatusUpdated event", async function () {
-      await workOrderRegistry.createWorkOrder("WO-005", "Service", "Regular service");
-      
+    it("Should emit ReportStored event", async function () {
       await expect(
-        workOrderRegistry.updateWorkOrderStatus("WO-005", "COMPLETED")
-      ).to.emit(workOrderRegistry, "WorkOrderStatusUpdated");
+        workOrderRegistry.storeReport("RPT-003", "bafy-event-cid")
+      ).to.emit(workOrderRegistry, "ReportStored");
     });
   });
 });

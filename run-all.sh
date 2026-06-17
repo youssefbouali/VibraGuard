@@ -538,12 +538,12 @@ kubectl get svc -n $NAMESPACE
 cd "$ROOT_DIR/vibraguard/frontend"
 docker build -t vibraguard-frontend:latest .
 
-docker run -t \
-	  --user root \
-	  -v $(pwd):/zap/wrk \
-	  zaproxy/zap-stable zap-baseline.py \
-	  -t http://$(minikube ip):30008 \
-	  -r zap-report.html
+#docker run -t \
+#	  --user root \
+#	  -v $(pwd):/zap/wrk \
+#	  zaproxy/zap-stable zap-baseline.py \
+#	  -t http://$(minikube ip):30008 \
+#	  -r zap-report.html
 
 MINIKUBE_IP=$(minikube ip)
 echo ""

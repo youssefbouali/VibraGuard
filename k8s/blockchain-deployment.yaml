@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blockchain
+  namespace: vibraguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blockchain
+  template:
+    metadata:
+      labels:
+        app: blockchain
+    spec:
+      containers:
+        - name: blockchain
+          image: vibraguard-blockchain:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8545

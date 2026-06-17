@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka
+  namespace: vibraguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      containers:
+        - name: kafka
+          image: custom-kafka:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 9092
+            - containerPort: 2181
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka
+  namespace: vibraguard
+spec:
+  selector:
+    app: kafka
+  ports:
+    - name: kafka-port
+      protocol: TCP
+      port: 9092
+      targetPort: 9092
+    - name: zookeeper-port
+      protocol: TCP
+      port: 2181
+      targetPort: 2181

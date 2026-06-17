@@ -19,6 +19,7 @@ public class Report {
     private String type; // pdf, excel
     private String frequency; // quotidien, hebdomadaire, mensuel
     private String ipfsHash;
+    private String blockchainTxHash;
     private String createdBy;
     private String createdByEmail;
     private Long createdAt;

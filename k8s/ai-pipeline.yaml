@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mqtt-kafka-bridge
+  namespace: vibraguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mqtt-bridge
+  template:
+    metadata:
+      labels:
+        app: mqtt-bridge
+    spec:
+      containers:
+        - name: bridge
+          image: vibraguard-ia:latest
+          imagePullPolicy: Never
+          command: ["python3", "-u", "mqtt_to_kafka.py"]
+          env:
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: MQTT_BROKER
+              value: "mosquitto"
+            - name: KAFKA_BROKER
+              value: "kafka:9092"
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: spark-ai-processor
+  namespace: vibraguard
+spec:
+  template:
+    spec:
+      containers:
+        - name: spark-processor
+          image: vibraguard-ia:latest
+          imagePullPolicy: Never
+          command: ["spark-submit"]
+          args: [
+            "--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0",
+            "spark_streaming_process.py"
+          ]
+          env:
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: KAFKA_BROKER
+              value: "kafka:9092"
+      restartPolicy: OnFailure
