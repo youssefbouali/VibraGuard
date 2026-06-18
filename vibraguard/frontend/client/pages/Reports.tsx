@@ -26,6 +26,7 @@ type IntegrityStatus = {
 
 interface ReportKpis {
   mtbf?: number;
+  mttr?: number;
   uptime?: string;
   totalCost?: number;
   activeWorkOrders?: number;
@@ -36,6 +37,7 @@ interface ReportKpis {
 interface MotorReport {
   id: string;
   type?: string;
+  site?: string;
   zone?: string;
   localisation?: string;
   puissance?: string;
@@ -46,18 +48,123 @@ interface MotorReport {
 
 interface WorkOrderReport {
   id: string;
+  asset?: string;
+  status?: string;
+  duration?: string;
+  createdAt?: string;
+  completedAt?: string;
 }
 
 interface AlertReport {
   id: string;
 }
 
+interface SiteMetric {
+  name: string;
+  value: number;
+}
+
 function formatCurrency(value: number) {
-  return `${value.toLocaleString("fr-FR")} EUR`;
+  return `${value.toLocaleString("fr-FR")} DH`;
+}
+
+function formatHours(value?: number) {
+  return typeof value === "number" && Number.isFinite(value) ? `${value.toFixed(1)} h` : "0.0 h";
 }
 
 function formatMotorVibration(value?: number) {
   return typeof value === "number" ? `${value.toFixed(2)} mm/s` : "N/A";
+}
+
+function parseDurationHours(value?: string) {
+  if (!value) return null;
+
+  const trimmed = value.trim().toLowerCase();
+  if (!trimmed) return null;
+
+  const matcher = trimmed.match(/(?:(\d+(?:\.\d+)?)h)?\s*(?:(\d+(?:\.\d+)?)m)?/);
+  if (matcher && (matcher[1] || matcher[2])) {
+    const hours = matcher[1] ? Number(matcher[1]) : 0;
+    const minutes = matcher[2] ? Number(matcher[2]) : 0;
+    return hours + minutes / 60;
+  }
+
+  const numeric = Number(trimmed);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function parseReportDate(value?: string) {
+  if (!value) return null;
+
+  const directDate = new Date(value);
+  if (!Number.isNaN(directDate.getTime())) {
+    return directDate;
+  }
+
+  const normalizedDate = new Date(value.replace(" ", "T"));
+  return Number.isNaN(normalizedDate.getTime()) ? null : normalizedDate;
+}
+
+function buildMttrBySite(workOrders: WorkOrderReport[], motors: MotorReport[]): SiteMetric[] {
+  const assetToSite = new Map(
+    motors.map((motor) => [
+      motor.id,
+      (motor.zone || motor.site || "").trim() || "Site inconnu",
+    ]),
+  );
+
+  const totals = new Map<string, { totalHours: number; count: number }>();
+
+  for (const workOrder of workOrders) {
+    if (!workOrder.asset) continue;
+    if (workOrder.status && !workOrder.status.toLowerCase().includes("termin")) continue;
+
+    const siteName = assetToSite.get(workOrder.asset);
+    if (!siteName) continue;
+
+    const durationHours =
+      parseDurationHours(workOrder.duration) ??
+      (() => {
+        const createdAt = parseReportDate(workOrder.createdAt);
+        const completedAt = parseReportDate(workOrder.completedAt);
+        if (!createdAt || !completedAt) return null;
+
+        const diffHours = (completedAt.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+        return diffHours >= 0 ? diffHours : null;
+      })();
+
+    if (durationHours === null) continue;
+
+    const current = totals.get(siteName) || { totalHours: 0, count: 0 };
+    current.totalHours += durationHours;
+    current.count += 1;
+    totals.set(siteName, current);
+  }
+
+  return Array.from(totals.entries())
+    .map(([name, { totalHours, count }]) => ({
+      name,
+      value: Math.round((totalHours / count) * 10) / 10,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name, "fr"));
+}
+
+function buildReliabilityBySite(mtbfBySite: SiteMetric[], mttrBySite: SiteMetric[]) {
+  const mtbfMap = new Map(mtbfBySite.map((item) => [item.name, item.value]));
+  const mttrMap = new Map(mttrBySite.map((item) => [item.name, item.value]));
+  const siteNames = Array.from(new Set([...mtbfMap.keys(), ...mttrMap.keys()])).sort((a, b) =>
+    a.localeCompare(b, "fr"),
+  );
+
+  if (siteNames.length === 0) {
+    return [["Aucune donnée", "0.0 h", "0.0 h"]];
+  }
+
+  return siteNames.map((siteName) => [
+    siteName,
+    formatHours(mtbfMap.get(siteName)),
+    formatHours(mttrMap.get(siteName)),
+  ]);
 }
 
 export default function Reports() {
@@ -94,20 +201,25 @@ export default function Reports() {
     try {
       setGenerating(true);
 
-      const [kpis, motors, alerts, workOrders] = await Promise.all([
+      const [kpis, motors, alerts, workOrders, mtbfBySite] = await Promise.all([
         api.getBIKPIs() as Promise<ReportKpis>,
         api.getMotors() as Promise<MotorReport[]>,
         api.getAlerts() as Promise<AlertReport[]>,
         api.getWorkOrders() as Promise<WorkOrderReport[]>,
+        api.getMtbfBySite() as Promise<SiteMetric[]>,
       ]);
 
       const safeMotors = Array.isArray(motors) ? motors : [];
       const safeAlerts = Array.isArray(alerts) ? alerts : [];
       const safeWorkOrders = Array.isArray(workOrders) ? workOrders : [];
+      const safeMtbfBySite = Array.isArray(mtbfBySite) ? mtbfBySite : [];
 
-      const mtbfValue = typeof kpis?.mtbf === "number" ? `${kpis.mtbf.toFixed(1)} h` : "0.0 h";
+      const mtbfValue = formatHours(kpis?.mtbf);
+      const mttrValue = formatHours(kpis?.mttr);
       const availabilityValue = kpis?.uptime || "100.0%";
       const maintenanceCostValue = formatCurrency(Number(kpis?.totalCost || 0));
+      const mttrBySite = buildMttrBySite(safeWorkOrders, safeMotors);
+      const reliabilityBySiteRows = buildReliabilityBySite(safeMtbfBySite, mttrBySite);
 
       let fileContent = "";
       if (formData.type === "pdf") {
@@ -129,6 +241,7 @@ export default function Reports() {
           head: [["Paramètre", "Valeur", "Tendance"]],
           body: [
             ["MTBF", mtbfValue, "Live"],
+            ["MTTR", mttrValue, "Live"],
             ["Disponibilité", availabilityValue, "Live"],
             ["Coût Maintenance", maintenanceCostValue, "Live"],
           ],
@@ -149,7 +262,19 @@ export default function Reports() {
         });
 
         doc.setFontSize(14);
-        doc.setTextColor(230, 240, 242);
+        doc.setTextColor(15, 39, 48);
+        doc.text("MTTR et MTBF par site", 14, (doc as any).lastAutoTable.finalY + 14);
+
+        autoTable(doc, {
+          startY: (doc as any).lastAutoTable.finalY + 18,
+          head: [["Site", "MTBF", "MTTR"]],
+          body: reliabilityBySiteRows,
+          theme: "striped",
+          headStyles: { fillColor: [0, 122, 61] },
+        });
+
+        doc.setFontSize(14);
+        doc.setTextColor(15, 39, 48);
         doc.text("Rapport détaillé des moteurs", 14, (doc as any).lastAutoTable.finalY + 14);
 
         autoTable(doc, {
@@ -179,14 +304,22 @@ export default function Reports() {
         const wsData = [
           ["KPI", "Valeur", "Tendance"],
           ["MTBF", mtbfValue, "Live"],
+          ["MTTR", mttrValue, "Live"],
           ["Disponibilité", availabilityValue, "Live"],
-          ["Coût", maintenanceCostValue, "Live"],
+          ["Coût Maintenance", maintenanceCostValue, "Live"],
           ["Nombre de moteurs", String(kpis?.totalMotors ?? safeMotors.length), "Live"],
           ["Alertes actives", String(kpis?.activeAlerts ?? safeAlerts.length), "Live"],
           ["Ordres de travail actifs", String(kpis?.activeWorkOrders ?? safeWorkOrders.length), "Live"],
         ];
         const ws = XLSX.utils.aoa_to_sheet(wsData);
         XLSX.utils.book_append_sheet(wb, ws, "Rapport");
+
+        const reliabilitySheetData = [
+          ["Site", "MTBF", "MTTR"],
+          ...reliabilityBySiteRows,
+        ];
+        const reliabilitySheet = XLSX.utils.aoa_to_sheet(reliabilitySheetData);
+        XLSX.utils.book_append_sheet(wb, reliabilitySheet, "MTTR_MTBF Site");
 
         const motorSheetData = [
           ["ID", "Type", "Zone", "Localisation", "Etat", "Vibration", "Dernière alerte"],

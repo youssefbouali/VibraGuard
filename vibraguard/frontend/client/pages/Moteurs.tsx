@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { cn, formatTime } from "@/lib/utils";
 import { api } from "@/lib/api";
+import { downloadMotorsCsv } from "@/lib/motor-export";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -17,7 +18,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Loader2, Trash2, Edit, MoreHorizontal, Save, X, Plus } from "lucide-react";
+import { Loader2, Trash2, Edit, MoreHorizontal, Save, X, Plus, Download } from "lucide-react";
 import { useMoteurs } from "@/hooks/use-moteurs";
 
 type HealthStatus = "Critique" | "Alerte" | "Optimal" | "Attention" | "Normal"; // Backward compatibility included
@@ -170,6 +171,21 @@ export default function Moteurs() {
   const zones = ["Toutes les zones", ...new Set((apiMoteurs || []).map((m: any) => m.zone))];
   const statuses = ["Tous", "Optimal", "Alerte", "Critique"];
 
+  const handleDownloadAllMotors = () => {
+    if (!apiMoteurs || apiMoteurs.length === 0) {
+      toast.error("Aucune donnée moteur à télécharger");
+      return;
+    }
+
+    downloadMotorsCsv(apiMoteurs, "motors-power-bi-all.csv");
+    toast.success("Téléchargement des données moteurs lancé");
+  };
+
+  const handleDownloadMotor = (motor: Moteur) => {
+    downloadMotorsCsv([motor], `motor-${motor.id}-power-bi.csv`);
+    toast.success(`Téléchargement lancé pour ${motor.id}`);
+  };
+
   return (
     <DashboardLayout breadcrumb="Moteurs">
       <div className="flex flex-col gap-4 sm:gap-6">
@@ -178,14 +194,24 @@ export default function Moteurs() {
         {/* Title row */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <h1 className="text-xl sm:text-2xl lg:text-[24px] font-semibold text-[#E6F0F2]">Liste des Moteurs</h1>
-          <button 
-            onClick={() => navigate("/moteurs/ajouter")}
-            className="flex items-center gap-2 px-4 h-10 rounded-md bg-[#007A3D] hover:bg-[#006633] transition-colors text-white text-sm font-medium whitespace-nowrap"
-          >
-            <Plus className="w-4 h-4 text-white" />
-            <span className="hidden sm:inline">Ajouter un Moteur</span>
-            <span className="sm:hidden">Ajouter</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={handleDownloadAllMotors}
+              className="flex items-center gap-2 px-4 h-10 rounded-md border border-white/10 bg-[#0F2730] hover:bg-[#163340] transition-colors text-white text-sm font-medium whitespace-nowrap"
+            >
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">Download All Motors</span>
+              <span className="sm:hidden">Export</span>
+            </button>
+            <button 
+              onClick={() => navigate("/moteurs/ajouter")}
+              className="flex items-center gap-2 px-4 h-10 rounded-md bg-[#007A3D] hover:bg-[#006633] transition-colors text-white text-sm font-medium whitespace-nowrap"
+            >
+              <Plus className="w-4 h-4 text-white" />
+              <span className="hidden sm:inline">Ajouter un Moteur</span>
+              <span className="sm:hidden">Ajouter</span>
+            </button>
+          </div>
         </div>
 
         {/* Filters bar */}
@@ -318,6 +344,16 @@ export default function Moteurs() {
                       </div>
                     </div>
                     <div className="px-6 py-4 flex items-center justify-end gap-2 pr-10">
+                       <button
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           handleDownloadMotor(m);
+                         }}
+                         className="flex w-8 h-8 items-center justify-center rounded bg-[#0F2730] hover:bg-[#163340] transition-colors shrink-0"
+                         title="Download this motor for Power BI"
+                       >
+                         <Download className="w-4 h-4 text-[#C9E7E6]" />
+                       </button>
                        <ActionBtn><VibrationIcon /></ActionBtn>
                        <DropdownMenu>
                          <DropdownMenuTrigger asChild>
@@ -360,6 +396,18 @@ export default function Moteurs() {
                       <p className="text-[#64748B] text-[10px] font-bold uppercase mb-1">Type</p>
                       <p className="text-white font-medium">{m.type}</p>
                     </div>
+                  </div>
+                  <div className="mt-5 pt-4 border-t border-white/5">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDownloadMotor(m);
+                      }}
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-white/10 bg-white/5 text-[#E6F0F2] text-xs font-medium hover:bg-white/10 transition-colors"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download Motor Data
+                    </button>
                   </div>
                 </div>
               );

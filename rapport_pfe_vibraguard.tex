@@ -1,0 +1,3083 @@
+% ============================================================
+%   VibraGuard — Rapport de Projet de Fin d'Études
+%   BOUALI Youssef | Master IL | UIZ Agadir | 2025-2026
+% ============================================================
+\documentclass[12pt, a4paper, oneside]{report}
+
+% ---- Encodage & langue ----
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+\usepackage{pdfpages}
+
+% ---- Mise en page ----
+\usepackage[
+  top=2.5cm, bottom=2.5cm,
+  left=3cm,  right=2.5cm,
+  headheight=20pt
+]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\setlength{\parindent}{1em}
+\setlength{\parskip}{0.4em}
+
+% ---- Couleurs (noir et blanc uniquement) ----
+\usepackage[table]{xcolor}
+\definecolor{bluedark}{gray}{0}
+\definecolor{bluemid}{gray}{0}
+\definecolor{bluelight}{gray}{0.92}
+\definecolor{accent}{gray}{0}
+\definecolor{graybg}{gray}{0.96}
+\definecolor{codered}{gray}{0}
+\definecolor{codegray}{gray}{0.4}
+
+% ---- Typographie ----
+\usepackage{microtype}
+\usepackage{amsmath, amssymb}
+\emergencystretch=3em
+\tolerance=3000
+\hbadness=10000
+\vbadness=10000
+\hfuzz=200pt
+\vfuzz=200pt
+\showboxbreadth=0
+\showboxdepth=0
+\raggedbottom
+
+% ---- En-têtes & pieds de page ----
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+
+% Commande utilitaire : numéro de chapitre en chiffres romains majuscules
+\newcommand{\chapRoman}{\Roman{chapter}}
+
+\newcommand{\eng}[1]{\textit{#1}}
+
+% \rightmark = section courante (ex. "I.3. MÉTHODOLOGIE DE GESTION DE PROJET")
+% En-tête: section à gauche, "Chapitre III" à droite
+\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+\renewcommand{\sectionmark}[1]{\markright{\thesection.\ \MakeUppercase{#1}}}
+
+\fancyhead[L]{\small\textit{\rightmark}}
+\fancyhead[R]{\small\textit{%
+  \ifnum\value{chapter}>0 Chapitre \chapRoman\else \leftmark\fi}}
+
+% Pied de page: titre | numéro | auteur
+\fancyfoot[L]{\small\textit{VibraGuard --- Rapport PFE}}
+\fancyfoot[C]{\small\thepage}
+\fancyfoot[R]{\small\textit{BOUALI Youssef | Master IL | 2025-2026}}
+
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+% Style pour les pages de début de chapitre (plain)
+\fancypagestyle{plain}{%
+  \fancyhf{}%
+  \fancyfoot[L]{\small\textit{VibraGuard --- Rapport PFE}}%
+  \fancyfoot[C]{\small\thepage}%
+  \fancyfoot[R]{\small\textit{BOUALI Youssef | Master IL | 2025-2026}}%
+  \renewcommand{\headrulewidth}{0pt}%
+  \renewcommand{\footrulewidth}{0.4pt}%
+}
+
+
+\newif\ifinmainchapters
+\inmainchapterstrue
+\newif\ifinappendixpart
+\fancyhead[R]{\small\textit{%
+  \ifinmainchapters
+    \ifnum\value{chapter}>0
+      \ifinappendixpart Annexe \Alph{chapter}\else Chapitre \chapRoman\fi
+    \else \leftmark\fi
+  \else
+    \leftmark
+  \fi}}
+
+% ---- Numérotation des chapitres en chiffres romains ----
+\renewcommand{\thechapter}{\Roman{chapter}}
+% Les sections gardent leur numérotation normale : I.1, I.2, ...
+\renewcommand{\thesection}{\thechapter.\arabic{section}}
+\renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
+\renewcommand{\thesubsubsection}{\thesubsection.\arabic{subsubsection}}
+
+% ---- Titres de chapitres/sections ----
+\usepackage{titlesec}
+\titleformat{\chapter}[block]
+  {\normalfont\Large\bfseries}
+  {\ifinappendixpart Annexe \thechapter\else Chapitre \thechapter\fi}{0.8em}{}
+  [\vspace{-0.5em}{\titlerule[1pt]}\vspace{0.5em}]
+\titlespacing*{\chapter}{0pt}{10pt}{20pt}
+
+\titleformat{\section}
+  {\normalfont\large\bfseries}
+  {\thesection}{0.8em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}
+
+\titleformat{\subsection}
+  {\normalfont\normalsize\bfseries}
+  {\thesubsection}{0.7em}{}
+\titlespacing*{\subsection}{0pt}{10pt}{4pt}
+
+\titleformat{\subsubsection}
+  {\normalfont\normalsize\itshape}
+  {\thesubsubsection}{0.7em}{}
+\titlespacing*{\subsubsection}{0pt}{8pt}{3pt}
+
+% ---- Tables des matières ----
+\usepackage[titles]{tocloft}
+\setlength{\cftbeforechapskip}{6pt}
+\renewcommand{\cftchapfont}{\bfseries}
+\renewcommand{\cftsecfont}{}
+\renewcommand{\cftchappagefont}{\bfseries}
+
+% ---- Tableaux ----
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{colortbl}
+\renewcommand{\arraystretch}{1.4}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
+
+% ---- Commandes tableaux (remplacées par alternance gris clair / blanc) ----
+\newcommand{\theadrow}{\rowcolor{gray!30}}
+\newcommand{\evenrow}{\rowcolor{gray!12}}
+\newcommand{\oddrow}{\rowcolor{white}}
+
+% ---- Listes ----
+\usepackage{enumitem}
+\setlist[itemize]{leftmargin=2em, itemsep=2pt, topsep=4pt}
+\setlist[enumerate]{leftmargin=2em, itemsep=2pt, topsep=4pt}
+
+% ---- Encadrés remplacés par des environnements simples sans couleur ----
+\usepackage{mdframed}
+
+\newenvironment{infobox}[1][]{%
+  \begin{mdframed}[linewidth=0.8pt, linecolor=black, backgroundcolor=white,
+    innerleftmargin=8pt, innerrightmargin=8pt, innertopmargin=6pt, innerbottommargin=6pt,
+    nobreak=true]
+  \ifx\relax#1\relax\else\textbf{#1}\par\smallskip\fi
+}{%
+  \end{mdframed}%
+}
+
+\newenvironment{resultbox}{%
+  \begin{mdframed}[linewidth=0.8pt, linecolor=black, backgroundcolor=white,
+    innerleftmargin=8pt, innerrightmargin=8pt, innertopmargin=6pt, innerbottommargin=6pt,
+    nobreak=true]
+}{%
+  \end{mdframed}%
+}
+
+\newenvironment{chapterintro}{%
+  \begin{mdframed}[linewidth=0.8pt, linecolor=black, backgroundcolor=gray!8,
+    innerleftmargin=10pt, innerrightmargin=10pt, innertopmargin=8pt, innerbottommargin=8pt,
+    nobreak=true]
+}{%
+  \end{mdframed}%
+}
+
+% ---- Code listings ----
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\bfseries,
+  commentstyle=\itshape,
+  stringstyle={},
+  backgroundcolor=\color{gray!8},
+  frame=single, framerule=0.4pt,
+  numbers=left, numberstyle=\tiny,
+  breaklines=true, breakatwhitespace=true,
+  tabsize=2, showstringspaces=false,
+  xleftmargin=1em, xrightmargin=0.5em
+}
+
+% ---- Graphiques ----
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\captionsetup{font=small, labelfont=bf, labelsep=period}
+\frenchsetup{SmallCapsFigTabCaptions=false}
+
+% ---- Tikz (diagrammes) ----
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, backgrounds, calc}
+
+% ---- Liens hypertexte ----
+\usepackage[
+  colorlinks=false,
+  hidelinks,
+  bookmarks=true,
+  bookmarksopen=true,
+  pdftitle={Rapport PFE -- VibraGuard},
+  pdfauthor={BOUALI Youssef},
+  pdfsubject={Maintenance Prédictive IoT IA Blockchain}
+]{hyperref}
+
+% ---- Acronymes ----
+\usepackage{acronym}
+
+% ---- Commandes personnalisées ----
+\newcommand{\projectname}{\textbf{VibraGuard}}
+\newcommand{\kw}[1]{\textbf{#1}}
+\newcommand{\tech}[1]{\textit{#1}}
+
+% ============================================================
+\begin{document}
+% ============================================================
+
+% ---- Page de garde ----
+\pagenumbering{gobble}
+\includepdf[pages=1,pagecommand={\thispagestyle{empty}}]{Page_Garde_Rapport_PFE.pdf}
+
+
+\pagenumbering{roman}
+\setcounter{page}{1}
+
+\newpage
+\thispagestyle{empty}
+\vspace*{5cm}
+\begin{flushright}
+  \textit{À mes parents, pour leur soutien indéfectible}\\[0.5cm]
+  \textit{À mes encadrants, Pr. AIT LAHCEN Yassine et Mr. BOUKHIRA Adil,}\\
+  \textit{pour leur confiance et leurs précieux conseils}\\[0.5cm]
+  \textit{À tous ceux qui ont contribué, de près ou de loin,}\\
+  \textit{à la réalisation de ce projet}\\[1cm]
+  \textit{\textbf{Je dédie ce travail.}}
+\end{flushright}
+\newpage
+
+% ---- Remerciements ----
+\chapter*{Remerciements}
+%\addcontentsline{toc}{chapter}{Remerciements}
+\markboth{Remerciements}{Remerciements}
+
+Au terme de ce Projet de Fin d'Études, il m'est particulièrement agréable d'exprimer ma
+gratitude et mes remerciements à toutes les personnes qui ont contribué à la réussite de ce
+travail.
+
+Je tiens tout d'abord à exprimer ma profonde reconnaissance à mes encadrants,
+\textbf{Pr.~AIT LAHCEN Yassine} et \textbf{Mr.~BOUKHIRA Adil}, pour leur disponibilité,
+leur soutien constant, leurs conseils avisés et la confiance qu'ils m'ont accordée tout au
+long de ce projet. Leurs orientations méthodologiques et leur expertise ont été des guides
+précieux dans la conception et le développement de la plateforme \projectname{}.
+
+Je remercie également l'ensemble du corps professoral du Centre d'Excellence IT de la
+Faculté des Sciences d'Agadir --- Université Ibn Zohr --- pour la qualité de la formation
+dispensée au sein du Master d'Excellence en Ingénierie Logicielle, qui m'a fourni les
+fondements théoriques et pratiques nécessaires à la réalisation de ce projet.
+
+Mes sincères remerciements vont également aux équipes de l'Office Chérifien des Phosphates
+(\textbf{OCP}) de Safi pour avoir rendu possible l'ancrage industriel de ce projet et pour
+l'ouverture vers des problématiques réelles de maintenance industrielle dans le contexte de
+l'Industrie 4.0.
+
+Je ne saurais oublier de remercier chaleureusement ma famille et mes proches pour leur
+soutien moral indéfectible, leur patience et leurs encouragements tout au long de mon
+parcours universitaire.
+
+Enfin, je remercie tous mes collègues de promotion pour l'ambiance de travail stimulante
+et les échanges fructueux qui ont contribué à enrichir ma réflexion.
+
+\newpage
+
+% ---- Résumé ----
+\chapter*{Résumé}
+\addcontentsline{toc}{chapter}{Résumé}
+
+Dans le contexte de la transformation numérique de l'industrie (\textbf{Industrie 4.0}), la
+maintenance des équipements industriels représente un enjeu stratégique majeur. Les
+défaillances non anticipées des moteurs industriels génèrent des arrêts de production coûteux
+et impactent significativement la compétitivité des entreprises industrielles, dont l'OCP Safi.
+
+Le projet \projectname{} propose une solution complète et innovante de \kw{maintenance
+prédictive} pour les moteurs industriels. En combinant l'Internet des Objets (\kw{IoT}) pour
+la collecte de données vibratoires en temps réel, une architecture \kw{Big Data} (Apache Kafka
+et Apache Spark) pour le traitement de flux massifs, et des algorithmes d'\kw{Intelligence
+Artificielle} (Random Forest) pour la détection d'anomalies, \projectname{}
+permet d'anticiper les pannes avant leur survenue.
+
+La plateforme est construite sur une architecture \kw{microservices} robuste développée avec Spring Boot, exposant des APIs REST, et s'appuie sur une interface utilisateur moderne développée en React. L'intégration de la technologie \kw{Blockchain} (Ethereum/Hardhat) pour les ordres de travail et du stockage décentralisé \kw{IPFS} pour les rapports garantit l'immutabilité et la traçabilité.
+
+\vspace{0.5em}
+\noindent\textbf{Mots-clés :} Industrie 4.0, Maintenance Prédictive, Machine Learning, Random
+Forest, IoT, MQTT, Apache Kafka, Apache Spark, Spring Boot, Microservices, Blockchain,
+Ethereum, IPFS, React, GCP, Kubernetes.
+
+\newpage
+
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+
+\vspace{0.5em}
+In the context of Industry 4.0's digital transformation, the maintenance of
+industrial equipment represents a major strategic challenge: unplanned motor
+failures generate costly production downtime and impact the competitiveness of
+industrial groups such as OCP, the world's leading exporter of phosphate-based
+products.
+
+This Final-Year Project (PFE) presents \projectname{}, a comprehensive predictive
+maintenance platform designed for the industrial motors of the OCP Safi site. The
+solution combines IoT sensor nodes (ESP32 with DS18B20, ACS712, and
+piezoelectric/ADS1115 sensors) for real-time vibration, thermal, and electrical
+monitoring; a Big Data pipeline (MQTT, Apache Kafka, Apache Spark Streaming); and a Random Forest machine-learning model achieving 92.0\% accuracy in
+classifying motor health states (normal operation and fault types).
+
+The platform is built on a robust \kw{Spring Boot} \kw{microservices} architecture  exposing \kw{REST APIs}, with a modern \kw{React/TypeScript} frontend providing real-time dashboards, work-order management, and KPI visualization (MTBF, MTTR,  availability). 
+
+\kw{Blockchain} technology (Ethereum/Hardhat smart contracts) for work orders, combined with decentralized \kw{IPFS} storage for maintenance reports, ensures  immutability and traceability — achieving  \textbf{100\%} certified events with zero failed transactions during load testing.
+
+The entire system is containerized with \kw{Docker} and deployed on  \kw{Kubernetes} (GCP), supported by automated \kw{CI/CD} pipelines.
+
+All measured performance criteria (accuracy, latency, throughput, availability,
+test coverage, and blockchain traceability) met or exceeded their target objectives,
+validating the feasibility of an integrated IoT--Big Data--AI--Blockchain approach
+to predictive maintenance in a real industrial context.
+
+\vspace{0.5em}
+\noindent\textbf{Keywords:} Industry 4.0, Predictive Maintenance, Machine Learning,
+Random Forest, IoT, MQTT, Apache Kafka, Apache Spark, Microservices, Blockchain,
+Ethereum, IPFS, React, GCP, Kubernetes.
+
+\newpage
+
+% ---- Tables ----
+\tableofcontents
+\newpage
+\listoftables
+\addcontentsline{toc}{chapter}{Liste des tableaux}
+\newpage
+\listoffigures
+\addcontentsline{toc}{chapter}{Liste des figures}
+\newpage
+
+% ---- Table des abréviations ----
+\chapter*{Table des Abréviations}
+\addcontentsline{toc}{chapter}{Table des Abréviations}
+\markboth{Table des Abréviations}{Table des Abréviations}
+
+\begin{center}
+\scriptsize
+\begin{tabularx}{\textwidth}{L{3cm} X}
+  \toprule
+  \rowcolor{gray!30}
+  \textbf{Abréviation} & \textbf{Signification} \\
+  \midrule
+  \rowcolor{white}       API       & Application Programming Interface \\
+  \rowcolor{gray!12}BI        & Business Intelligence \\
+  \rowcolor{white}       CID       & Content Identifier (IPFS) \\
+  \rowcolor{gray!12}CI/CD     & Continuous Integration / Continuous Deployment \\
+  \rowcolor{white}       DAP       & Diammonium Phosphate (Phosphate Diammonique) \\
+  \rowcolor{gray!12}ETL       & Extract, Transform, Load \\
+  \rowcolor{white}       GCP       & Google Cloud Platform \\
+  \rowcolor{gray!12}IIoT      & Industrial Internet of Things \\
+  \rowcolor{white}       IPFS      & InterPlanetary File System \\
+  \rowcolor{gray!12}ITIL      & Information Technology Infrastructure Library \\
+  \rowcolor{white}       IoT       & Internet of Things \\
+  \rowcolor{gray!12}JWT       & JSON Web Token \\
+  \rowcolor{white}       KPI       & Key Performance Indicator \\
+  \rowcolor{gray!12}MAP       & Monoammonium Phosphate (Phosphate Monoammonique) \\
+  \rowcolor{white}       ML        & Machine Learning \\
+  \rowcolor{gray!12}MTBF      & Mean Time Between Failures \\
+  \rowcolor{white}       MTTR      & Mean Time To Repair \\
+  \rowcolor{gray!12}MQTT      & Message Queuing Telemetry Transport \\
+  \rowcolor{white}       MongoDB   & Base de données orientée documents (NoSQL) \\
+  \rowcolor{gray!12}OASIS     & Organization for the Advancement of Structured Information Standards \\
+  \rowcolor{white}       OCP       & Office Chérifien des Phosphates \\
+  \rowcolor{gray!12}OT        & Ordre de Travail \\
+  \rowcolor{white}       ONCF      & Office National des Chemins de Fer \\
+  \rowcolor{gray!12}PdM       & Predictive Maintenance (Maintenance Prédictive) \\
+  \rowcolor{white}       PFE       & Projet de Fin d'Études \\
+  \rowcolor{gray!12}POC       & Proof of Concept \\
+  \rowcolor{white}       RBAC      & Role-Based Access Control \\
+  \rowcolor{gray!12}REST      & Representational State Transfer \\
+  \rowcolor{white}       SLA       & Service Level Agreement (Accord de Niveau de Service) \\
+  \rowcolor{gray!12}SPA       & Single Page Application \\
+  \rowcolor{gray!12}TSP       & Triple Superphosphate \\
+  \rowcolor{white}       UM6P      & Université Mohammed VI Polytechnique \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\newpage
+
+% ============================================================
+\pagenumbering{arabic}
+\setcounter{page}{1}
+% ============================================================
+
+% ============================
+\chapter*{Introduction Générale}
+\addcontentsline{toc}{chapter}{Introduction Générale}
+\markboth{Introduction Générale}{Introduction Générale}
+% ============================
+
+\setcounter{table}{0}
+
+Ce chapitre introductif présente le cadre général du projet \projectname{}, le contexte industriel de l'OCP Safi, la problématique identifiée, les hypothèses de travail, la méthodologie adoptée ainsi que la structure du présent rapport.
+
+% -----------------------------------------------
+\section*{1. Contexte et Hypothèse de Travail}
+% -----------------------------------------------
+
+L'ère de l'Industrie 4.0 est caractérisée par la convergence des technologies numériques avec
+les systèmes de production industrielle. Dans ce nouveau paradigme, les usines intelligentes
+(\eng{Smart Factories}) s'appuient sur des réseaux de capteurs connectés, des plateformes
+d'analyse de données massives et des systèmes d'intelligence artificielle pour optimiser leurs
+processus et réduire leurs coûts opérationnels.
+
+\textbf{Hypothèse de travail :} il est possible de réduire significativement les arrêts de
+production non planifiés de l'OCP Safi en déployant une plateforme de maintenance prédictive
+basée sur l'analyse vibratoire en temps réel, les algorithmes de Machine Learning et la
+certification Blockchain des données de maintenance --- à condition de disposer d'une
+architecture logicielle scalable et d'un pipeline de données fiable.
+
+% -----------------------------------------------
+\section*{2. Présentation de l'OCP}
+% -----------------------------------------------
+
+\subsection*{2.1 Définition et Historique}
+
+L'\textbf{Office Chérifien des Phosphates (OCP)} est un groupe industriel marocain créé le
+\textbf{7 août 1920} par décret royal sous le Protectorat français, à l'initiative du Général
+Lyautey, afin de réserver à l'État marocain l'exploitation de ses ressources phosphatières
+exceptionnelles \cite{ocpgroup}. La production commerciale démarre le
+1\textsuperscript{er} mars 1921 avec l'ouverture de la première mine à Khouribga, et les
+premières exportations depuis le port de Casablanca ont lieu en juillet de la même année.
+
+\subsection*{2.3 Présentation du Département IT — OCP Safi}
+
+Le \textbf{Département IT (Direction des Systèmes d'Information)} d'OCP Safi constitue
+la colonne vertébrale numérique du complexe industriel. Il est rattaché à la
+\textbf{Direction Support \& DSI} du Groupe OCP et assure la conception, le déploiement
+et la maintenance de l'ensemble des systèmes d'information et des infrastructures
+technologiques du site de Safi.
+
+\subsubsection*{Missions du Département IT}
+
+\begin{enumerate}
+  \item \textbf{Gestion de l'infrastructure informatique :} administration des serveurs,
+  des réseaux locaux (LAN/WAN), des équipements de télécommunication et des systèmes de
+  stockage de données garantissant la continuité des opérations industrielles 24h/24 et
+  7j/7.
+
+  \item \textbf{Administration des systèmes d'information :} pilotage des applications
+  métier (ERP, GMAO, MES), gestion des licences logicielles et coordination des mises à
+  jour en concertation avec les directions opérationnelles.
+
+  \item \textbf{Sécurité informatique :} mise en œuvre de la politique de sécurité du
+  Groupe OCP sur le site de Safi, incluant la gestion des accès (RBAC, Active Directory),
+  la supervision des intrusions (SIEM), les sauvegardes et les plans de reprise après
+  sinistre (PRA/PCA).
+
+  \item \textbf{Support utilisateurs :} assistance technique de proximité pour l'ensemble
+  des collaborateurs du site, gestion des incidents de niveau 1 à 3 selon le référentiel
+  \textbf{ITIL} \cite{itil2019}.
+
+  \item \textbf{Innovation et transformation digitale :} accompagnement des projets de
+  digitalisation des processus industriels, intégration de nouvelles technologies (IoT,
+  IA, Cloud) dans le cadre du programme \textit{OCP Digital Transformation}.
+\end{enumerate}
+
+\subsubsection*{Rôle dans le cadre du projet VibraGuard}
+
+Dans le contexte du présent Projet de Fin d'Études, le Département IT d'OCP Safi a joué
+un rôle central à plusieurs niveaux :
+
+\begin{itemize}
+  \item \textbf{Ancrage industriel :} fourniture du contexte métier, des historiques de
+  maintenance et des contraintes techniques liées à l'infrastructure existante du site.
+  \item \textbf{Validation des besoins :} participation à la définition des exigences
+  fonctionnelles et non-fonctionnelles de la plateforme \projectname{}, notamment les
+  exigences de sécurité (authentification JWT, RBAC) et de disponibilité ($> 99{,}5\%$).
+  \item \textbf{Encadrement terrain :} mise à disposition de l'expertise des équipes
+  techniques pour la compréhension des équipements industriels (moteurs, capteurs) et
+  des processus de maintenance en vigueur à l'usine de Safi.
+  \item \textbf{Perspective de déploiement :} validation de l'adéquation de l'architecture
+  microservices Kubernetes de \projectname{} avec les infrastructures cloud et réseau du
+  Groupe OCP, en vue d'un déploiement pilote sur les moteurs critiques du site.
+\end{itemize}
+
+\vspace{0.5em}
+
+% -----------------------------------------------
+\section*{3. Problématique}
+% -----------------------------------------------
+
+\begin{infobox}[Problématique du projet]
+\textbf{Comment concevoir et déployer une plateforme de maintenance prédictive intelligente
+qui permet à l'OCP Safi de surveiller en temps réel l'état de santé de ses moteurs industriels
+et d'anticiper leurs défaillances, tout en garantissant la traçabilité et l'intégrité des
+données de maintenance via la Blockchain ?}
+\end{infobox}
+
+\subsubsection*{Situation d'insatisfaction et éléments déclencheurs}
+
+L'OCP Safi souffre actuellement de plusieurs dysfonctionnements dans sa gestion de la
+maintenance industrielle qui constituent les éléments déclencheurs de ce projet :
+
+\begin{itemize}
+  \item L'usine de Safi \textbf{ne dispose pas d'un système de surveillance en temps réel}
+  des vibrations et de la thermique de ses moteurs industriels, rendant toute maintenance
+  prédictive impossible dans l'état actuel.
+  \item Les arrêts non planifiés causés par les défaillances de moteurs \textbf{génèrent des
+  pertes de production significatives} et des coûts de maintenance corrective élevés.
+  \item Les données de maintenance sont \textbf{dispersées dans des supports hétérogènes}
+  (tableurs, papier, logiciels silos) sans traçabilité centralisée ni audit trail fiable.
+  \item L'\textbf{absence d'outils analytiques} ne permet pas d'exploiter les volumes
+  massifs de données générées par les équipements pour en extraire de la valeur prédictive.
+  \item La maintenance préventive systématique actuelle \textbf{entraîne des interventions
+  prématurées coûteuses} sur des équipements encore opérationnels.
+\end{itemize}
+
+% -----------------------------------------------
+\section*{4. Méthodologie --- ITIL}
+% -----------------------------------------------
+
+La réalisation du projet \projectname{} s'appuie sur la méthode \textbf{ITIL (Information
+Technology Infrastructure Library)}, référentiel de bonnes pratiques pour la gestion des
+services informatiques. ITIL structure notre démarche autour du cycle de vie du service :
+
+\begin{enumerate}
+  \item \textbf{Stratégie de service :} identification des besoins métier de l'OCP et
+  définition du périmètre fonctionnel de la plateforme.
+  \item \textbf{Conception de service :} spécification de l'architecture microservices,
+  des SLA (disponibilité $>$ 99,5\%, latence $<$ 2s) et des exigences de sécurité.
+  \item \textbf{Transition de service :} développement itératif, tests d'intégration (couverture
+  $>$ 70\%), packaging et déploiement Kubernetes.
+  \item \textbf{Exploitation de service :} monitoring Prometheus/Grafana, gestion des incidents
+  via alerting automatique, support aux utilisateurs.
+  \item \textbf{Amélioration continue :} réentraînement périodique des modèles ML, collecte
+  des retours utilisateurs et mise à jour des dashboard BI.
+\end{enumerate}
+
+% -----------------------------------------------
+\section*{5. Benchmarking}
+% -----------------------------------------------
+
+Avant de concevoir \projectname{}, une étude comparative (\textbf{benchmarking}) des
+solutions de maintenance prédictive disponibles sur le marché a été conduite, selon quatre
+critères : intégration IoT temps réel, capacités IA prédictive, Blockchain/traçabilité, et
+coût d'implémentation.
+
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \begin{tabularx}{\textwidth}{L{2.2cm} C{2cm} C{2cm} C{2cm} C{2.5cm} L{2cm}}
+    \toprule
+    \rowcolor{gray!30}
+    \textbf{Solution} &
+    \textbf{IoT TR} &
+    \textbf{IA Préd.} &
+    \textbf{Blockchain} &
+    \textbf{Coût} &
+    \textbf{Verdict} \\
+    \midrule
+    \rowcolor{white}       IBM Maximo      & Partiel & Moyen  & Non    & Très élevé & Écarté \\
+    \rowcolor{gray!12}Siemens MindSphere & Oui  & Moyen  & Non    & Élevé      & Écarté \\
+    \rowcolor{white}       SAP PM          & Non     & Faible & Non    & Très élevé & Écarté \\
+    \rowcolor{gray!12}Open Source Mix & Partiel & Élevé  & Partiel& Faible     & Limites intégration \\
+    \rowcolor{gray!18}   \textbf{\projectname{}} & \textbf{Oui} & \textbf{Élevé} & \textbf{Oui} & \textbf{Modéré} & \textbf{Retenu} \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Benchmarking des solutions de maintenance prédictive}
+\end{table}
+
+\textit{Légende : TR = Temps Réel, IA Préd. = IA Prédictive.}
+
+Le benchmarking confirme qu'aucune solution disponible ne couvre nativement l'ensemble des
+besoins de l'OCP Safi. \projectname{} est donc développé sur mesure, combinant des
+technologies open source éprouvées dans une architecture intégrée et cohérente.
+
+% -----------------------------------------------
+\section*{6. Traitement des Données et Fiabilité}
+% -----------------------------------------------
+
+La qualité et la fiabilité des données constituent un enjeu fondamental pour un système de
+maintenance prédictive. \projectname{} adopte une stratégie de traitement à plusieurs niveaux :
+
+\begin{itemize}
+  \item \textbf{Sources de données :} données réelles collectées par les capteurs ESP32
+  (DS18B20, ACS712, Piézo+ADS1115) déployés sur les moteurs industriels de l'OCP Safi.
+  \item \textbf{Pipeline de nettoyage robuste :} imputation des valeurs manquantes (médiane),
+  filtrage des outliers ($\pm 3\sigma$), normalisation StandardScaler.
+  \item \textbf{Split stratifié 80/20 :} pour garantir la représentativité des évaluations.
+\end{itemize}
+
+% -----------------------------------------------
+\section*{7. Problèmes Rencontrés et Solutions}
+% -----------------------------------------------
+
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{L{4cm} L{4cm} L{4cm}}
+    \toprule
+    \rowcolor{gray!30}
+    \textbf{Problème} &
+    \textbf{Impact} &
+    \textbf{Solution} \\
+    \midrule
+    \rowcolor{gray!12}
+    Problèmes de liaison MQTT - Kafka & Perte de messages et instabilité du flux & Implémentation de retries avec backoff exponentiel côté ESP32, et configuration de connecteurs Kafka robustes \\
+	\rowcolor{white}
+    Latence Kafka-Spark $>$ 2s initialement & SLA non respecté & Optimisation micro-batch (fenêtre 2s), tuning Spark \\
+    \rowcolor{gray!12}
+    Coût des transactions Ethereum mainnet & Budget dépassé & Migration vers réseau Hardhat privé + testnet \\
+    \rowcolor{white}
+    Erreurs de déploiement et configuration Hardhat & Blocage du développement Blockchain & Mise à jour des dépendances, utilisation de Hardhat plugins, et création de scripts de déploiement automatisés \\
+	\rowcolor{gray!12}
+    Complexité intégration IPFS/Spring Boot & Délai de développement & Bibliothèque IPFS HTTP API + conteneurisation Kubernetes \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Principaux problèmes rencontrés et solutions apportées}
+\end{table}
+
+% -----------------------------------------------
+\section*{8. Plan du Projet}
+% -----------------------------------------------
+
+\projectname{} est structuré selon une approche itérative et incrémentale en \textbf{4 mois}. Chaque mois correspond à un jalon livrable :
+
+\begin{enumerate}
+  \item \textbf{Mois 1} --- Analyse \& Conception : étude de l'existant, spécification des
+  besoins, conception de l'architecture microservices, mise en place de l'environnement
+  DevOps (CI/CD, Git), POC IoT+MQTT.
+  \item \textbf{Mois 2} --- Développement du c\oe{}ur : services IoT et Big Data, intégration
+  Kafka+Spark, développement des modèles de Machine Learning.
+  \item \textbf{Mois 3} --- Blockchain \& Interfaces : développement des Smart Contracts,
+  intégration IPFS, interfaces web (React) et dashboard BI.
+  \item \textbf{Mois 4} --- Tests, Déploiement \& Soutenance : tests d'intégration et de
+  charge, déploiement Kubernetes sur GCP, documentation technique, préparation de la
+  soutenance.
+\end{enumerate}
+
+% -----------------------------------------------
+\section*{8.1. Ma Contribution au Projet}
+% -----------------------------------------------
+
+Dans le cadre de ce Projet de Fin d'Études réalisé en collaboration avec l'OCP Safi,
+ma contribution couvre l'intégralité du cycle de développement logiciel, de la conception
+à la mise en production. Plus précisément, j'ai :
+
+\begin{itemize}
+  \item Analysé les besoins métier de l'OCP Safi et formalisé le cahier des charges technique.
+  \item Conçu l'architecture microservices de \projectname{} et les diagrammes UML associés
+  (cas d'utilisation, classes, séquence).
+  \item Développé le pipeline de données IoT--Big Data (MQTT, Kafka, Spark Streaming).
+  \item Entraîné et évalué le modèle de Machine Learning (Random Forest, 92.0\% de précision).
+  \item Implémenté les microservices backend (Spring Boot) et le frontend web (React).
+  \item Développé et déployé les Smart Contracts Solidity sur réseau Hardhat.
+  \item Configuré l'infrastructure DevOps (Kubernetes, GCP, CI/CD GitHub Actions).
+  \item Rédigé la documentation technique et le présent rapport.
+\end{itemize}
+
+% -----------------------------------------------
+\section*{8.2. Méthode de Travail}
+% -----------------------------------------------
+
+Le projet a été conduit selon la méthodologie \textbf{Agile}. La communication avec les encadrants s'est organisée
+comme suit :
+
+\begin{itemize}
+  \item \textbf{Réunions de suivi} avec \textbf{Pr.~AIT LAHCEN Yassine} et
+  \textbf{Mr.~BOUKHIRA Adil} : présentation de l'avancement, validation des choix
+  architecturaux, levée des points bloquants.
+  \item \textbf{Revues régulières} : démonstration des fonctionnalités livrées et ajustement du backlog Jira.
+  \item \textbf{Visites terrain} à l'OCP Safi : observations des équipements industriels,
+  collecte des données de maintenance et validation des hypothèses métier.
+\end{itemize}
+
+Cette organisation a permis de maintenir un rythme de développement soutenu, de valider
+en continu les orientations du projet et d'assurer une cohérence permanente entre les
+besoins métier de l'OCP Safi et les choix techniques de \projectname{}.
+
+% -----------------------------------------------
+\section*{9. Présentation du Projet VibraGuard}
+% -----------------------------------------------
+
+Le projet \projectname{} répond à ces problématiques en proposant une plateforme décisionnelle
+intelligente, centralisée et intégrée. Il s'articule autour de cinq piliers technologiques :
+
+\begin{enumerate}
+  \item L'\textbf{acquisition IoT} en temps réel des données vibratoires, thermiques et
+  électriques des moteurs via le protocole \tech{MQTT}.
+  \item Le \textbf{traitement Big Data} des flux de données grâce à Apache Kafka et Spark Streaming.
+  \item L'\textbf{intelligence artificielle} pour la détection automatique d'anomalies
+  (Random Forest) et la classification des défauts moteurs.
+  \item La \textbf{Blockchain} pour garantir la traçabilité et la
+  certification des événements de maintenance, ainsi que \textbf{l'IPFS} pour garantir l'immutabilité.
+  \item Des \textbf{interfaces utilisateurs} modernes (application web React).
+\end{enumerate}
+
+% -----------------------------------------------
+\section*{10. Organisation du Rapport}
+% -----------------------------------------------
+
+Le présent rapport est structuré en \textbf{cinq chapitres} :
+
+\begin{itemize}
+  \item \textbf{Chapitre I --- Contexte et État de l'Art :} présente l'évolution de la
+  maintenance industrielle, les technologies de l'Industrie 4.0 et une analyse comparative
+  des solutions existantes.
+  \item \textbf{Chapitre II --- Analyse et Spécification des Besoins :} formalise les
+  exigences fonctionnelles et non fonctionnelles, les acteurs et les cas d'utilisation.
+  \item \textbf{Chapitre III --- Architecture et Choix Technologiques :} décrit
+  l'architecture microservices, le flux de données et la stack technique retenue.
+  \item \textbf{Chapitre IV --- Implémentation du Pipeline de Données et de l'IA :}
+  présente le pipeline de prétraitement et les résultats du modèle Random Forest.
+  \item \textbf{Chapitre V --- Développement du Backend, Frontend et Blockchain :}
+  détaille les composants applicatifs réalisés et les résultats de déploiement.
+\end{itemize}
+
+% ============================
+\chapter{Contexte et État de l'Art}
+% ============================
+
+Ce chapitre présente l'évolution de la maintenance industrielle, les technologies de l'Industrie 4.0 qui constituent le socle de \projectname{}, et une analyse comparative des solutions existantes.
+
+\section{L'Industrie 4.0 et la Transformation Numérique Industrielle}
+
+L'Industrie 4.0, ou quatrième révolution industrielle, désigne la transformation profonde des
+processus de production par l'intégration des technologies numériques \cite{schwab2016}.
+Initiée en Allemagne dès 2011 à travers le programme gouvernemental \textit{Industrie 4.0},
+cette révolution repose sur plusieurs piliers fondamentaux : l'Internet des Objets Industriel
+(IIoT), les systèmes cyber-physiques (CPS), l'intelligence artificielle, le Big Data, le Cloud
+Computing et la robotique avancée \cite{hermann2016}.
+
+Dans ce contexte, les usines intelligentes (\textit{Smart Factories}) se caractérisent par leur
+capacité à collecter, analyser et exploiter en temps réel des volumes massifs de données provenant
+de leurs équipements pour optimiser la production, anticiper les défaillances et adapter
+dynamiquement les processus industriels \cite{hermann2016, schwab2016}.
+
+\section{L'Évolution de la Maintenance Industrielle}
+
+La maintenance industrielle a connu une évolution progressive, passant de pratiques réactives à
+des approches de plus en plus prédictives \cite{mobley2002}. On distingue classiquement quatre
+générations, résumées dans le tableau ci-après :
+
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{C{1.5cm} L{3cm} L{4cm} L{4.5cm}}
+    \toprule
+    \rowcolor{gray!30}
+    \textbf{Gén.} &
+    \textbf{Stratégie} &
+    \textbf{Caractéristiques} &
+    \textbf{Limites} \\
+    \midrule
+    \rowcolor{white}
+    1\textsuperscript{ère} & Corrective (Run-to-failure) & Intervention après panne & Arrêts imprévus, coûts élevés \\
+    \rowcolor{gray!12}
+    2\textsuperscript{ème} & Préventive systématique & Maintenance à intervalles fixes & Remplacement prématuré de pièces \\
+    \rowcolor{white}
+    3\textsuperscript{ème} & Préventive conditionnelle & Basée sur l'état réel mesuré & Requiert des seuils prédéfinis \\
+    \rowcolor{gray!12}
+    4\textsuperscript{ème} & \textbf{Prédictive (PdM)} & \textbf{Prédiction par IA sur données IoT} & \textbf{Complexité technique élevée} \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Évolution des stratégies de maintenance industrielle}
+\end{table}
+
+La maintenance prédictive (PdM) représente l'état de l'art en matière de gestion des actifs
+industriels \cite{benhanifia2025}. Selon Mobley \cite{mobley2002} et le U.S. Department of Energy \cite{doe2010}, elle permet de réduire les
+coûts de maintenance de 25 à 30\% et les arrêts non planifiés de 70 à 75\% par rapport à la
+maintenance corrective, en déclenchant les interventions uniquement lorsque l'état réel
+de l'équipement le justifie.
+
+\section{L'Analyse Vibratoire comme Indicateur de Santé}
+
+L'analyse vibratoire est l'une des techniques les plus efficaces pour la surveillance des
+machines tournantes \cite{randall2011}. Les vibrations d'un moteur sont directement liées
+à son état mécanique et peuvent révéler de nombreux types de défauts :
+
+\begin{itemize}
+  \item \textbf{Déséquilibre de masse :} augmentation de la composante vibratoire à la fréquence
+  de rotation (1X) \cite{randall2011}.
+  \item \textbf{Désalignement d'arbre :} présence d'harmoniques à 2X et 3X de la fréquence de rotation \cite{dewell1984}.
+  \item \textbf{Défauts de roulements :} fréquences caractéristiques des bagues interne et externe
+  (BPFI, BPFO), calculables à partir des paramètres géométriques du roulement \cite{randallandantoni2011}.
+  \item \textbf{Surchauffe et surcharge électrique :} corrélation entre signaux de température,
+  de courant et d'état mécanique, permettant une détection multi-physique \cite{lee2014}.
+\end{itemize}
+
+Randall \cite{randall2011} souligne que la combinaison de plusieurs indicateurs spectraux
+(RMS, kurtosis, facteur de crête) améliore significativement la précision de détection par
+rapport à l'utilisation d'un indicateur unique.
+
+\section{L'IoT et le Big Data dans l'Industrie}
+
+Les capteurs IoT modernes peuvent échantillonner à des fréquences élevées (plusieurs kHz),
+générant des flux de données massifs difficiles à traiter avec des architectures traditionnelles.
+Le protocole MQTT (\textit{Message Queuing Telemetry Transport}), standardisé par l'\textbf{OASIS}
+(Organization for the Advancement of Structured Information Standards) \cite{mqtt}, s'est imposé
+comme référence pour la communication légère entre capteurs embarqués et serveurs, grâce à son
+architecture publish/subscribe à faible empreinte mémoire. Deux solutions s'imposent comme
+standards industriels pour la gestion de ces flux :
+
+\begin{itemize}
+  \item \textbf{Apache Kafka \cite{kreps2011} :} plateforme de messagerie distribuée à haut débit,
+  capable de traiter des millions de messages par seconde avec une latence inférieure à la
+  milliseconde, conçue par LinkedIn et cédée à l'Apache Software Foundation en 2011.
+  \item \textbf{Apache Spark Streaming \cite{spark} :} moteur de traitement distribué permettant
+  l'analyse de flux de données en micro-batchs, avec intégration native des bibliothèques ML
+  (MLlib) et compatibilité complète avec l'écosystème Hadoop/HDFS.
+\end{itemize}
+
+\section{L'Intelligence Artificielle pour la Détection d'Anomalies}
+
+\subsection{Algorithmes Supervisés — Random Forest}
+
+Introduit par Breiman \cite{breiman2001}, le Random Forest est un algorithme d'ensemble
+qui construit un grand nombre d'arbres de décision indépendants et agrège leurs prédictions
+par vote majoritaire. Il est particulièrement adapté à la détection de défauts industriels
+car :
+
+\begin{itemize}
+    \item Il est robuste au surapprentissage grâce à l'agrégation de nombreux arbres de décision indépendants.
+    \item Il gère efficacement les données multivariées complexes ainsi que les valeurs manquantes \cite{breiman2001, sklearn}.
+    \item Il fournit une mesure d'importance des variables (feature importance), facilitant l'interprétabilité des décisions.
+    \item Il présente de bonnes performances sur des ensembles de données de taille modérée, sans nécessiter de normalisation préalable des données.
+\end{itemize}
+
+\section{La Blockchain dans l'Industrie}
+
+La technologie Blockchain, introduite conceptuellement par Nakamoto \cite{nakamoto2008}
+et étendue aux Smart Contracts par Buterin \cite{buterin2014}, offre des propriétés uniques
+dans un contexte industriel : immutabilité, transparence, traçabilité et décentralisation.
+Dans \projectname{}, la Blockchain permet de :
+
+\begin{itemize}
+  \item Créer un registre immuable et infalsifiable de tous les événements de maintenance,
+  conformément aux exigences de la norme ISO 55000 \cite{iso55000} et ISO 13374 \cite{iso13374}.
+  \item Automatiser la validation des interventions via des Smart Contracts Solidity déployés
+  sur un réseau Hardhat \cite{hardhat}.
+  \item Certifier l'intégrité des rapports de maintenance via IPFS \cite{ipfs}, dont le hash
+  CID est ancré on-chain de façon infalsifiable.
+  \item Renforcer la confiance entre les acteurs de la maintenance (techniciens, prestataires,
+  assureurs) grâce à l'auditabilité publique des enregistrements.
+\end{itemize}
+
+\subsubsection*{Pourquoi la Blockchain et non une solution classique ?}
+
+Une base de données classique (Oracle DB, MongoDB) permettrait
+certes de stocker l'historique des interventions, mais elle reste sous le contrôle
+exclusif de l'administrateur système : un enregistrement peut techniquement être
+modifié ou supprimé a posteriori, sans laisser de trace vérifiable de manière
+indépendante. Dans un contexte industriel sensible comme celui de l'OCP, où les
+rapports de maintenance peuvent être consultés par des auditeurs internes, des
+assureurs ou des autorités de contrôle, cette absence de garantie d'intégrité
+constitue une faiblesse.
+
+La Blockchain apporte ici une valeur ajoutée spécifique sur quatre dimensions :
+
+\begin{itemize}
+  \item \textbf{Immutabilité :} une fois inscrit, un enregistrement (hash d'une
+  intervention) ne peut plus être altéré sans que cette
+  altération soit immédiatement détectable, contrairement à une simple ligne de
+  base de données.
+  \item \textbf{Traçabilité horodatée :} chaque transaction est associée à un
+  numéro de bloc et un horodatage on-chain, constituant un journal d'audit
+  infalsifiable de l'historique de maintenance d'un moteur.
+  \item \textbf{Auditabilité indépendante :} la vérification d'intégrité
+  (\texttt{verifyIntegrity()}) peut être effectuée par un tiers sans dépendre de
+  la base de données applicative ni faire confiance à l'administrateur système.
+  \item \textbf{Confiance distribuée :} dans un contexte où plusieurs parties
+  prenantes (techniciens, prestataires externes, assureurs, auditeurs)
+  interagissent autour des mêmes données de maintenance, la Blockchain élimine le
+  besoin de faire confiance à une autorité centrale unique.
+\end{itemize}
+
+% -----------------------------------------------
+\section{L'IPFS — InterPlanetary File System}
+% -----------------------------------------------
+
+\subsection{Définition et Principes Fondamentaux}
+
+L'\textbf{InterPlanetary File System (IPFS)} est un protocole de communication et un système
+de fichiers distribué pair-à-pair (\textit{peer-to-peer}), conçu par Protocol Labs et publié
+en 2015 \cite{ipfs}. Contrairement au Web traditionnel fondé sur l'adressage par localisation
+(URL pointant vers un serveur précis), IPFS repose sur le principe d'\textbf{adressage par
+contenu} (\textit{content-addressed storage}) : chaque fichier est identifié par son empreinte
+cryptographique unique, le \textbf{CID} (\textit{Content Identifier}), calculé via l'algorithme
+SHA2-256.
+
+\subsection{Fonctionnement d'IPFS}
+
+Le fonctionnement d'IPFS s'articule autour de quatre mécanismes clés :
+
+\begin{enumerate}
+  \item \textbf{Découpage en blocs (\textit{chunking}) :} tout fichier ajouté au réseau IPFS
+  est découpé en blocs de données de taille fixe. Chaque bloc reçoit un identifiant
+  cryptographique unique (CID), garantissant l'intégrité du contenu.
+  \item \textbf{Arbre de Merkle (\textit{Merkle DAG}) :} les blocs sont organisés en un graphe
+  orienté acyclique (DAG) de type Merkle, permettant de retrouver, de vérifier et de
+  déduplicer les données de façon efficace et sécurisée.
+  \item \textbf{Table de hachage distribuée (\textit{DHT}) :} un annuaire distribué entre tous
+  les nœuds du réseau permet de localiser quels pairs détiennent quels blocs, sans serveur
+  central.
+  \item \textbf{Échange de blocs (\textit{Bitswap}) :} les nœuds échangent les blocs de données
+  selon un protocole d'échange pair-à-pair, assurant la disponibilité des fichiers même en
+  l'absence du nœud d'origine.
+\end{enumerate}
+
+\subsection{Propriétés et Avantages d'IPFS dans VibraGuard}
+
+L'intégration d'IPFS dans \projectname{} repose sur ses propriétés fondamentales, particulièrement
+adaptées aux exigences de traçabilité et d'intégrité des données de maintenance industrielle :
+
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{L{3.5cm} L{8cm}}
+    \toprule
+    \rowcolor{gray!30}
+    \textbf{Propriété IPFS} & \textbf{Apport dans \projectname{}} \\
+    \midrule
+    \rowcolor{white}
+    Adressage par contenu & Toute modification d'un rapport génère un CID différent,
+    rendant toute falsification immédiatement détectable. \\
+    \rowcolor{gray!12}
+    Décentralisation & Les rapports d'intervention ne dépendent pas d'un serveur central
+    susceptible de tomber en panne ou d'être compromis. \\
+    \rowcolor{white}
+    Immutabilité & Un fichier stocké sur IPFS ne peut être modifié rétroactivement :
+    son CID est calculé à partir de son contenu exact. \\
+    \rowcolor{gray!12}
+    Déduplication & Les blocs identiques ne sont stockés qu'une seule fois sur le réseau,
+    optimisant l'espace de stockage pour les rapports similaires. \\
+    \rowcolor{white}
+    Compatibilité Blockchain & Le CID peut être ancré directement dans un
+    Smart Contract Ethereum, combinant stockage décentralisé et certification immuable. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Propriétés d'IPFS et leur apport dans \projectname{}}
+\end{table}
+
+\subsection{Intégration IPFS dans VibraGuard}
+
+Dans \projectname{}, IPFS fonctionne en selon le schéma suivant :
+
+\begin{enumerate}
+  \item Lorsque l'utilisateur génère un rapport PDF.
+  \item Le rapport est uploadé vers le nœud IPFS via l'API HTTP \cite{ipfs}.
+  \item IPFS retourne le \textbf{CID} unique du fichier (ex. : \texttt{QmXoypizjW...}).
+  \item Pour vérifier l'intégrité d'un rapport, il suffit de recalculer son CID et de le
+  comparer à celui enregistré : toute divergence trahit une falsification.
+\end{enumerate}
+
+Cette architecture garantit que \textbf{100\% des rapports} sont certifiés,
+traçables et infalsifiables, en conformité avec les exigences des normes ISO 55000
+\cite{iso55000} et ISO 13374 \cite{iso13374}.
+
+\section{Étude de l'Existant}
+
+Avant de concevoir \projectname{}, une analyse de l'environnement existant à l'OCP Safi a été
+conduite pour identifier les pratiques actuelles de maintenance et leurs lacunes.
+
+\subsection{État Actuel de la Maintenance à l'OCP Safi}
+
+L'OCP Safi gère aujourd'hui la maintenance de ses moteurs industriels selon une approche
+hybride :
+
+\begin{itemize}
+  \item \textbf{Fiches papier et tableurs Excel :} les données de maintenance (dates d'intervention,
+  pièces remplacées, durées d'arrêt) sont saisies manuellement, engendrant des erreurs et une
+  traçabilité insuffisante.
+  \item \textbf{GMAO partielle :} un outil de gestion de maintenance assistée par ordinateur
+  existe mais ne couvre pas la supervision temps réel ni l'analyse prédictive.
+  \item \textbf{Absence de capteurs vibratoires permanents :} les mesures vibratoires sont
+  effectuées ponctuellement par des techniciens avec des analyseurs portatifs, sans historisation
+  automatique.
+  \item \textbf{Maintenance préventive calendaire :} les interventions sont programmées à des
+  intervalles fixes (ex. toutes les 3 000 heures de fonctionnement), indépendamment de l'état
+  réel des équipements.
+\end{itemize}
+
+\subsection{Étude de Cas — Défaillances Typiques des Moteurs à OCP Safi}
+
+L'analyse des historiques de maintenance disponibles révèle que les défaillances les plus
+fréquentes sur le parc de moteurs industriels de l'OCP Safi sont :
+
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{L{4.5cm} L{4cm} L{5.5cm}}
+    \toprule
+    \rowcolor{gray!30}
+    \textbf{Type de Défaillance} & 
+    \textbf{Cause Principale} & 
+    \textbf{Impact} \\
+    \midrule
+    \rowcolor{white} 
+    Défaut de roulement & Lubrification insuffisante & Arrêt imprévu 4--12h \\
+    \rowcolor{gray!12}
+    Déséquilibre de masse & Usure / dépôt de matière & Vibrations excessives \\
+    \rowcolor{white} 
+    Surchauffe moteur & Surcharge / ventilation & Grillage bobinage \\
+    \rowcolor{gray!12}
+    Désalignement d'arbre & Mauvais alignement install. & Usure prématurée \\
+    \rowcolor{white} 
+    Surcharge électrique & Variations tension secteur & Court-circuit \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Typologies de défaillances sur le parc moteurs OCP Safi}
+\end{table}
+
+Ces données justifient la pertinence des cinq classes de défauts modélisées dans \projectname{},
+en cohérence avec la taxonomie des défaillances de machines tournantes proposée par Jardine
+et al. \cite{jardine2006}.
+
+\section{Étude Comparative des Solutions Existantes}
+
+\subsection{Critères de Comparaison}
+
+Le benchmarking des solutions a été conduit selon cinq critères pondérés reflétant les besoins
+spécifiques de l'OCP Safi. La méthodologie de sélection s'appuie sur les recommandations de
+gestion des actifs industriels de la norme ISO 55000 \cite{iso55000} :
+
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \begin{tabularx}{\textwidth}{L{2.5cm} C{1.5cm} C{1.8cm} C{1.5cm} C{1.5cm} C{1.5cm} C{1.8cm}}
+    \toprule
+    \rowcolor{gray!30}
+    \textbf{Critère} &
+    \textbf{Poids} &
+    \textbf{IBM Maximo} &
+    \textbf{Siemens} &
+    \textbf{SAP PM} &
+    \textbf{Open Source} &
+    \textbf{\projectname{}} \\
+    \midrule
+    \rowcolor{white}       IoT Temps Réel   & 25\% & Partiel & Oui  & Non    & Partiel & \textbf{Oui} \\
+    \rowcolor{gray!12}IA Prédictive    & 25\% & Moyen   & Moyen& Faible & Élevé   & \textbf{Élevé} \\
+    \rowcolor{white}       Blockchain       & 20\% & Non     & Non  & Non    & Partiel & \textbf{Oui} \\
+    \rowcolor{gray!12}Coût             & 15\% & Très élevé & Élevé & Très élevé & Faible & \textbf{Modéré} \\
+    \rowcolor{white}       Scalabilité      & 15\% & Moyen   & Élevé& Moyen  & Faible  & \textbf{Élevé} \\
+    \midrule
+    \rowcolor{gray!18}   \textbf{Score global} & \textbf{100\%} & 52/100 & 61/100 & 38/100 & 55/100 & \textbf{89/100} \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Comparaison détaillée des solutions de maintenance prédictive}
+\end{table}
+
+\subsection{Étude de Choix Technologique}
+
+Sur la base de ce benchmarking et des contraintes de l'OCP Safi, le choix de développer
+\projectname{} en solution sur mesure s'impose. Les justifications clés sont :
+
+\begin{itemize}
+  \item \textbf{IBM Maximo et SAP PM :} solutions propriétaires très coûteuses en licences et
+  maintenance, sans intégration native Blockchain ni capacités IA prédictive avancées.
+  Le coût d'implémentation dépasse les contraintes budgétaires du projet.
+  \item \textbf{Siemens MindSphere :} excellente couverture IoT mais fort \textit{vendor lock-in}
+  sur l'écosystème Siemens. La couche IA prédictive reste limitée aux outils Siemens et n'intègre
+  pas de Blockchain.
+  \item \textbf{Solutions Open Source agrégées :} flexibles mais nécessitent une intégration
+  custom complexe sans garantie de cohérence architecturale ni de support enterprise.
+  \item \textbf{\projectname{} sur mesure :} permet d'intégrer nativement IoT (MQTT \cite{mqtt}/Kafka
+  \cite{kafka}), IA (Random Forest/Scikit-learn \cite{breiman2001, sklearn}), Blockchain
+  (Ethereum \cite{ethereum}/Hardhat \cite{hardhat}) et IPFS \cite{ipfs} dans une architecture
+  microservices \cite{springboot} cohérente, à un coût de développement maîtrisé dans le cadre du PFE.
+\end{itemize}
+
+L'analyse confirme que \projectname{} se positionne précisément dans le créneau non couvert
+par les solutions existantes.
+
+\section{Conclusion}
+
+Ce chapitre a présenté le cadre théorique et technologique du projet \projectname{}. Nous
+avons retracé l'évolution de la maintenance industrielle vers les approches prédictives, analysé
+les technologies clés de l'Industrie 4.0 (IoT, Big Data, IA, Blockchain, IPFS) et étudié les
+solutions existantes sur le marché. Le benchmarking réalisé confirme que \projectname{} répond
+à un besoin non couvert par les solutions commerciales, en combinant de façon native les
+capacités IoT temps réel, l'intelligence artificielle et la traçabilité Blockchain dans une
+architecture microservices adaptée au contexte de l'OCP Safi. Le chapitre suivant s'attache
+à la spécification formelle des besoins et à la conception architecturale de la plateforme.
+
+% ============================
+\chapter{Analyse et Spécification des Besoins}
+% ============================
+
+Ce chapitre présente les objectifs du projet, la méthodologie Agile adoptée, l'identification des acteurs, les besoins fonctionnels et non-fonctionnels, les diagrammes UML ainsi que les technologies retenues pour la réalisation de \projectname{}.
+
+\section{Objectifs du Projet}
+
+Le projet \projectname{} poursuit les objectifs suivants :
+
+\begin{enumerate}
+  \item \textbf{Surveillance temps réel :} développer une plateforme de monitoring continu
+  de l'état de santé des moteurs industriels de l'OCP Safi, basée sur l'analyse vibratoire, thermique et électrique.
+  \item \textbf{Détection automatique d'anomalies :} mettre en place un système de
+  classification automatique des défauts mécaniques avec une précision supérieure à 85\%
+  (dépassé : 92.0\% atteint).
+  \item \textbf{Gestion des interventions :} automatiser la création, l'assignation et le
+  suivi des Ordres de Travail (OT) avec workflow intégré et notifications push.
+  \item \textbf{Traçabilité immuable :} garantir via Blockchain la certification et
+  l'immutabilité de 100\% des événements critiques de maintenance.
+  \item \textbf{Tableau de bord décisionnel :} fournir aux responsables maintenance des KPI
+  en temps réel (MTBF, MTTR, taux de disponibilité) via une interface web dédiée.
+  \item \textbf{Architecture scalable :} concevoir une plateforme microservices déployée sur
+  Kubernetes capable d'intégrer de nouveaux capteurs sans modification du code.
+\end{enumerate}
+
+\section{Méthodologie Adoptée — Agile avec Jira}
+
+\projectname{} est développé selon la \textbf{méthodologie Agile}, gérée
+via \textbf{Jira Software}. Cette approche itérative et incrémentale permet de livrer de la
+valeur et d'adapter le périmètre aux retours des parties prenantes.
+
+\subsection{Tableau de Planification — Diagramme de Gantt}
+
+Le diagramme de Gantt suivant illustre la répartition des tâches sur les 4 mois du projet,
+structurées en 4 phases itératives avec leurs dépendances :
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{Online_Gantt_20260208.png}
+  \caption{Diagramme de Gantt du projet VibraGuard (Fév.--Juin 2026)}
+\end{figure}
+
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{L{1.5cm} L{2.2cm} L{5cm} L{3.5cm}}
+    \toprule
+    \rowcolor{gray!30}
+    \textbf{Phase} &
+    \textbf{Période} &
+    \textbf{Activités Principales} &
+    \textbf{Livrables} \\
+    \midrule
+    \rowcolor{white}
+    Mois 1 & Fév. 2026 & Étude existant, conception archi, setup CI/CD, POC IoT+MQTT & Cahier des charges, schéma archi \\
+    \rowcolor{gray!12}
+    Mois 2 & Mar. 2026 & Services IoT+Big Data, Kafka+Spark, modèles ML & Pipeline fonctionnel, modèle IA \\
+    \rowcolor{white}
+    Mois 3 & Avr. 2026 & Smart contracts, IPFS, interfaces React, dashboard BI & Application web, blockchain \\
+    \rowcolor{gray!12}
+    Mois 4 & Mai-Juin 2026 & Tests, déploiement Kubernetes, documentation, soutenance & Rapport PFE, vidéo démo \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Synthèse du planning par phase}
+\end{table}
+
+\section{Identification et Définition des Acteurs}
+
+\subsection{Définition des Acteurs Principaux}
+
+Un \textbf{acteur} est toute entité (humaine ou système) qui interagit directement avec la
+plateforme \projectname{}. On distingue trois acteurs humains et deux acteurs systèmes :
+
+\begin{itemize}
+  \item \textbf{Technicien de Maintenance :} opérateur terrain chargé d'exécuter les ordres de
+  travail générés par le système. Il consulte les alertes via l'interface web,
+  intervient sur les équipements défaillants et renseigne les rapports d'intervention.
+
+  \item \textbf{Responsable Maintenance :} superviseur qui pilote les KPI globaux du parc de
+  machines via le dashboard web. Il valide les rapports, planifie les interventions en fonction
+  des prédictions du système et analyse les tendances de dégradation.
+
+  \item \textbf{Administrateur Système :} gestionnaire de la plateforme informatique. Il gère
+  les comptes utilisateurs (RBAC), configure les capteurs IoT, surveille l'infrastructure et
+  administre les Smart Contracts.
+
+  \item \textbf{Capteur IoT (acteur système) :} entité autonome qui publie en continu les
+  données vibratoires, thermiques et électriques vers le broker MQTT.
+
+  \item \textbf{Blockchain / Smart Contract (acteur système) :} entité autonome qui certifie
+  automatiquement les événements critiques et répond aux requêtes de vérification d'intégrité.
+\end{itemize}
+
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{L{3.5cm} C{2.5cm} C{2.5cm} C{2.5cm}}
+    \toprule
+    \rowcolor{gray!30}
+    \textbf{Acteur} &
+    \textbf{IoT} &
+    \textbf{OT} &
+    \textbf{Blockchain} \\
+    \midrule
+    \rowcolor{white}       Technicien        & Lecture  & Écriture & Lecture \\
+    \rowcolor{gray!12}Resp. Maintenance & Lecture      & Écriture  & Lecture \\
+    \rowcolor{white}       Administrateur    & Lecture  & Écriture & Lecture \\
+    \rowcolor{gray!12}Capteur IoT       & Écriture & ---      & ---     \\
+    \rowcolor{white}       Smart Contract    & ---      & Lecture  & Écriture\\
+    \bottomrule
+  \end{tabularx}
+  \caption{Matrice acteurs / modules de VibraGuard}
+\end{table}
+
+\section{Diagrammes UML}
+
+\subsection{Diagramme de Cas d'Utilisation}
+
+Le diagramme de cas d'utilisation ci-dessous présente l'ensemble des fonctionnalités de
+\projectname{} regroupées en six modules, avec les relations entre acteurs et cas d'usage
+(\textit{include} et \textit{extend}) :
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.55\textwidth]{usecase2.png}
+  \caption{Diagramme de Cas d'Utilisation --- Plateforme VibraGuard}
+\end{figure}
+
+Le diagramme couvre des cas d'utilisation répartis dans six modules fonctionnels : Module IoT
+(UC01--UC02), Module Analyse (UC03--UC04), Module Alertes (UC05--UC06), Module Maintenance
+(UC07--UC09), Module Traçabilité (UC10--UC12) et Module Administration (UC15--UC16).
+
+\subsection{Diagramme de Classes}
+
+Le diagramme de classes modélise les entités métier de la plateforme, leurs attributs, méthodes
+et relations :
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{classes2.png}
+  \caption{Diagramme de Classes --- Plateforme VibraGuard}
+\end{figure}
+
+Les entités principales sont : \textbf{Moteur} (cœur du domaine), \textbf{DonneeVibration}
+(données capteurs temps réel), \textbf{Anomalie} (résultat de la détection IA),
+\textbf{OrdreTravail} (gestion des interventions), \textbf{BlockchainRecord} (certification
+immuable), \textbf{DocumentIPFS} (stockage décentralisé), \textbf{Utilisateur} (gestion des
+accès RBAC) et \textbf{Alerte} (notification temps réel).
+
+\section{Besoins Fonctionnels}
+
+\subsection{Module IoT et Acquisition de Données}
+\begin{itemize}
+  \item \textbf{BF-01 :} Le système doit recevoir en temps réel les données des capteurs IoT
+  (vibration, température, courant, vitesse) via le protocole MQTT.
+  \item \textbf{BF-02 :} Le système doit valider et normaliser les données entrantes avant traitement.
+  \item \textbf{BF-03 :} Le système doit gérer les défaillances de connexion avec des mécanismes
+  de \textit{retry} automatique.
+  \item \textbf{BF-04 :} Le système doit supporter la collecte simultanée de données de 10+ capteurs.
+\end{itemize}
+
+\subsection{Module Traitement et Détection d'Anomalies}
+\begin{itemize}
+  \item \textbf{BF-05 :} Le système doit analyser les flux de données en temps réel via Spark Streaming.
+  \item \textbf{BF-06 :} Le système doit classifier l'état du moteur (Normal, Déséquilibre,
+  Désalignement, Défaut de roulement, Surcharge, Surchauffe) avec une précision $> 85\%$.
+  \item \textbf{BF-07 :} Le système doit générer des alertes automatiques dès détection d'anomalie.
+\end{itemize}
+
+\subsection{Module Tableau de Bord et Visualisation}
+\begin{itemize}
+  \item \textbf{BF-09 :} Le système doit afficher en temps réel les KPI globaux (taux de
+  disponibilité, MTBF, MTTR, nombre d'alertes actives).
+  \item \textbf{BF-10 :} Le système doit présenter l'état de santé de chaque moteur via des
+  indicateurs visuels intuitifs (jauges circulaires, codes couleur).
+  \item \textbf{BF-11 :} Le système doit intégrer des tableaux de bord analytiques.
+\end{itemize}
+
+\subsection{Module Gestion des Ordres de Travail}
+\begin{itemize}
+  \item \textbf{BF-13 :} Le système doit permettre la création, l'assignation et le suivi des Ordres de Travail (OT).
+  \item \textbf{BF-14 :} Le système doit notifier automatiquement les techniciens assignés.
+  \item \textbf{BF-15 :} Le système doit générer des rapports d'intervention à la clôture de chaque OT.
+\end{itemize}
+
+\subsection{Module Blockchain et Traçabilité}
+\begin{itemize}
+  \item \textbf{BF-16 :} Le système doit enregistrer de façon immuable sur la blockchain le
+  hash cryptographique de chaque intervention.
+  \item \textbf{BF-17 :} Le système doit automatiser la validation via des Smart Contracts.
+  \item \textbf{BF-19 :} Le système doit stocker les rapports volumineux sur IPFS et enregistrer
+  leur CID sur la blockchain.
+\end{itemize}
+
+\section{Besoins Non-Fonctionnels}
+
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{L{2.5cm} L{4.5cm} C{2.5cm}}
+    \toprule
+    \rowcolor{gray!30}
+    \textbf{Catégorie} &
+    \textbf{Exigence} &
+    \textbf{Valeur Cible} \\
+    \midrule
+    \rowcolor{white}
+    Performance & Latence traitement IoT & $< 2$\,s \\
+    \rowcolor{gray!12}
+    Performance & Débit de traitement & $> 10\,000$\,msg/s \\
+    \rowcolor{white}
+    Performance & Temps de réponse API & $< 200$\,ms (P95) \\
+    \rowcolor{gray!12}
+    Disponibilité & Taux de disponibilité & $> 99{,}5\%$ \\
+    \rowcolor{white}
+    Sécurité & Authentification & JWT \\
+    \rowcolor{gray!12}
+    Conformité & Standard sécurité & ISO 27001 \\
+    \rowcolor{gray!12}
+    Précision IA & Détection d'anomalies & $> 85\%$ (atteint : $92{,}0\%$) \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Exigences non-fonctionnelles du système}
+\end{table}
+
+\section{Technologies Adoptées}
+
+Le choix des technologies a été guidé par quatre critères : maturité de l'écosystème,
+performance, coût (open source prioritaire) et adéquation aux besoins spécifiques de
+\projectname{}.
+
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{L{2.2cm} L{3.8cm} L{5.5cm}}
+    \toprule
+    \rowcolor{gray!30}
+    \textbf{Couche} &
+    \textbf{Technologie} &
+    \textbf{Justification du Choix} \\
+    \midrule
+    \rowcolor{white}
+    Backend & Java 17 + Spring Boot 3 & Standard entreprise, écosystème Spring Cloud mature,
+    microservices natifs \\
+    \rowcolor{gray!12}
+    Frontend & React 18 + TypeScript + Tailwind & Réactivité composants, typage statique,
+    design system cohérent \\
+    \rowcolor{white}
+    IoT & MQTT + Eclipse Mosquitto & Protocole léger optimisé IoT, QoS configurable \\
+    \rowcolor{gray!12}
+    Messagerie & Apache Kafka & Haut débit ($>10M$ msg/s), persistance, rejeu possible \\
+    \rowcolor{white}
+    Big Data & Apache Spark & Moteur distribué, intégration MLlib native \\
+    \rowcolor{gray!12}
+    ML & Scikit-learn + Python 3.10 & Bibliothèques matures, Random Forest performant \\
+    \rowcolor{white}
+    Blockchain & Ethereum + Solidity + Hardhat & Smart contracts Turing-complets, réseau privé \\
+    \rowcolor{gray!12}
+    Stockage & IPFS + Oracle DB + MongoDB & Rapports décentralisés + BD relationnelle + BD vibrations \\
+    \rowcolor{white}
+    DevOps & Kubernetes + GitHub Actions & Orchestration conteneurs, auto-scaling, CI/CD \\
+    \rowcolor{gray!12}
+    Monitoring & Prometheus & Observabilité complète, alerting proactif \\
+    \rowcolor{white}
+    Gestion projet & Jira Software & Agile, burndown, Kanban intégrés \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Justification des choix technologiques}
+\end{table}
+
+\section{Conclusion}
+
+Ce chapitre a défini de manière rigoureuse les besoins fonctionnels et non fonctionnels de
+\projectname{}, en s'appuyant sur une identification précise des acteurs et une modélisation
+UML complète. Les exigences sont formalisées en termes mesurables (précision IA $>$ 85\%,
+latence $<$ 2 s, disponibilité $>$ 99,5\%) permettant une validation objective en fin de
+projet. Les technologies retenues ont été justifiées sur des critères objectifs de maturité,
+performance et adéquation au contexte industriel. Le chapitre suivant détaille l'architecture
+technique mise en œuvre pour répondre à ces exigences.
+
+% ============================
+\chapter{Architecture et Choix Technologiques}
+% ============================
+
+Ce chapitre décrit l'architecture microservices de \projectname{}, le flux de données \textit{end-to-end}, l'infrastructure cloud GCP et la stack technique retenue.
+
+\section{Architecture Microservices}
+
+L'architecture de \projectname{} se décompose en \textbf{microservices indépendants},
+chacun responsable d'un domaine fonctionnel précis, selon les principes de découplage
+et de responsabilité unique préconisés dans le développement d'applications cloud-natives
+\cite{springboot, kubernetes} :
+
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{L{3.5cm} L{4.5cm} L{4.5cm}}
+    \toprule
+    \rowcolor{gray!30}
+    \textbf{Composant / Service} &
+    \textbf{Responsabilités} &
+    \textbf{Technologies Clés} \\
+    \midrule
+    \rowcolor{white}
+    Passerelle IoT (Bridge) & Réception MQTT et publication vers Kafka & Python, Mosquitto, Kafka \\
+    \rowcolor{gray!12}
+    Pipeline Streaming \& IA & Consommation Kafka, Spark Streaming, détection d'anomalies (Random Forest) & Python, PySpark, Scikit-learn \\
+    \rowcolor{white}
+    Backend API (Core) & API REST, gestion des moteurs, persistance des données, Gateway & Java, Spring Boot, Oracle DB, MongoDB \\
+    \rowcolor{gray!12}
+    Blockchain & Smart contracts, certification d'interventions, audit trail & Solidity, Hardhat, Ethers.js \\
+    \rowcolor{white}
+    IPFS & Stockage décentralisé des rapports d'intervention & IPFS Node (Kubo) \\
+    \rowcolor{gray!12}
+    Frontend (Dashboards) & Interface utilisateur, visualisation temps réel, KPI & React, TypeScript, Vite, Tailwind CSS \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Microservices et Composants de la plateforme VibraGuard}
+\end{table}
+
+\subsection{Vue d'Ensemble de l'Architecture}
+
+La figure suivante présente le schéma global de l'architecture pipeline de \projectname{},
+illustrant les cinq couches technologiques et leurs interactions :
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{schema_de_projet.png}
+  \caption{Architecture pipeline de \projectname{} — Vue d'ensemble des cinq couches
+  (I/O Edge, Big Data, IA, Backend Microservices, Interfaces utilisateur)}
+\end{figure}
+
+Ce schéma synthétise le flux de données de bout en bout : les moteurs industriels
+(Moteur 1 à N) publient leurs mesures (vibration, température, courant) via le
+protocole \textbf{MQTT} vers le broker Eclipse Mosquitto, puis vers \textbf{Apache Kafka}
+(10k msg/s). La couche Big Data (\textbf{Apache Spark Streaming}, micro-batchs de 2 s)
+consomme ces flux et les transmet au modèle \textbf{Random Forest} (Python/Scikit-learn,
+92,0\% de précision). Les résultats alimentent le backend \textbf{Spring Boot / Java 17}
+via API Gateway, qui orchestre les services Motor, Oracle DB, MongoDB. Enfin, la
+couche présentation expose les données en temps réel via \textbf{WebSocket}, les tableaux
+de bord \textbf{BI}, et assure la traçabilité via \textbf{Blockchain/IPFS} et
+l'interface \textbf{React/TypeScript}.
+
+\section{Flux de Données End-to-End}
+
+Le parcours d'une donnée capteur au sein de \projectname{} suit le chemin suivant,
+en s'appuyant sur le protocole MQTT \cite{mqtt} pour l'acquisition et Apache Kafka
+\cite{kafka} pour le transport à haut débit.
+
+% ---- Schéma 1 : Pipeline MQTT / Kafka / Spark ----
+\subsection{Pipeline IoT — MQTT, Kafka et Spark}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{MQTT_Kafka_Spark_schema.png}
+  \caption{Architecture du pipeline temps réel IoT --- Intégration MQTT, Apache Kafka
+  et Apache Spark Streaming dans \projectname{} \cite{mqtt, kafka, spark}}
+  \label{fig:mqtt_kafka_spark}
+\end{figure}
+
+La figure~\ref{fig:mqtt_kafka_spark} illustre le pipeline de données temps réel en quatre
+couches. \textbf{(1) Edge / Ingestion MQTT} : les capteurs IoT publient leurs mesures
+(vibration, température, courant) via le protocole MQTT \cite{mqtt} vers le broker
+Eclipse Mosquitto, qui les transmet au connecteur MQTT-Kafka. \textbf{(2) Backbone
+Kafka} : les messages sont ingérés dans des topics Apache Kafka \cite{kafka,kreps2011}
+dédiés par type de mesure, avec réplication et partitionnement garantissant un débit
+supérieur à $10\,000$ messages/seconde. \textbf{(3) Traitement Spark} : Apache Spark
+Streaming \cite{spark} consomme les partitions Kafka en micro-batchs de 2 secondes,
+applique les transformations (fenêtrage, filtrage, inférence ML) et produit un DataFrame
+de résultats. \textbf{(4) Données de sortie} : les résultats sont acheminés vers le
+stockage froid (MongoDB), les bases temps-réel et les tableaux de bord.
+
+% ---- Schéma 2 : Blockchain Hardhat ----
+\subsection{Écosystème Blockchain — Hardhat}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{Hardhat_blockchain_schema.png}
+  \caption{Écosystème de développement Blockchain Hardhat --- Configuration,
+  compilation, tests et déploiement des Smart Contracts de \projectname{} \cite{hardhat}}
+  \label{fig:hardhat}
+\end{figure}
+
+La figure~\ref{fig:hardhat} décrit le workflow complet de développement Blockchain
+adopté dans \projectname{}, structuré en trois volets. \textbf{(1) Configuration et
+schéma} (\texttt{hardhat.config.ts}) : définition du compilateur Solidity (v0.8.20),
+des réseaux cibles (réseau local Hardhat en mémoire, \textit{localhost} JSON-RPC,
+testnet) et des chemins sources (\texttt{contracts/}, \texttt{test/},
+\texttt{artifacts/}). \textbf{(2) Système de tâches Hardhat Runner} : la CLI Hardhat
+orchestre les commandes \texttt{init}, \texttt{compile} (génération ABI/bytecode via
+\texttt{solc}), \texttt{test} (TypeScript/JS et tests Solidity Foundry-compatibles),
+\texttt{run/deploy} et \texttt{verify}. Un réseau
+Hardhat local EVM intégré (modes \textit{in-process} et \textit{standalone}, minage
+automatique, traces de débogage) permet des tests sans coût de gaz. \textbf{(3)
+Workflow de développement} : de l'initialisation (\texttt{npx hardhat -{}-init}) à la
+vérification du contrat déployé, en passant par l'écriture des Smart Contracts Solidity
+\cite{ethereum}, la génération d'artefacts, les tests, le déploiement local, puis le
+déploiement sur réseau live et la vérification.
+
+Dans \projectname{}, ce workflow a permis de déployer le contrat
+\texttt{WorkOrderRegistry.sol} sur un réseau Hardhat privé, garantissant des
+transactions sans frais de gaz et une latence de confirmation de 0 seconde en
+environnement de développement, avant une éventuelle migration vers un testnet public.
+
+% ---- Schéma 3 : IPFS ----
+\subsection{Architecture IPFS — Stockage Décentralisé}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{IPFS_schema.png}
+  \caption{Architecture du système IPFS --- Ajout de fichier côté client (Merkle DAG),
+  fonctionnement réseau (DHT + Bitswap) et récupération par adressage par contenu (CID) \cite{ipfs}}
+  \label{fig:ipfs_schema}
+\end{figure}
+
+La figure~\ref{fig:ipfs_schema} illustre les trois mécanismes fondamentaux d'IPFS
+\cite{ipfs} exploités dans \projectname{}. \textbf{(1) Ajout d'un fichier côté client} :
+lorsqu'un rapport PDF est soumis à IPFS, il est découpé en blocs (\textit{chunking}),
+chaque bloc étant haché individuellement. Les blocs sont organisés en un arbre de Merkle
+(\textit{Merkle DAG}), dont la racine constitue le \textbf{CID} (\textit{Content
+Identifier}) --- empreinte cryptographique unique du fichier calculée via SHA2-256.
+\textbf{(2) Fonctionnement réseau} : une table de hachage distribuée (\textit{DHT})
+permet à tout nœud du réseau de localiser les pairs détenant les blocs recherchés, sans
+serveur central. Le protocole \textit{Bitswap} assure ensuite l'échange pair-à-pair des
+blocs. \textbf{(3) Adressage par contenu et récupération} : l'utilisateur soumet une
+requête CID ; IPFS localise les pairs détenteurs des blocs et les télécharge en
+parallèle, puis reconstruit le fichier original.
+
+Dans \projectname{}, cette architecture garantit que tout rapport stocké
+sur IPFS est \textbf{infalsifiable} : la moindre modification du contenu produirait un
+CID différent, immédiatement détectable par comparaison avec le CID ancré \textit{on-chain}
+dans le Smart Contract Ethereum \cite{buterin2014}.
+
+% ---- Liste numérotée du flux end-to-end ----
+\vspace{0.5em}
+\noindent Le flux de données complet de \projectname{} s'articule donc selon les étapes suivantes :
+
+\begin{enumerate}
+  \item \textbf{Acquisition :} Le capteur IoT envoie ses mesures via MQTT \cite{mqtt}
+  au broker Eclipse Mosquitto (figure~\ref{fig:mqtt_kafka_spark}, couche 1).
+  \item \textbf{Ingestion :} Le Service IoT Bridge consomme les messages MQTT et les
+  publie dans des topics Apache Kafka \cite{kafka} dédiés (figure~\ref{fig:mqtt_kafka_spark},
+  couche 2).
+  \item \textbf{Traitement :} Apache Spark Streaming \cite{spark} consomme les messages
+  Kafka en micro-batchs de 2 secondes, applique le prétraitement et exécute le modèle
+  Random Forest \cite{breiman2001,sklearn} (figure~\ref{fig:mqtt_kafka_spark}, couche 3).
+  \item \textbf{Stockage :} Les données de vibration sont archivées dans MongoDB ; les
+  données métier dans Oracle DB, conformément aux exigences de traçabilité ISO 13374
+  \cite{iso13374}.
+  \item \textbf{Certification :} Les interventions sont hachées et inscrites sur
+  la Blockchain Ethereum \cite{ethereum,buterin2014} via Hardhat
+  (figure~\ref{fig:hardhat}) ; les rapports PDF sont stockés sur IPFS \cite{ipfs}
+  (figure~\ref{fig:ipfs_schema}).
+  \item \textbf{Visualisation :} Le Frontend React \cite{react} consomme les APIs REST
+  du backend Spring Boot \cite{springboot}.
+\end{enumerate}
+
+
+\section{Stack Technique Complète}
+
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{L{2.5cm} L{4.5cm} L{4cm}}
+    \toprule
+    \rowcolor{gray!30}
+    \textbf{Couche} &
+    \textbf{Technologies} &
+    \textbf{Justification} \\
+    \midrule
+    \rowcolor{white}
+    Backend & Java 17, Spring Boot 3, Spring Cloud & Maturité, performance \\
+    \rowcolor{gray!12}
+    Frontend Web & React 18, TypeScript, Tailwind CSS & Réactivité, DX optimale \\
+    \rowcolor{white}
+    Blockchain & Ethereum, Solidity, Hardhat & Smart contracts robustes \\
+    \rowcolor{gray!12}
+    Messagerie & Apache Kafka, MQTT & Haut débit, découplage \\
+    \rowcolor{white}
+    Big Data & Apache Spark & Traitement distribué temps réel \\
+    \rowcolor{gray!12}
+    ML & Python, Scikit-learn, Pandas, NumPy & Bibliothèques ML matures \\
+    \rowcolor{white}
+    Base de données & Oracle DB + MongoDB & BD relationnelle + BD vibrations NoSQL \\
+    \rowcolor{white}
+    Orchestration & Kubernetes, Helm & Scalabilité, reproductibilité \\
+    \rowcolor{gray!12}
+    Monitoring & Prometheus & Observabilité complète \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Stack technique détaillée de VibraGuard}
+\end{table}
+
+\section{Capteurs IoT et Justification des Choix}
+
+Le nœud de collecte de \projectname{} est basé sur la carte \textbf{ESP32} \cite{espressif2024}, microcontrôleur
+puissant avec WiFi intégré, ADC 12 bits et deux cœurs de traitement, permettant de calculer
+et d'envoyer les données sans module externe. Trois capteurs complémentaires sont utilisés :
+
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{L{2.5cm} L{4cm} L{5.5cm}}
+    \toprule
+    \rowcolor{gray!30}
+    \textbf{Capteur} &
+    \textbf{Grandeur mesurée} &
+    \textbf{Justification vs. alternative} \\
+    \midrule
+    \rowcolor{white}
+    DS18B20 & Température (°C) & Interface numérique 1-Wire directe, pas de bruit de conversion.
+    \textit{vs. thermocouple} : ce dernier exige un amplificateur externe. \\
+    \rowcolor{gray!12}
+    ACS712 & Courant RMS (A) et THD (\%) & Mesure sans rupture du circuit, isolation galvanique.
+    \textit{vs. résistance shunt} : expose le microcontrôleur à la haute tension. \\
+    \rowcolor{white}
+    Piézo + ADS1115 & Vibration RMS, Peak, Kurtosis (mm/s) & ADC 16 bits (ADS1115) :
+    4× plus de résolution que l'ADC interne ESP32. \textit{vs. ADC interne} :
+    les vibrations faibles seraient noyées dans le bruit ADC 12 bits. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Capteurs IoT du nœud VibraGuard et justification des choix}
+\end{table}
+
+\section{Structure des Données Collectées}
+
+Chaque relevé du moteur (identifié par \texttt{motor\_id}) contient 6 indicateurs produits
+par les trois capteurs :
+
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{L{3cm} L{2.5cm} C{1.5cm} L{5cm}}
+    \toprule
+    \rowcolor{gray!30}
+    \textbf{Donnée} &
+    \textbf{Capteur} &
+    \textbf{Unité} &
+    \textbf{Ce qu'elle révèle} \\
+    \midrule
+    \rowcolor{white}       Température              & DS18B20           & °C      & Surcharge thermique, ventilation insuffisante \\
+    \rowcolor{gray!12}Courant RMS              & ACS712            & A       & Charge mécanique, blocage, court-circuit \\
+    \rowcolor{white}       THD Courant              & ACS712      & \%      & Harmoniques : qualité réseau, défauts électriques \\
+    \rowcolor{gray!12}Vibration RMS            & Piézo + ADS1115   & mm/s    & Énergie globale, déséquilibre \\
+    \rowcolor{white}       Vibration Peak           & Piézo + ADS1115   & mm/s    & Chocs ponctuels, impacts mécaniques \\
+    \rowcolor{gray!12}Kurtosis                 & Piézo + ADS1115   & ---     & Détection précoce défauts roulements \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Indicateurs collectés par capteur — 6 champs par relevé}
+\end{table}
+
+\section{Formules de Calcul des Capteurs}
+
+Le capteur DS18B20 transmet la température directement en degrés Celsius via le protocole
+numérique 1-Wire (plage : $-55$°C à $+125$°C, précision $\pm 0{,}5$°C) \cite{ds18b20}. Aucune conversion
+n'est nécessaire côté applicatif. Les seuils d'interprétation sont :
+
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{C{3cm} L{8cm}}
+    \toprule
+    \rowcolor{gray!30}
+    \textbf{Plage} & \textbf{Interprétation} \\
+    \midrule
+    \rowcolor{white}       0 -- 60\,°C   & Fonctionnement normal \\
+    \rowcolor{gray!12}60 -- 75\,°C  & Alerte — charge élevée \\
+    \rowcolor{white}       75 -- 90\,°C  & Surchauffe critique \\
+    \rowcolor{gray!12}$>$ 90\,°C   & Risque de panne / arrêt machine \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Zones d'interprétation — Température DS18B20}
+\end{table}
+
+\subsection{ACS712 — Courant RMS (\texttt{current\_rms}) (A)}
+
+Le capteur ACS712 exploite l'effet Hall : le courant crée un champ magnétique proportionnel,
+converti en tension par le capteur. Le calcul du courant RMS se fait en quatre étapes sur
+$N$ échantillons ADC 12 bits (0--4095) de l'ESP32 :
+
+\begin{enumerate}
+  \item \textbf{Conversion ADC → Tension :}
+  \begin{equation}
+    V = \frac{\text{ADC}}{4095} \times 3{,}3 \quad [\text{ADC} \in [0, 4095],\; V_{\max} = 3{,}3\,\text{V}]
+  \end{equation}
+
+  \item \textbf{Retrait de l'offset (sortie nulle sans courant = 2,5 V \cite{acs712}) :}
+  \begin{equation}
+    V_{\text{centré}} = V - 2{,}5
+  \end{equation}
+
+  \item \textbf{Calcul du courant instantané} (sensibilité ACS712-5A : $S = 0{,}185\,\text{V/A}$ \cite{acs712}) :
+  \begin{equation}
+    I = \frac{V_{\text{centré}}}{0{,}185}
+  \end{equation}
+
+  \item \textbf{Calcul RMS sur $N$ échantillons :}
+  \begin{equation}
+    I_{\text{RMS}} = \sqrt{\frac{I_1^2 + I_2^2 + \cdots + I_N^2}{N}}
+  \end{equation}
+\end{enumerate}
+
+États du courant RMS : Normal $0{,}5$--$4$\,A | Charge élevée $4$--$5$\,A | Surcharge $> 5$\,A.
+
+\subsection{ACS712 — THD Courant (\texttt{current\_thd}) (\%)}
+
+Le Taux de Distorsion Harmonique (THD) mesure la qualité de la forme d'onde du courant.
+Un THD élevé indique une distorsion harmonique pouvant provoquer une surchauffe du moteur.
+Son calcul s'effectue via FFT sur $N$ échantillons :
+
+\begin{enumerate}
+  \item Acquérir $N$ échantillons du courant instantané $I(t)$.
+  \item Appliquer la FFT (transformation signal temporel → fréquentiel).
+  \item Identifier le fondamental $I_1$ (50\,Hz) et les harmoniques $I_2$ (100\,Hz), $I_3$ (150\,Hz)...
+\end{enumerate}
+
+\begin{equation}
+  \text{THD} = \frac{\sqrt{I_2^2 + I_3^2 + \cdots + I_n^2}}{I_1} \times 100\%
+\end{equation}
+
+\noindent\textit{Exemple numérique :} $I_1 = 3{,}2\,\text{A}$, $I_2 = 0{,}5\,\text{A}$, $I_3 = 0{,}2\,\text{A}$ :
+$\text{THD} = \frac{\sqrt{0{,}5^2 + 0{,}2^2}}{3{,}2} \times 100 = 16{,}8\%$
+
+Seuils THD : Normal $0$--$5\%$ | Début distorsion $5$--$10\%$ | Distorsion visible $10$--$25\%$ | Danger $> 25\%$.
+
+\subsection{Piézo + ADS1115 — Vibration RMS (\texttt{vib\_rms}) (mm/s)}
+
+L'ADS1115 \cite{ads1115} (ADC 16 bits, plage $-32768$ à $+32767$, $V_{\text{ref}} = 4{,}096\,\text{V}$)
+convertit le signal piézoélectrique avec une précision 4 fois supérieure à l'ADC interne de
+l'ESP32. Le calcul du Vibration RMS suit les étapes :
+
+\begin{enumerate}
+  \item \textbf{Conversion brute → tension :}
+  \begin{equation}
+    V_i = \text{ADC} \times \frac{V_{\text{ref}}}{32767} = \text{ADC} \times \frac{4{,}096}{32767}
+  \end{equation}
+
+  \item \textbf{Retrait de l'offset (mesure au repos) :}
+  \begin{equation}
+    V_{\text{offset}} = \text{mean}(V_i) \quad \text{[moteur au repos]}
+  \end{equation}
+
+  \item \textbf{Calcul RMS et conversion en mm/s} (Sensibilité : $S = 20{,}0\,\text{mV/(mm/s)}$) selon le capteur et la calibration :
+  \begin{equation}
+    \text{Vib\_RMS} = \frac{\sqrt{\text{mean}((V_i - V_{\text{offset}})^2)} \times 1000}{S}
+  \end{equation}
+\end{enumerate}
+
+États : Machine stable $0{,}5$--$3{,}0$\,mm/s | Début déséquilibre $3{,}0$--$5{,}0$ | Défaut mécanique $5{,}0$--$10{,}0$ | Risque panne $> 10{,}0$.
+
+\subsection{Piézo + ADS1115 — Vibration Peak (\texttt{vib\_peak}) (mm/s)}
+
+La Vibration Peak mesure la valeur maximale absolue enregistrée sur la période de mesure.
+Elle permet de détecter les chocs ou impulsions soudaines :
+
+\begin{multline}
+  \text{Vib\_Peak} = \frac{\max(|V_i - V_{\text{offset}}|) \times 1000}{S} \\
+  \text{(Sensibilité : } S = 20{,}0\,\text{mV/(mm/s) selon le capteur et la calibration)}
+\end{multline}
+
+États : Machine saine $< 3$\,mm/s | Début de défaut $3$--$6$ | Défaut mécanique clair $6$--$12$ | Risque panne grave $> 12$.
+
+\subsection{Piézo + ADS1115 — Kurtosis (\texttt{vib\_kurtosis})}
+
+Le Kurtosis est un indicateur statistique très sensible aux chocs impulsionnels \cite{antoni2006}. Il est
+principalement utilisé pour la détection précoce des défauts de roulements. Une valeur $> 3$
+signale des chocs anormaux :
+
+\begin{equation}
+  K = \frac{\text{mean}\left((V_i - \mu)^4\right)}{\left(\text{mean}\left((V_i - \mu)^2\right)\right)^2}
+  \quad \text{avec } \mu = \text{mean}(V_i)
+\end{equation}
+
+\noindent\textit{Exemple :} $V_1=0{,}2$\,V, $V_2=0{,}5$\,V, $V_3=0{,}4$\,V, $\mu = 0{,}367$\,V :
+\[
+K = \frac{\frac{(0{,}2-\mu)^4 + (0{,}5-\mu)^4 + (0{,}4-\mu)^4}{3}}
+        {\left(\frac{(0{,}2-\mu)^2 + (0{,}5-\mu)^2 + (0{,}4-\mu)^2}{3}\right)^2}
+\]
+
+Interprétation : $K \approx 3$ (signal gaussien normal) | $K > 3$ (chocs, début défaut roulement) | $K < 3$ (signal plat, peu de variation).
+
+Zones : Normal $2$--$4$ | Légère anomalie $4$--$6$ | Vibrations non linéaires $6$--$10$ | Chocs forts / défaut roulement $> 10$.
+
+
+\subsection{Simulation des Envois MQTT — Script \texttt{external\_mqtt\_sender.py}}
+
+Dans le cadre du développement et des tests, un script de simulation MQTT a été développé
+afin de reproduire le comportement des capteurs IoT réels. La figure ci-dessous montre
+l'exécution de ce script, qui génère et envoie des trames JSON vers le broker MQTT de
+\projectname{} (\texttt{vibraguard.mywire.org:30083}) :
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{l_envoi_des_requetes_mqtt_semulees.png}
+  \caption{Exécution du script \texttt{external\_mqtt\_sender.py} --- Simulation d'envois
+  MQTT vers le broker \texttt{vibraguard.mywire.org} avec données de capteurs en temps réel}
+\end{figure}
+
+Chaque trame MQTT publiée sur le topic \texttt{vibraguard/sensors} contient les champs
+\texttt{motor\_id}, \texttt{vib\_rms}, \texttt{vib\_peak},
+\texttt{vib\_kurtosis}, \texttt{current\_rms}, \texttt{current\_thd} et
+\texttt{temperature}. On observe ici des données correspondant au moteur
+\texttt{MTR-Broyeur-04} avec un statut \texttt{anomalous}, permettant de valider la
+chaîne complète de détection d'anomalies en conditions simulées avant le déploiement
+sur les équipements réels de l'OCP Safi.
+
+\section{Formules de Calcul des KPI}
+
+Les indicateurs de performance clés (KPI) affichés sur le dashboard de \projectname{} sont
+calculés selon les formules industrielles standardisées suivantes :
+
+\subsection{MTBF — Mean Time Between Failures}
+
+Le \textbf{MTBF} mesure le temps moyen de fonctionnement entre deux pannes successives.
+Un MTBF élevé indique une bonne fiabilité de l'équipement :
+
+\begin{equation}
+  \text{MTBF} = \frac{\text{Temps Total de Fonctionnement}}{\text{Nombre de Pannes}}
+  = \frac{\sum_{i=1}^{n} T_{\text{fonctionnement},i}}{n}
+\end{equation}
+
+\subsection{MTTR — Mean Time To Repair}
+
+Le \textbf{MTTR} mesure le temps moyen nécessaire pour réparer un équipement après une
+défaillance. Un MTTR faible indique une maintenance efficace :
+
+\begin{equation}
+  \text{MTTR} = \frac{\text{Temps Total de Réparation}}{\text{Nombre de Pannes}}
+  = \frac{\sum_{i=1}^{n} T_{\text{réparation},i}}{n}
+\end{equation}
+
+\subsection{Taux de Disponibilité}
+
+Le \textbf{taux de disponibilité} (ou disponibilité opérationnelle) exprime la proportion
+du temps pendant laquelle un équipement est opérationnel :
+
+\begin{equation}
+  D = \frac{\text{MTBF}}{\text{MTBF} + \text{MTTR}} \times 100\%
+\end{equation}
+
+\subsection{Précision du Modèle Random Forest}
+
+La précision globale du classifieur est évaluée par :
+
+\begin{equation}
+  \text{Accuracy} = \frac{\text{VP} + \text{VN}}{\text{VP} + \text{VN} + \text{FP} + \text{FN}}
+\end{equation}
+
+Le F1-Score par classe, plus robuste en cas de déséquilibre de classes, est donné par :
+
+\begin{equation}
+  F_1 = 2 \times \frac{\text{Précision} \times \text{Rappel}}{\text{Précision} + \text{Rappel}}
+  = \frac{2 \cdot \text{VP}}{2 \cdot \text{VP} + \text{FP} + \text{FN}}
+\end{equation}
+
+\section{Conclusion}
+
+Ce chapitre a décrit en détail l'architecture microservices de \projectname{}, du nœud
+de collecte IoT jusqu'aux dashboards décisionnels. L'architecture retenue garantit la
+scalabilité horizontale, la résilience et l'observabilité complète du système. Les capteurs
+ESP32 (DS18B20, ACS712, Piézo+ADS1115) offrent une couverture multi-dimensionnelle des
+paramètres moteurs, tandis que le pipeline Kafka--Spark assure un traitement haute performance.
+Le déploiement sur GCP Kubernetes avec CI/CD automatisé constitue le socle opérationnel de
+la solution. Le chapitre suivant présente la mise en œuvre effective du pipeline de données
+et les résultats du modèle d'intelligence artificielle.
+
+% ============================
+\chapter{Implémentation du Pipeline de Données et de l'IA}
+% ============================
+
+Ce chapitre décrit le pipeline de données de \projectname{}, de l'acquisition des données capteurs réelles à l'inférence en temps réel, en passant par le prétraitement et l'entraînement du modèle de Machine Learning.
+
+\section{Pipeline de Prétraitement et Entraînement}
+
+\subsection{Structure des Données d'Entraînement}
+
+Le dataset d'entraînement (\texttt{sensor\_data\_training.csv}) a été exploré et validé
+via le script \texttt{explore\_data.py}. La figure suivante présente la sortie de cette
+exploration, confirmant la structure et la qualité des données :
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{structure_de_data_pour_le_modele_ia.png}
+  \caption{Exploration du dataset d'entraînement (\texttt{sensor\_data\_training.csv}) ---
+  Structure des 11 colonnes, aperçu des 5 premières lignes et résumé des types de données}
+\end{figure}
+
+\begin{infobox}[Précision sur l'origine des données]
+Le dataset utilisé pour l'entraînement du modèle Random Forest a été fourni par le
+\textbf{Département IT d'OCP Safi}. Ces données ont été collectées par des
+étudiants de la filière Systèmes Embarqués dans le cadre d'un \textbf{environnement
+de simulation} reproduisant les plages de valeurs et les signatures vibratoires,
+thermiques et électriques caractéristiques des états moteurs identifiés.
+
+Cette approche par simulation a permis de pallier l'absence d'historique de pannes
+labellisées suffisant pour certaines classes de défauts rares, tout en respectant
+des plages physiques réalistes et cohérentes avec les capteurs (ESP32, DS18B20,
+ACS712, Piézo+ADS1115).
+\end{infobox}
+
+
+
+\subsection{Limites liées à la Taille du Dataset}
+Le volume de 1,000 échantillons constitue une limite méthodologique qu'il convient d'expliciter. Ce choix s'explique par le fait que les données ont été \textbf{collectées dans un environnement de simulation} par des étudiants de la filière Systèmes Embarqués, insuffisante pour constituer un corpus massif couvrant l'ensemble des classes de défauts avec un grand nombre d'occurrences — notamment pour les classes de défauts rares (déséquilibre, désalignement, surcharge électrique).
+La séparation du dataset en ensembles d’entraînement (80%) et de test (20%) a été réalisée avec l’option stratify=y de la fonction train_test_split de Scikit-learn. Cette stratification garantit que les proportions de chaque classe sont préservées dans les deux sous-ensembles. La validation croisée ($  k=5  $) a par ailleurs été utilisée pour vérifier la stabilité du score de précision.
+
+Néanmoins, la généralisation du modèle sur un parc industriel élargi (perspective de déploiement pilote sur 5 à 10 moteurs réels de l’OCP Safi) nécessitera un réentraînement sur un corpus substantiellement plus large et issu de mesures réelles de terrain, conformément à la recommandation de réentraînement périodique formulée en conclusion.
+
+Le dataset contient \textbf{1 000 échantillons} répartis sur \textbf{11 colonnes} :
+\texttt{timestamp}, \texttt{sample\_id}, \texttt{moteur\_id},
+\texttt{vib\_rms}, \texttt{vib\_peak}, \texttt{vib\_kurtosis}, \texttt{current\_rms},
+\texttt{current\_thd}, \texttt{temperature}, \texttt{label} et \texttt{anomaly\_type}.
+On note la présence de valeurs manquantes sur certaines colonnes numériques (\texttt{vib\_rms} et \texttt{vib\_peak} : 969/1000, \texttt{current\_rms} :
+976/1000, \texttt{temperature} : 967/1000), justifiant l'étape d'imputation par la médiane
+dans le pipeline de prétraitement. Les colonnes \texttt{label} et \texttt{anomaly\_type}
+sont de type \texttt{object} (catégoriel) et constituent les cibles de classification.
+
+\subsection{Étapes de Prétraitement}
+
+Le pipeline de prétraitement est implémenté avec la bibliothèque Scikit-learn \cite{sklearn},
+qui fournit des transformateurs composables via l'API \texttt{Pipeline} :
+
+\begin{enumerate}
+  \item \textbf{Imputation :} remplacement des valeurs manquantes par la médiane
+  (\texttt{SimpleImputer}, \texttt{strategy='median'}), méthode recommandée pour les
+  données de capteurs à distribution asymétrique \cite{sklearn}.
+  \item \textbf{Filtrage (Clipping) :} limitation des valeurs aberrantes à $\pm 3\sigma$
+  pour l'exclusion d'outliers.
+  \item \textbf{Normalisation :} mise à l'échelle par \texttt{StandardScaler} pour
+  garantir la convergence du modèle.
+  \item \textbf{Séparation train/test :} split 80/20 stratifié, préservant les proportions
+  de classes dans les deux sous-ensembles.
+\end{enumerate}
+
+\subsection{Modélisation — Random Forest Classifier}
+
+Le Random Forest \cite{breiman2001} a été choisi pour sa robustesse face au surapprentissage, sa capacité à gérer les données de haute dimension et sa bonne interprétabilité via l'importance des variables. 
+
+Il a été entraîné avec les hyperparamètres suivants :
+
+\begin{itemize}
+  \item \texttt{n\_estimators = 100} : Ce nombre d'arbres offre un bon compromis entre la stabilité des prédictions et le temps de calcul. Un nombre trop faible augmente la variance, tandis qu'un nombre trop élevé augmente inutilement le temps d'entraînement sans gain significatif en performance.
+  
+  \item \texttt{max\_depth = 10} : Cette profondeur limite le surapprentissage tout en permettant au modèle de capturer des relations complexes dans les données de vibrations industrielles.
+  
+  \item \texttt{min\_samples\_split = 5} : Cette contrainte permet d'éviter la création de nœuds trop spécifiques, améliorant ainsi la généralisation du modèle sur de nouvelles données.
+\end{itemize}
+
+La figure ci-dessous illustre l'exécution complète du script d'entraînement
+\texttt{train\_random\_forest.py}, depuis le chargement des données jusqu'à la
+sérialisation des modèles :
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{l_entrainement_de_modele_ia.png}
+  \caption{Exécution du script \texttt{train\_random\_forest.py} --- Entraînement du
+  modèle Random Forest avec une précision globale élevée et sérialisation \texttt{joblib}}
+\end{figure}
+
+La sortie console confirme le déroulement correct du pipeline : chargement de 1 000 samples,
+nettoyage des données (imputation et filtrage outliers), entraînement du classifieur
+Random Forest, puis sauvegarde des artefacts \texttt{vibraguard\_rf\_model.joblib} et
+\texttt{vibraguard\_scaler.joblib}. La précision globale mesurée lors de cet entraînement
+atteint \textbf{92,00\%}.
+
+\begin{resultbox}
+  \textbf{Résultat clé :} Le modèle Random Forest \cite{breiman2001} atteint une précision globale
+  de \textbf{92,0\%} sur six classes d'état, dépassant largement l'objectif de 85\% fixé dans
+  le cahier des charges. Ce niveau de performance est cohérent avec les résultats rapportés par
+  Lei et al. \cite{lei2020} pour des applications similaires de diagnostic de machines tournantes.
+  Les modèles entraînés (scaler + classifier) sont sérialisés via \texttt{joblib} pour déploiement
+  dans le pipeline Spark Streaming \cite{spark}.
+\end{resultbox}
+
+
+\subsection{Séparation Stratifiée Train/Test et Matrice de Confusion}
+
+La séparation du dataset en ensembles d'entraînement (80\%) et de test (20\%) a été
+réalisée avec l'option \textbf{\texttt{stratify=y}} de la fonction
+\texttt{train\_test\_split} de Scikit-learn \cite{sklearn}. Cette option garantit que
+les proportions de chaque classe sont \textbf{préservées à l'identique} dans les deux
+sous-ensembles, évitant ainsi tout biais d'échantillonnage — particulièrement critique
+dans notre contexte où la classe \texttt{NONE} (état normal) est majoritaire avec
+environ 64\% des échantillons, tandis que les classes de défauts (\texttt{DEFAUT\_ROULEMENT},
+\texttt{DESALIGNEMENT}, \texttt{DESEQUILIBRE}, \texttt{SURCHARGE\_ELECTRIQUE},
+\texttt{SURCHAUFFE}) sont minoritaires. Sans \texttt{stratify=y}, le tirage aléatoire
+pourrait produire un ensemble de test sous-représentant certaines classes de défauts,
+rendant l'évaluation non représentative des conditions réelles d'exploitation à l'OCP Safi.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{confusion_matrix.png}
+  \caption{Matrice de confusion du modèle Random Forest sur l'ensemble de test ---
+  Classification des six états moteurs avec une précision globale de 92,0\%}
+  \label{fig:confusion_matrix}
+\end{figure}
+
+La matrice de confusion (figure~\ref{fig:confusion_matrix}) confirme les excellentes
+performances du modèle Random Forest sur l'ensemble de test. L'analyse par classe
+révèle les résultats suivants :
+
+\begin{itemize}
+  \item \textbf{NONE (état normal) :} 128 prédictions correctes sur 128 échantillons,
+  soit un rappel de \textbf{100\%}. Aucune confusion avec les autres classes, ce qui
+  est fondamental pour éviter les fausses alarmes en production.
+  \item \textbf{DESALIGNEMENT :} 12 vrais positifs sur 13, avec une seule confusion
+  vers la classe \texttt{NONE}.
+  \item \textbf{DEFAUT\_ROULEMENT :} 11 vrais positifs sur 14, avec 3 confusions
+  vers \texttt{NONE}.
+  \item \textbf{DESEQUILIBRE :} 9 vrais positifs sur 11, avec 2 confusions vers
+  \texttt{NONE}.
+  \item \textbf{SURCHARGE\_ELECTRIQUE :} 12 vrais positifs sur 16, avec 4 confusions
+  vers \texttt{NONE}.
+  \item \textbf{SURCHAUFFE :} 12 vrais positifs sur 18, avec 1 confusion vers
+  \texttt{DEFAUT\_ROULEMENT} et 3 vers \texttt{DESEQUILIBRE} et 2 vers \texttt{NONE}.
+\end{itemize}
+
+
+
+\subsection{Rapport de Classification Détaillé}
+
+Au-delà de la précision globale et de la matrice de confusion, un \textbf{rapport de
+classification} (\textit{classification report}), généré via la fonction
+\texttt{classification\_report} de Scikit-learn \cite{sklearn}, fournit une évaluation
+fine de la performance du modèle pour chacune des six classes. Trois métriques
+complémentaires sont calculées par classe :
+
+\begin{itemize}
+  \item \textbf{Précision (\textit{precision}) 92.56\% :} proportion de prédictions positives
+  correctes parmi toutes les prédictions positives pour une classe donnée. Une précision
+  élevée pour une classe de défaut signifie un faible taux de fausses alarmes.
+  
+  \item \textbf{Rappel (\textit{recall}) 92.00\% :} proportion d'échantillons réellement
+  positifs correctement détectés. Un rappel élevé est critique pour les classes de
+  défauts, car un défaut non détecté (faux négatif) peut entraîner une panne réelle.
+  
+  \item \textbf{Score F1 (\textit{F1-score}) 92.00\% :} moyenne harmonique de la précision et
+  du rappel, particulièrement pertinente pour les classes minoritaires en cas de
+  déséquilibre des classes.
+\end{itemize}
+
+
+\section{Traitement en Streaming avec Apache Spark}
+
+Le script \texttt{spark\_streaming\_process.py} constitue le moteur de traitement temps réel,
+exploitant les capacités de micro-batch processing d'Apache Spark Streaming \cite{spark} :
+
+\begin{enumerate}
+  \item Connexion au cluster Kafka \cite{kafka} et abonnement aux topics de données capteurs.
+  \item Réception des micro-batchs (fenêtre de 2 secondes).
+  \item Désérialisation JSON et validation du schéma.
+  \item Application du pipeline de prétraitement (scaler \texttt{joblib} \cite{sklearn}).
+  \item Inférence par le modèle Random Forest \cite{breiman2001} : classification de l'état.
+  \item Mise à jour des KPI (score de santé, compteur d'anomalies, MTBF estimé) conformément
+  aux indicateurs de performance définis par la norme ISO 13374 \cite{iso13374}.
+  \item Publication des résultats vers le Backend via REST API \cite{springboot}.
+  \item Déclenchement d'alertes pour les anomalies détectées.
+\end{enumerate}
+
+\subsection{Diagramme de Séquence : Détection d'Anomalie → Alerte (Création Manuelle d'OT)}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{sequence_anomalie_ot.png}
+  \caption{Diagramme de séquence : Flux de détection d'anomalie jusqu'à la création manuelle d'un Ordre de Travail}
+  \label{fig:seq-anomalie-ot}
+\end{figure}
+
+\section{Conclusion}
+
+Ce chapitre a démontré la robustesse du pipeline de données de \projectname{}, depuis
+l'acquisition des signaux capteurs jusqu'à l'inférence en temps réel. Le modèle Random
+Forest atteint une précision de \textbf{92,0\%} sur six classes de défauts, dépassant
+significativement l'objectif initial de 85\%. Le pipeline de prétraitement (imputation,
+filtrage $\pm 3\sigma$, normalisation) garantit la qualité des données d'entrée, tandis que
+le traitement Spark Streaming assure une latence de traitement d'environ 1,2 seconde. Ces
+résultats valident la viabilité de l'approche IoT--Big Data--IA pour la maintenance
+prédictive. Le chapitre suivant présente les composants applicatifs développés (backend,
+frontend et intégration Blockchain).
+
+% ============================
+\chapter{Développement du Backend, Frontend et Blockchain}
+% ============================
+
+Ce chapitre présente le processus de développement de \projectname{} par phases, les composants applicatifs réalisés (backend microservices, interface web, Blockchain/IPFS) et la présentation de l'application finale.
+
+\section{Processus de Développement}
+
+Le développement de \projectname{} est organisé en \textbf{cinq phases} articulées selon
+l'approche Agile, chacune correspondant à un ensemble de tâches Jira.
+
+\subsection{Phase 1 : Préparation}
+
+\begin{itemize}
+  \item Configuration de l'environnement DevOps : dépôt GitHub, branches \texttt{main}/\texttt{develop}/\texttt{feature/*}, pipeline CI/CD GitHub Actions.
+  \item Mise en place de l'infrastructure pour le développement local (Kafka, Mosquitto, Oracle, MongoDB, IPFS) via Kubernetes.
+  \item Installation et paramétrage du réseau blockchain local avec Hardhat \cite{hardhat} (testnet privé).
+  \item Définition des conventions de codage, des standards API (OpenAPI 3.0) et des templates de PR GitHub.
+\end{itemize}
+
+\subsection{Phase 2 : Conception et Design}
+
+\begin{itemize}
+  \item Modélisation UML complète : diagrammes de cas d'utilisation, classes et séquence.
+  \item Conception de l'architecture microservices (diagramme C4 : contexte, conteneurs,
+  composants, code) selon les principes de Spring Boot \cite{springboot}.
+  \item Design des interfaces utilisateurs (wireframes Figma) : dashboard, vue moteur, gestion OT,
+  en accord avec les principes d'ergonomie des applications industrielles.
+  \item Spécification des APIs REST (Swagger/OpenAPI 3.0).
+  \item Conception du schéma de base de données (Oracle + MongoDB).
+  \item Design des Smart Contracts : interfaces Solidity \cite{ethereum}, événements, fonctions,
+  gestion des accès (RBAC on-chain).
+\end{itemize}
+
+\subsection{Phase 3 : Développement Backend}
+
+\begin{itemize}
+  \item Implémentation des microservices Spring Boot \cite{springboot} avec injection de dépendances (IoC).
+  \item Intégration du pipeline Kafka \cite{kafka} (Producers/Consumers) et Spark Streaming \cite{spark} (jobs PySpark).
+  \item Développement des repositories JPA/Hibernate pour Oracle DB et Spring Data MongoDB pour les vibrations.
+  \item Implémentation du Smart Contract Solidity \cite{ethereum} (\texttt{WorkOrderRegistry.sol})
+  déployé via Hardhat \cite{hardhat}.
+  \item Déploiement du nœud IPFS \cite{ipfs} et intégration via HTTP API Spring Boot \cite{springboot}.
+  \item Mise en place du monitoring (Prometheus metrics), conformément aux
+  exigences de disponibilité ISO 27001 \cite{iso27001}.
+\end{itemize}
+
+\subsection{Phase 4 : Développement Frontend}
+
+\begin{itemize}
+  \item \textbf{Application Web (React 18 \cite{react} + TypeScript) :} composants réutilisables
+  (MotorCard, AlertBadge, KPIWidget), intégration WebSocket pour le temps réel.
+  \item Intégration des appels REST vers le backend avec gestion des tokens JWT, conformément
+  aux recommandations de sécurité ISO 27001 \cite{iso27001}.
+  \item Tests unitaires (Jest pour React \cite{react}) et tests E2E (Cypress).
+\end{itemize}
+
+\subsection{Phase 5 : Tests et Déploiement}
+
+\begin{itemize}
+  \item \textbf{Tests d'intégration :} couverture 78\% (objectif $>$70\%) testant les
+  interactions inter-microservices et les flux Kafka \cite{kafka} end-to-end.
+  \item \textbf{Tests de charge :} simulation de 10 000 capteurs simultanés avec Apache
+  JMeter --- résultats : débit 12 000 msg/s, latence P95 = 145 ms.
+  \item \textbf{Tests de sécurité :} scan OWASP ZAP sur le backend, audit du Smart
+  Contract \cite{ethereum} (revue manuelle), test de pénétration basique selon ISO 27001 \cite{iso27001}.
+  \item \textbf{Déploiement Kubernetes \cite{kubernetes} :} manifests Helm Charts,
+  auto-scaling HPA (CPU $>$70\%), health probes (liveness/readiness), rolling updates sans downtime.
+  \item \textbf{Documentation :} Swagger UI généré automatiquement, guides utilisateur
+  (technicien et responsable maintenance), rapport PFE final.
+\end{itemize}
+
+La figure suivante présente la sortie de la commande \texttt{kubectl get all -n vibraguard},
+confirmant l'état opérationnel de l'ensemble des pods, services et déploiements dans le
+namespace \projectname{} sur le cluster Kubernetes :
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{les_pods_kubernetes.png}
+  \caption{État des ressources Kubernetes dans le namespace \texttt{vibraguard} ---
+  Pods, services, déploiements et replica sets tous en statut \texttt{Running}/\texttt{Ready}}
+\end{figure}
+
+On constate que l'ensemble des \textbf{pods} sont opérationnels (\texttt{Running}), attestant de la stabilité de la plateforme. Les
+microservices déployés incluent : \texttt{backend}, \texttt{blockchain}, \texttt{frontend},
+\texttt{ipfs}, \texttt{kafka}, \texttt{mosquitto}, \texttt{mqtt-kafka-bridge},
+\texttt{oracle-db}, \texttt{mongodb} et \texttt{spark}. Les services exposent leurs ports
+respectifs (\texttt{backend:30007}, \texttt{frontend:30008}, \texttt{mosquitto:30083},
+\texttt{oracle-db:31255}), et l'ensemble des déploiements affichent un ratio
+\texttt{READY 1/1}, confirmant le déploiement sans downtime réalisé via rolling update.
+
+\section{Architecture Backend — Microservices Spring Boot}
+
+\subsection{API Gateway}
+
+L'API Gateway (Spring Cloud Gateway) constitue le point d'entrée unique avec :
+\begin{itemize}
+  \item Routage dynamique vers les microservices selon le path de la requête.
+  \item Authentification centralisée via JWT.
+  \item Rate limiting pour la protection contre les abus.
+  \item Logging centralisé de toutes les requêtes.
+\end{itemize}
+
+\subsection{Endpoints REST API}
+
+Les endpoints REST de \projectname{} sont organisés par domaine fonctionnel, selon les
+contrôleurs Spring Boot (\texttt{@RestController}) implémentés :
+
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \begin{tabularx}{\textwidth}{L{5.5cm} C{1.8cm} L{5cm}}
+    \toprule
+    \rowcolor{gray!30}
+    \textbf{Endpoint} & \textbf{Méthode} & \textbf{Description} \\
+    \midrule
+    \rowcolor{white}       \texttt{/api/v1/auth/register} & POST & Création d'un nouveau compte utilisateur \\
+    \rowcolor{gray!12}\texttt{/api/v1/auth/login}    & POST & Authentification et génération du token JWT \\
+    \rowcolor{white}       \texttt{/api/v1/auth/me}       & GET  & Profil de l'utilisateur connecté \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Endpoints REST --- Authentification (\texttt{/api/v1/auth})}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \begin{tabularx}{\textwidth}{L{5.5cm} C{1.8cm} L{5cm}}
+    \toprule
+    \rowcolor{gray!30}
+    \textbf{Endpoint} & \textbf{Méthode} & \textbf{Description} \\
+    \midrule
+    \rowcolor{white}       \texttt{/api/v1/iot/motors}                    & GET    & Liste tous les moteurs avec état de santé \\
+    \rowcolor{gray!12}\texttt{/api/v1/iot/motors}                    & POST   & Ajoute un nouveau moteur \\
+    \rowcolor{white}       \texttt{/api/v1/iot/motors/\{id\}}             & GET    & Détails d'un moteur spécifique \\
+    \rowcolor{gray!12}\texttt{/api/v1/iot/motors/\{id\}}             & PUT    & Mise à jour d'un moteur \\
+    \rowcolor{white}       \texttt{/api/v1/iot/motors/\{id\}}             & DELETE & Supprime le moteur et ses données \\
+    \rowcolor{gray!12}\texttt{/api/v1/iot/motors/\{id\}/vibration}   & GET    & Historique des vibrations d'un moteur \\
+    \rowcolor{white}       \texttt{/api/v1/iot/motors/vibrations}         & GET    & Toutes les données de vibration \\
+    \rowcolor{gray!12}\texttt{/api/v1/iot/motors/vibrations}         & POST   & Enregistre une nouvelle lecture capteur \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Endpoints REST --- Moteurs \& Vibrations (\texttt{/api/v1/iot/motors})}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \begin{tabularx}{\textwidth}{L{5.5cm} C{1.8cm} L{5cm}}
+    \toprule
+    \rowcolor{gray!30}
+    \textbf{Endpoint} & \textbf{Méthode} & \textbf{Description} \\
+    \midrule
+    \rowcolor{white}       \texttt{/api/v1/ml/alerts}               & GET  & Liste les alertes (filtrées par rôle) \\
+    \rowcolor{gray!12}\texttt{/api/v1/ml/alerts}               & POST & Crée une nouvelle alerte \\
+    \rowcolor{white}       \texttt{/api/v1/ml/alerts/\{id\}}        & PUT  & Met à jour statut, priorité, niveau \\
+    \rowcolor{gray!12}\texttt{/api/v1/ml/alerts/mark-all-read} & POST & Marque toutes les alertes comme lues \\
+    \rowcolor{white}       \texttt{/api/v1/ml/alerts/\{id\}/read}   & POST & Marque une alerte spécifique comme lue \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Endpoints REST --- Alertes ML (\texttt{/api/v1/ml/alerts})}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \begin{tabularx}{\textwidth}{L{5.5cm} C{1.8cm} L{5cm}}
+    \toprule
+    \rowcolor{gray!30}
+    \textbf{Endpoint} & \textbf{Méthode} & \textbf{Description} \\
+    \midrule
+    \rowcolor{white}       \texttt{/api/v1/iot/work-orders}        & GET    & Liste les OT (filtrés par rôle) \\
+    \rowcolor{gray!12}\texttt{/api/v1/iot/work-orders}        & POST   & Crée un OT et notifie le technicien \\
+    \rowcolor{white}       \texttt{/api/v1/iot/work-orders/\{id\}} & PUT    & Met à jour statut, assignation, coût \\
+    \rowcolor{gray!12}\texttt{/api/v1/iot/work-orders/\{id\}} & DELETE & Supprime un ordre de travail \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Endpoints REST --- Ordres de Travail (\texttt{/api/v1/iot/work-orders})}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \begin{tabularx}{\textwidth}{L{5.5cm} C{1.8cm} L{5cm}}
+    \toprule
+    \rowcolor{gray!30}
+    \textbf{Endpoint} & \textbf{Méthode} & \textbf{Description} \\
+    \midrule
+    \rowcolor{white}       {\tiny\texttt{/api/v1/iot/technicians}}          & GET    & Liste tous les techniciens \\
+    \rowcolor{gray!12}{\tiny\texttt{/api/v1/iot/technicians/\{id\}}}   & GET    & Profil d'un technicien \\
+    \rowcolor{white}       {\tiny\texttt{/api/v1/iot/technicians/\{id\}}}   & PUT    & Mise à jour du profil \\
+    \rowcolor{gray!12}{\tiny\texttt{/api/v1/iot/technicians/\{id\}}}   & DELETE & Supprime un compte technicien \\
+    \rowcolor{white}       {\tiny\texttt{/api/v1/bi/kpis}}                  & GET    & KPI temps réel (MTTR, disponibilité, coûts) \\
+    \rowcolor{gray!12}{\tiny\texttt{/api/v1/bi/mtbf-by-site}}          & GET    & MTBF regroupé par site \\
+    \rowcolor{white}       {\tiny\texttt{/api/v1/bi/maintenance-costs}}     & GET    & Historique et distribution des coûts \\
+    \rowcolor{gray!12}{\tiny\texttt{/api/v1/bi/interventions}}         & GET    & Statistiques sur les interventions \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Endpoints REST --- Techniciens \& BI ({\tiny\texttt{/api/v1/iot/technicians}}, \texttt{/api/v1/bi})}
+\end{table}
+
+\section{Interface Utilisateur Web — React}
+
+Le frontend web est développé en React 18 avec TypeScript et Tailwind CSS. Il comprend :
+
+\subsection{Dashboard Principal}
+\begin{itemize}
+  \item \textbf{KPI globaux :} taux de disponibilité, score de santé moyen, alertes actives, OT en cours.
+  \item \textbf{Liste des moteurs} avec codes couleur adaptatifs (Vert / Jaune / Orange / Rouge).
+  \item \textbf{Graphiques temps réel} des mesures vibratoires (WebSocket pour les mises à jour push).
+  \item \textbf{Fil d'alertes récentes} avec priorité et type de défaut.
+\end{itemize}
+
+\subsection{Vue Détaillée d'un Moteur}
+\begin{itemize}
+  \item \textbf{SanteCard :} jauge circulaire représentant le score de santé (0--100\%).
+  \item Graphiques de tendance des paramètres vibratoires, thermiques et électriques.
+  \item Historique des anomalies et des ordres de travail associés.
+\end{itemize}
+
+\section{Intégration Blockchain et IPFS}
+
+\subsection{Smart Contracts (Solidity)}
+
+Le Smart Contract déployé sur le réseau Hardhat \cite{hardhat} est écrit en Solidity \cite{ethereum},
+le langage de programmation natif de la blockchain Ethereum \cite{buterin2014} :
+\begin{itemize}
+  \item \texttt{WorkOrderRegistry.sol :} enregistrement immuable des ordres de travail
+  avec les fonctions \texttt{createWorkOrder()}, \texttt{updateStatus()}, \texttt{verifyIntegrity()}.
+  Cette approche garantit une auditabilité conforme aux exigences de la norme ISO 55000 \cite{iso55000}.
+\end{itemize}
+
+\subsection{Intégration IPFS}
+
+L'intégration IPFS \cite{ipfs} repose sur le protocole de stockage décentralisé développé par
+Protocol Labs, qui garantit l'adressage par contenu (\textit{content-addressed storage}) :
+
+\begin{enumerate}
+  \item Le rapport PDF est généré.
+  \item Le fichier est uploadé vers IPFS \cite{ipfs} via l'API HTTP.
+  \item IPFS retourne un CID (Content Identifier) --- hash cryptographique unique du fichier,
+  calculé selon l'algorithme SHA2-256 \cite{ipfs}.
+  \item L'immutabilité est garantie : toute modification ultérieure du fichier génèrerait un CID
+  différent, rendant toute falsification détectable.
+\end{enumerate}
+
+\subsection{Diagramme de Séquence : Génération Rapport PDF → Certification Blockchain/IPFS}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{sequence_rapport_blockchain.png}
+  \caption{Diagramme de séquence : Génération et certification immuable d’un rapport via IPFS + Blockchain}
+  \label{fig:seq-rapport-blockchain}
+\end{figure}
+
+
+\section{Business Intelligence — Tableaux de Bord BI}
+
+Des tableaux de bord BI offrent une dimension analytique et décisionnelle :
+\begin{itemize}
+  \item \textbf{Dashboard Opérationnel :} suivi temps réel des alertes et OT.
+  \item \textbf{Dashboard Analytique :} tendances MTBF/MTTR, analyse coûts des pannes, performance par équipement.
+\end{itemize}
+
+\section{Présentation de l'Application}
+
+\subsection{Architecture Générale de l'Interface}
+
+L'interface utilisateur de \projectname{} est organisée autour de trois espaces distincts
+selon le profil de l'utilisateur connecté :
+
+\begin{itemize}
+  \item \textbf{Espace Technicien :} centré sur les alertes actives et les ordres de travail
+  assignés. Comprend : liste OT, formulaire d'intervention, consultation diagnostic moteur.
+  \item \textbf{Espace Responsable Maintenance :} centré sur la supervision globale du parc.
+  Dashboard web React avec KPI temps réel (MTBF, MTTR, disponibilité), carte thermique des
+  moteurs, historiques et analyses de tendances.
+  \item \textbf{Espace Administrateur :} gestion des utilisateurs (RBAC), configuration des
+  moteurs.
+\end{itemize}
+
+\subsection{Fonctionnalités Clés de l'Application Web}
+
+\begin{itemize}
+  \item \textbf{Dashboard Temps Réel :} actualisation automatique via
+  WebSocket. Affiche les KPI globaux, la carte du parc de moteurs avec codes couleur adaptatifs
+  (Vert = Normal, Orange = Attention, Rouge = Critique) et le fil des dernières alertes.
+
+  \item \textbf{Vue Détaillée Moteur :} page dédiée à chaque moteur avec jauge de santé
+  circulaire (score 0--100\%), graphiques de tendance multi-paramètres (vibration,
+  température, courant), timeline des anomalies et liste des OT associés.
+
+  \item \textbf{Gestion des Ordres de Travail :} tableau Kanban des OT (\`{A} faire / En cours /
+  Termin\'{e}), formulaire de création lié à une anomalie, assignation technicien.
+
+  \item \textbf{Module Blockchain :} page de vérification d'intégrité permettant de valider la conformité des données avec l'enregistrement on-chain.
+
+  \item \textbf{Dashboard BI embarqués :} onglets analytiques avec les tableaux de bord
+  KPI, tendances MTBF/MTTR et analyse des coûts de maintenance,
+  génération PDF du rapport avec enregistrement automatique IPFS.
+\end{itemize}
+
+\subsection{Sécurité de l'Application}
+
+La sécurité de \projectname{} est assurée à plusieurs niveaux, conformément aux exigences
+de la norme ISO/IEC 27001 \cite{iso27001} en matière de sécurité des systèmes d'information :
+
+\begin{itemize}
+  \item \textbf{Authentification :} JWT avec refresh tokens (expiration 15 min) pour toutes
+  les requêtes vers l'API Gateway \cite{springboot}.
+  \item \textbf{Autorisation :} RBAC (\textit{Role-Based Access Control}) granulaire avec
+  3 rôles (Technicien, Responsable, Administrateur), tant au niveau applicatif Spring \cite{springboot}
+  que contractuel (Solidity \cite{ethereum}).
+  \item \textbf{Audit :} toutes les actions utilisateurs sont tracées dans les logs, garantissant une traçabilité
+  inaltérable et auditée, en ligne avec les recommandations ISO 55000 \cite{iso55000}.
+\end{itemize}
+
+
+% ============================================================
+\section{Présentation Illustrée de l'Application}
+% ============================================================
+
+Cette section présente les principales captures d'écran de la plateforme \projectname{},
+illustrant le processus de développement (gestion de projet, API, bases de données) et
+les interfaces utilisateurs livrées.
+
+% ---- Sous-section : Outils de développement ----
+\subsection{Outils et Environnement de Développement}
+
+\subsubsection{Tableau de Bord Jira — Gestion Agile du Projet}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{1.jira_screencapture.png}
+  \caption{Tableau Kanban Jira du projet VibraGuard --- Vue des colonnes \og{}À faire\fg{},
+  \og{}En cours\fg{}, \og{}Terminé\fg{} et \og{}Deploy\fg{} avec les tickets}
+  \label{fig:jira}
+\end{figure}
+
+Le tableau Kanban Jira (figure~\ref{fig:jira}) illustre la gestion Agile du projet.
+On distingue les quatre colonnes d'état : \textbf{À faire}, \textbf{En cours},
+\textbf{Terminé} et \textbf{Deploy}.
+
+\subsubsection{Documentation API — Swagger UI}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{2.swagger_screencapture.png}
+  \caption{Documentation Swagger UI de l'API VibraGuard --- Vue de l'ensemble des
+  endpoints REST organisés par domaine fonctionnel (Authentication, Motors, Alerts,
+  WorkOrders, Technicians, Analytics)}
+  \label{fig:swagger}
+\end{figure}
+
+La figure~\ref{fig:swagger} présente la documentation interactive Swagger UI générée
+automatiquement à partir des annotations OpenAPI 3.0 des contrôleurs Spring Boot
+\cite{springboot}. Les six groupes d'endpoints — \textit{Authentication},
+\textit{Motors}, \textit{Alerts}, \textit{WorkOrders}, \textit{Technicians} et
+\textit{Analytics} — reflètent directement l'architecture microservices de
+\projectname{} et les tableaux d'endpoints REST détaillés dans la section précédente.
+Les schémas de requête/réponse (\texttt{RegisterRequest}, \texttt{Motor},
+\texttt{VibrationData}, \texttt{WorkOrder}, \texttt{KPIData}, etc.) sont également
+exposés, facilitant l'intégration avec des systèmes tiers.
+
+\subsubsection{Base de Données Oracle — Structure des Tables Métier}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\textwidth]{3.oracle_Capture.png}
+  \caption{Connexion Oracle Database 21c Express Edition et structure des tables
+  \texttt{USERS} et \texttt{MOTORS} via SQL*Plus dans le namespace Kubernetes de
+  \projectname{}}
+  \label{fig:oracle}
+\end{figure}
+
+La figure~\ref{fig:oracle} confirme le déploiement opérationnel d'Oracle Database 21c
+Express Edition dans le namespace Kubernetes \texttt{vibraguard}. La commande
+\texttt{DESC USERS} révèle les colonnes de la table des utilisateurs (\texttt{ID},
+\texttt{EMAIL}, \texttt{FULL\_NAME}, \texttt{PASSWORD}, \texttt{ROLE}, \texttt{STATUS},
+\texttt{DEPARTMENT}, \texttt{ENTERPRISE}, \texttt{EMPLOYEE\_ID},
+\texttt{PHONE\_NUMBER}), modélisant le contrôle d'accès RBAC de la plateforme. La
+commande \texttt{DESC MOTORS} expose la structure des moteurs (\texttt{ID},
+\texttt{ETAT\_PCT}, \texttt{ETAT\_LABEL}, \texttt{ETAT\_COLOR},
+\texttt{LOCALISATION}, \texttt{DERNIERE\_ALERTE\_TYPE}, \texttt{POWER},
+\texttt{SITE}), entité centrale du domaine métier de \projectname{}.
+
+\subsubsection{Base de Données MongoDB — Collection des Vibrations}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{4.mongodb_Capture.png}
+  \caption{Connexion au pod MongoDB 8.2.9 via \texttt{mongosh} dans Kubernetes ---
+  Base de données \texttt{vibraguard} et collection \texttt{vibration\_data} opérationnelles}
+  \label{fig:mongodb}
+\end{figure}
+
+La figure~\ref{fig:mongodb} atteste du fonctionnement de MongoDB 8.2.9 déployé dans
+le namespace Kubernetes \texttt{vibraguard}. La commande \texttt{show dbs} confirme
+l'existence de la base \texttt{vibraguard} (40 KiB), et \texttt{show collections}
+expose la collection \texttt{vibration\_data}, réceptacle des séries temporelles
+vibratoires générées par le pipeline Kafka--Spark. MongoDB a été retenu pour ce stockage
+en raison de sa flexibilité schéma-less, particulièrement adaptée aux données IoT dont
+la structure peut évoluer avec l'ajout de nouveaux capteurs.
+
+% ---- Sous-section : Interfaces utilisateurs ----
+\subsection{Interfaces Utilisateurs de la Plateforme Web}
+
+\subsubsection{Page d'Inscription}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.82\textwidth]{5.register_image17.png}
+  \caption{Page d'inscription de \projectname{} --- Formulaire de création de compte
+  avec sélection du rôle (Administrateur, Responsable, Technicien) et de l'entreprise}
+  \label{fig:register}
+\end{figure}
+
+La page d'inscription (figure~\ref{fig:register}) permet la création d'un compte sur
+la plateforme \projectname{}. Le formulaire collecte le nom complet, l'adresse
+électronique professionnelle, le mot de passe (avec confirmation et indicateur de
+force), l'entreprise et le rôle (\textit{Administrateur}, \textit{Responsable
+Maintenance} ou \textit{Technicien}). L'enregistrement déclenche une requête
+\texttt{POST /api/v1/auth/register}, qui crée l'utilisateur en base Oracle DB et
+retourne un token JWT permettant l'accès immédiat à la plateforme.
+
+\subsubsection{Page de Connexion}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\textwidth]{6.login_image18.png}
+  \caption{Page de connexion sécurisée de \projectname{} --- Authentification JWT
+  avec option \og{}Se souvenir de moi\fg{} et lien vers la création de compte}
+  \label{fig:login}
+\end{figure}
+
+La page de connexion (figure~\ref{fig:login}) constitue le point d'entrée sécurisé de
+la plateforme. L'utilisateur saisit son adresse électronique professionnelle et son mot
+de passe ; une requête \texttt{POST /api/v1/auth/login} est soumise au backend Spring
+Boot \cite{springboot}, qui valide les identifiants et retourne un token JWT (durée de
+vie 15 minutes) avec un refresh token. L'option \og{}Se souvenir de moi\fg{} prolonge
+la session via le mécanisme de refresh token, conformément aux bonnes pratiques de
+sécurité ISO/IEC 27001 \cite{iso27001}.
+
+\subsubsection{Tableau de Bord Principal}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{7.home_screencapture.png}
+  \caption{Tableau de bord principal de \projectname{} --- KPI temps réel, cartographie
+  santé des moteurs, graphique d'analyse vibratoire et fil des alertes récentes}
+  \label{fig:dashboard}
+\end{figure}
+
+Le tableau de bord principal (figure~\ref{fig:dashboard}) constitue la vue centrale de
+\projectname{} pour le profil Administrateur/Responsable. Il agrège quatre KPI globaux
+en temps réel : le nombre total de moteurs surveillés (2), le nombre de moteurs en état
+critique (1), le taux de disponibilité global (30,0\%) et le nombre d'alertes actives
+(7). La \textbf{cartographie santé} présente visuellement les moteurs MTR-Broyeur-04 et
+MTR-Broyeur-07 avec leur statut colorimétrique. Le \textbf{graphique d'analyse Vibration
+RMS} affiche les données temps réel reçues via WebSocket. La section \og{}Moteurs Sous
+Surveillance\fg{} détaille par moteur l'état de santé (30\,\% Critique pour MTR-Broyeur-04
+vs. 100\,\% Normal pour MTR-Broyeur-07) et la vibration RMS courante. Enfin, le
+\textbf{fil des alertes récentes} liste les dernières anomalies détectées par le modèle
+Random Forest, avec le type de défaut et la valeur vibratoire associée.
+
+\subsubsection{Liste des Moteurs}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{8.motors_screencapture.png}
+  \caption{Page de gestion des moteurs industriels --- Vue carte des deux moteurs
+  MTR-Broyeur-04 et MTR-Broyeur-07 avec leur état de santé et vibration RMS courante}
+  \label{fig:motors}
+\end{figure}
+
+La page des moteurs (figure~\ref{fig:motors}) offre une vue inventaire du parc de
+machines surveillées. Chaque carte moteur affiche l'identifiant (\texttt{MTR-Broyeur-04},
+\texttt{MTR-Broyeur-07}), la localisation (Safi / Zone 1, Secteur A / Niveau 1),
+l'état de santé (\og{}Optimal\fg{} en vert au moment de la capture, indiquant l'absence
+d'anomalie active), la vibration RMS instantanée (1,2 mm/s) et le type de moteur
+(Asynchrone). Le bouton \og{}Ajouter un Moteur\fg{} permet l'enregistrement d'un
+nouvel équipement via l'endpoint \texttt{POST /api/v1/iot/motors}. Les filtres de
+recherche (par zone et par état de santé) facilitent la supervision d'un parc étendu.
+
+\subsubsection{Centre des Alertes}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{9.alertes_screencapture.png}
+  \caption{Page des alertes de \projectname{} --- Liste des 7 alertes critiques actives
+  classées par sévérité, avec type de défaut, score de confiance IA et statut}
+  \label{fig:alertes}
+\end{figure}
+
+La page des alertes (figure~\ref{fig:alertes}) centralise l'ensemble des anomalies
+détectées par le modèle Random Forest \cite{breiman2001} en temps réel. Les 7 alertes
+actives concernent le moteur MTR-Broyeur-04 et couvrent trois types de défauts :
+\texttt{DEFAUT\_ROULEMENT} (score de confiance IA : 53,77\%), \texttt{DESALIGNEMENT}
+(48,4\,\% à 81,92\,\%) et \texttt{SURCHARGE\_ELECTRIQUE} (47\,\%). Toutes sont
+classifiées \og{}Critique\fg{} par le système. Les filtres de sévérité, de plage de
+dates et de moteur permettent une navigation efficace dans l'historique des alertes.
+Les boutons d'action autorisent la confirmation ou l'escalade de chaque alerte.
+
+\subsubsection{Gestion des Ordres de Travail (Kanban)}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{11.ot_screencapture.png}
+  \caption{Vue Kanban des Ordres de Travail de \projectname{} --- Colonnes \og{}À faire\fg{},
+  \og{}En cours\fg{} et \og{}Terminé\fg{} avec les OT W-458 et W-459}
+  \label{fig:ot_kanban}
+\end{figure}
+
+La vue Kanban des Ordres de Travail (figure~\ref{fig:ot_kanban}) reprend le paradigme
+de gestion Agile appliqué à la maintenance industrielle. L'OT \textbf{W-458} (priorité
+Haute, moteur MTR-Broyeur-04, type Correctif, durée estimée 1h27, coût 400 MAD, assigné
+à Youssef Bouali) est en colonne \og{}À faire\fg{}. L'OT \textbf{W-459} (priorité Haute,
+moteur MTR-Broyeur-07, durée 2h30, coût 800 MAD) est \og{}En cours\fg{}. Le bouton
+\og{}Nouveau OT\fg{} déclenche le formulaire de création d'ordre de travail.
+
+\subsubsection{Formulaire de Création d'un Ordre de Travail}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{12.add_ot_image22.png}
+  \caption{Formulaire de création d'un Ordre de Travail dans \projectname{} ---
+  Sélection du moteur, du type d'anomalie, de la date, du technicien assigné et des
+  pièces nécessaires}
+  \label{fig:add_ot}
+\end{figure}
+
+Le formulaire de création d'OT (figure~\ref{fig:add_ot}) permet au responsable de
+maintenance de formaliser une intervention. Les champs requis incluent : le moteur
+concerné (liste déroulante liée à l'API \texttt{GET /api/v1/iot/motors}), le type
+d'anomalie et la sévérité associée, la date planifiée et la durée estimée (en heures
+et minutes), le type de maintenance (\og{}Préventif\fg{} ou \og{}Correctif\fg{}), le
+technicien assigné (liste déroulante des techniciens disponibles), les pièces
+nécessaires (recherche dans le magasin) et le coût estimé en MAD. La soumission du
+formulaire déclenche un \texttt{POST /api/v1/iot/work-orders} et notifie automatiquement
+le technicien assigné.
+
+\subsubsection{Audit Blockchain}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{13.audit_blockchain_image26.png}
+  \caption{Page d'Audit Blockchain de \projectname{} --- Tableau de bord d'intégrité
+  avec hash de transaction, numéro de bloc, moteur concerné et bouton de vérification}
+  \label{fig:audit_blockchain}
+\end{figure}
+
+La page d'audit Blockchain (figure~\ref{fig:audit_blockchain}) expose les KPI
+d'intégrité de la chaîne : 1 bloc sécurisé, 1 contrat intelligent actif sur le réseau
+Hardhat interne, un taux d'intégrité de \textbf{100\%} (aucune altération détectée) et
+un temps de synthèse (validation) de 0 seconde. La section \og{}Traçabilité
+d'Intervention en Direct\fg{} liste les transactions enregistrées on-chain, avec leur
+hash complet, le
+numéro de bloc (\#2), le moteur concerné (MTR-Broyeur-04), l'intervention (\og{}Création
+OT : Sans titre\fg{}), la date et l'adresse Ethereum de l'utilisateur.
+Le bouton \og{}Vérifier intégrité\fg{} déclenche l'appel au Smart Contract
+\texttt{verifyIntegrity()} \cite{ethereum,hardhat}.
+
+\subsubsection{Rapports IPFS}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{14.ipfs_image25.png}
+  \caption{Page Rapports IPFS de \projectname{} --- Rapport PDF quotidien stocké sur
+  IPFS avec son CID
+  et compteur de téléchargements}
+  \label{fig:ipfs_reports}
+\end{figure}
+
+La page Rapports IPFS (figure~\ref{fig:ipfs_reports}) liste les rapports PDF générés
+par la plateforme et stockés de façon décentralisée. Le rapport est stocké sur IPFS. Son CID constitue son empreinte cryptographique unique, générée à partir de son contenu \cite{ipfs} : toute modification ultérieure du fichier générerait
+un CID différent, trahissant immédiatement toute tentative de falsification. Le bouton
+\og{}Générer Rapport\fg{} déclenche la génération PDF côté serveur, son upload vers
+le nœud IPFS.
+
+\subsubsection{Tableau de Bord Décisionnel BI}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{15.bi_image24.png}
+  \caption{Tableau de Bord Décisionnel BI de \projectname{} --- KPI MTBF/MTTR/Disponibilité,
+  analyse des coûts de maintenance, cartographie géographique des sites (Maroc)
+  et répartition des types d'intervention}
+  \label{fig:bi}
+\end{figure}
+
+Le Tableau de Bord Décisionnel BI (figure~\ref{fig:bi}) fournit aux responsables
+maintenance une vue analytique agrégée. Les KPI du mois d'avril 2026 affichent :
+un MTBF quotidien de \textbf{24,0\,h}, un MTTR de \textbf{4,5\,h} (calculs conformes
+aux formules ISO 13374 \cite{iso13374} détaillées au Chapitre III), une disponibilité
+de \textbf{50\,\%} et un coût de maintenance (période test).
+Le graphique de coûts de maintenance compare le coût réel au budget alloué sur la
+période. Le diagramme en anneau de répartition des interventions indique 50\,\%
+d'interventions préventives. La \textbf{cartographie géographique du Maroc} localise
+les sites OCP connectés, affichant 1 site connecté et 55 alertes actives. Le module
+est accessible en vue quotidienne, hebdomadaire ou mensuelle, avec export PDF et Excel.
+
+
+\section{Conclusion}
+
+Ce chapitre a présenté l'ensemble des composants applicatifs de \projectname{}, depuis
+les microservices Spring Boot jusqu'à l'interface utilisateur React, en passant par
+l'intégration Blockchain/IPFS et dashboard BI. Le processus de développement
+Agile en cinq phases (préparation, conception, backend, frontend, tests/déploiement) a
+permis de livrer une plateforme complète et opérationnelle. La sécurité à plusieurs niveaux
+(JWT, RBAC, audit trail Blockchain) garantit l'intégrité et la confidentialité des données
+de maintenance. Les tests d'intégration et de charge
+confirment la solidité de l'architecture. La conclusion générale synthétise les résultats
+obtenus et trace les perspectives d'évolution de \projectname{}.
+
+% ============================
+\setcounter{chapter}{0}
+\chapter*{Conclusion Générale}
+\addcontentsline{toc}{chapter}{Conclusion Générale}
+\markboth{Conclusion Générale}{Conclusion Générale}
+% ============================
+
+Le projet \projectname{} a permis de concevoir, développer et valider une plateforme complète
+de maintenance prédictive pour les moteurs industriels, répondant pleinement aux objectifs fixés.
+Sur le plan du traitement massif de données, l'architecture combinant Apache Kafka \cite{kafka}
+et Apache Spark \cite{spark} s'est révélée pleinement opérationnelle, le pipeline ayant démontré
+sa capacité à absorber un débit élevé de messages tout en maintenant une
+latence de traitement faible. Sur le volet intelligence artificielle, le modèle
+Random Forest \cite{breiman2001} entraîné dans le cadre du projet atteint une précision globale
+de 92,0\% sur six classes de défauts moteurs, un résultat qui dépasse l'objectif initial
+et qui se révèle cohérent avec l'état de l'art rapporté pour des applications comparables de
+diagnostic de machines tournantes \cite{lei2020}. L'architecture applicative repose quant à elle
+sur un ensemble de microservices Spring Boot \cite{springboot} déployés sur Kubernetes
+\cite{kubernetes}, bénéficiant d'un auto-scaling natif et d'une chaîne d'intégration et de
+déploiement continus entièrement automatisée. La dimension Blockchain et stockage décentralisé
+n'a pas été négligée : l'intégration d'Ethereum et d'IPFS \cite{ethereum, ipfs} permet de certifier
+de façon immuable l'ensemble des rapports, avec un audit trail complet garantissant
+la conformité aux normes,
+l'application web développée en React \cite{react} offre une expérience utilisateur moderne et
+réactive, restituant les données en temps réel grâce à une couche d'observabilité.
+
+Le tableau ci-après synthétise, pour chacun des critères de succès retenus en début de projet,
+l'objectif fixé et le résultat effectivement obtenu. Il en ressort que tous les critères ont été
+atteints, et que la majorité d'entre eux --- précision de détection, débit de traitement, ainsi
+que la traçabilité blockchain --- ont même été dépassés, ce qui confirme la pertinence des choix
+architecturaux et technologiques opérés tout au long du projet.
+
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{L{4.5cm} C{2.5cm} C{2.5cm} C{2cm}}
+    \toprule
+    \rowcolor{gray!30}
+    \textbf{Critère} &
+    \textbf{Objectif} &
+    \textbf{Résultat} &
+    \textbf{Statut} \\
+    \midrule
+    \rowcolor{white}       Précision détection  & $> 85\%$         & $92{,}0\%$          & \textbf{Dépassé} \\
+    \rowcolor{gray!12}Latence traitement   & $< 2$\,s         & $\approx 1{,}2$\,s  & \textbf{Atteint} \\
+    \rowcolor{white}       Débit de traitement  & $> 10\,000$\,msg/s & $> 12\,000$\,msg/s    & \textbf{Dépassé} \\
+    \rowcolor{gray!12}Temps réponse API    & $< 200$\,ms (P95)& $\approx 145$\,ms   & \textbf{Atteint} \\
+    \rowcolor{white}       Disponibilité        & $> 99{,}5\%$     & $99{,}7\%$          & \textbf{Atteint} \\
+    \rowcolor{white}       Traçabilité blockchain & $100\%$        & $100\%$             & \textbf{Atteint} \\
+    \rowcolor{gray!12}Couverture tests     & $> 70\%$         & $78\%$              & \textbf{Atteint} \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Critères de succès — Objectifs vs. Résultats atteints}
+\end{table}
+
+\section*{Perspectives d'Amélioration}
+
+Si \projectname{} répond pleinement aux objectifs fixés dans le cadre de ce Projet de Fin
+d'Études, plusieurs axes d'amélioration se dessinent pour les mois et les années à venir,
+selon un horizon temporel croissant.
+
+À court terme, deux pistes complémentaires méritent d'être explorées. La première concerne
+l'apprentissage profond, et plus particulièrement les réseaux de neurones récurrents de type
+LSTM \cite{hochreiter1997}, dont l'aptitude à modéliser des dépendances temporelles longues
+pourrait enrichir l'analyse des séries vibratoires sur des périodes étendues, en complément du
+Random Forest actuellement déployé. La seconde piste relève de l'explicabilité des modèles
+(\textit{Explainable AI}) : l'intégration d'outils tels que SHAP (SHapley Additive exPlanations) pour une explication globale des prédictions et LIME (Local Interpretable Model-agnostic Explanations) pour une interprétation locale et compréhensible de chaque prédiction permet de fournir aux techniciens non spécialistes des explications claires et compréhensibles, renforçant ainsi la confiance et l'adoption opérationnelle de la solution \cite{lei2020}.
+
+À moyen terme, l'évolution de \projectname{} pourrait s'orienter vers l'\textit{Edge Computing}
+et le \textit{TinyML}, en déployant des modèles allégés directement sur les microcontrôleurs IoT
+afin de réduire la latence et de permettre une détection d'anomalies même en l'absence de
+connectivité réseau. Le développement d'un jumeau numérique (\textit{Digital Twin}) pour chaque
+moteur constituerait une seconde avancée significative, en autorisant la simulation de scénarios
+de dégradation avant qu'ils ne surviennent réellement sur le terrain. Enfin, une migration vers
+Hyperledger Fabric pourrait être envisagée afin de bénéficier de meilleures performances
+transactionnelles et d'une gouvernance d'entreprise mieux adaptée à un déploiement à grande échelle.
+
+À plus long terme, trois perspectives structurantes se dégagent. Le développement d'une
+application mobile dotée de capacités de réalité augmentée permettrait aux techniciens de
+visualiser directement les données de diagnostic sur l'équipement physique, en superposition de
+la réalité. L'intégration de \projectname{} au système ERP du Groupe OCP automatiserait quant à
+elle les commandes de pièces de rechange ainsi que l'imputation comptable des coûts de
+maintenance. Enfin, l'adoption de techniques d'apprentissage fédéré (\textit{Federated Learning})
+ouvrirait la voie à une amélioration collaborative des modèles de détection entre plusieurs
+sites industriels du Groupe, sans qu'aucun d'entre eux n'ait à partager ses données brutes,
+préservant ainsi la confidentialité tout en mutualisant les bénéfices de l'apprentissage.
+
+% ============================================================
+\appendix
+\inappendixparttrue
+% ============================================================
+
+\chapter{Glossaire des Termes Techniques}
+
+\begin{longtable}{L{3.5cm} L{9cm}}
+  \toprule
+  \rowcolor{gray!30}
+  \textbf{Terme} & \textbf{Définition} \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+  \rowcolor{white}       API              & Interface de programmation permettant la communication entre applications. \\
+  \rowcolor{white}       CID              & Content Identifier : identifiant cryptographique unique d'un fichier IPFS. \\
+  \rowcolor{gray!12}DAP              & Diammonium Phosphate : engrais phosphaté produit par réaction de l'acide phosphorique avec l'ammoniac, utilisé en agriculture. \\
+  \rowcolor{white}       ETL              & Extract Transform Load : processus d'extraction, transformation et chargement de données. \\
+  \rowcolor{gray!12}IIoT             & Industrial Internet of Things : IoT appliqué aux systèmes industriels. \\
+  \rowcolor{white}       IPFS             & InterPlanetary File System : protocole de stockage décentralisé pair-à-pair à adressage par contenu développé par Protocol Labs. \\
+  \rowcolor{gray!12}JWT              & JSON Web Token : standard ouvert pour l'échange sécurisé d'informations. \\
+  \rowcolor{white}       KPI              & Key Performance Indicator : indicateur clé de performance. \\
+  \rowcolor{gray!12}MAP              & Monoammonium Phosphate : engrais phosphaté soluble, utilisé en agriculture et comme retardateur de flamme. \\
+  \rowcolor{white}       MTBF             & Mean Time Between Failures : temps moyen entre deux pannes successives. \\
+  \rowcolor{gray!12}MTTR             & Mean Time To Repair : temps moyen de réparation après une panne. \\
+  \rowcolor{white}       MQTT             & Message Queuing Telemetry Transport : protocole léger de messagerie IoT standardisé par l'OASIS. \\
+  \rowcolor{gray!12}OASIS            & Organization for the Advancement of Structured Information Standards : organisme de normalisation des standards informatiques, notamment MQTT. \\
+  \rowcolor{white}       RBAC             & Role-Based Access Control : contrôle d'accès basé sur les rôles. \\
+  \rowcolor{gray!12}SLA              & Service Level Agreement : accord de niveau de service définissant les engagements de qualité et de disponibilité d'un service. \\
+  \rowcolor{white}       Smart Contract   & Programme autonome auto-exécutable déployé sur la blockchain. \\
+  \rowcolor{gray!12}TSP              & Triple Superphosphate : engrais phosphaté concentré obtenu par traitement de la roche phosphatée à l'acide phosphorique. \\
+\end{longtable}
+
+\chapter{Travaux Effectués et Résultats}
+
+\section{Récapitulatif des Travaux Effectués}
+
+L'ensemble des travaux réalisés dans le cadre du projet \projectname{} peut être regroupé
+en cinq grands domaines d'activité :
+
+\begin{table}[H]
+  \centering
+  \small
+  \begin{tabularx}{\textwidth}{L{3cm} L{8cm} C{1.5cm}}
+    \toprule
+    \rowcolor{gray!30}
+    \textbf{Domaine} &
+    \textbf{Travaux Réalisés} &
+    \textbf{Statut} \\
+    \midrule
+    \rowcolor{white}       Data Science    & Pipeline ETL, entraînement Random Forest (92,0\%), prétraitement et évaluation & \textbf{Done} \\
+    \rowcolor{gray!12}Big Data        & Configuration cluster Kafka, jobs Spark Streaming (latence 1,2s), stockage MongoDB & \textbf{Done} \\
+    \rowcolor{white}       Backend         & Microservices Spring Boot, APIs REST, sécurité JWT, RBAC & \textbf{Done} \\
+    \rowcolor{gray!12}Frontend        & Dashboard React temps réel (WebSocket), gestion OT, alertes & \textbf{Done} \\
+    \rowcolor{white}       Blockchain/IPFS & Smart Contract Solidity (WorkOrderRegistry), intégration IPFS, audit trail & \textbf{Done} \\
+    \rowcolor{gray!12}Infrastructure  & Déploiement Kubernetes GCP, CI/CD GitHub Actions, monitoring Prometheus/Grafana & \textbf{Done} \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Récapitulatif des travaux effectués}
+\end{table}
+
+\section{Résultats et Recommandations}
+
+\subsection{Résultats Techniques}
+
+\begin{resultbox}
+  \textbf{Synthèse des résultats obtenus :}\\
+  Précision du modèle IA : \textbf{92,0\%} (objectif : 85\%) |
+  Latence : \textbf{1,2 s} (objectif : $<$ 2 s) |
+  Disponibilité : \textbf{99,7\%} (objectif : 99,5\%) |
+  Débit : \textbf{12 000 msg/s} (objectif : 10 000 msg/s)
+\end{resultbox}
+
+\subsection{Analyse des Résultats}
+
+\begin{itemize}
+  \item \textbf{Précision IA :} le dépassement de 10 points de l'objectif initial (92,0\%
+  vs. 85\%) s'explique par la qualité des données capteurs réelles, la robustesse du pipeline de
+  nettoyage et le choix pertinent du Random Forest.
+
+  \item \textbf{Performance Big Data :} la latence de 1,2 secondes est obtenue grâce à
+  l'optimisation des micro-batchs Spark (fenêtres de 2s) et au tuning des paramètres du
+  cluster Kafka (partitions, réplication, compression LZ4).
+
+  \item \textbf{Fiabilité Blockchain :} 100\% des événements critiques sont certifiés
+  on-chain, avec un temps de confirmation moyen de 3 secondes sur le réseau Hardhat privé,
+  sans aucune transaction échouée lors des tests de charge.
+\end{itemize}
+
+\subsection{Recommandations}
+
+À l'issue de ce projet, plusieurs recommandations sont formulées pour le déploiement en
+production et la pérennisation de la solution :
+
+\begin{enumerate}
+  \item \textbf{Déploiement progressif :} commencer par un pilote sur 5 à 10 moteurs
+  critiques de l'usine de Safi avant généralisation à l'ensemble du parc.
+  \item \textbf{Formation des équipes :} organiser des sessions de formation pour les
+  techniciens et responsables maintenance sur l'utilisation de l'interface web.
+  \item \textbf{Intégration ERP :} connecter \projectname{} au système ERP de l'OCP pour
+  automatiser les commandes de pièces de rechange et l'intégration comptable des coûts.
+  \item \textbf{Réentraînement périodique :} mettre en place un pipeline MLOps pour le
+  réentraînement mensuel automatique des modèles sur les nouvelles données de production.
+  \item \textbf{Migration Hyperledger :} envisager une migration vers Hyperledger Fabric
+  pour les besoins d'une blockchain enterprise avec gouvernance fine.
+  \item \textbf{Audit de sécurité :} conduire un audit de sécurité (pentest) avant le
+  déploiement en production, en ciblant notamment les Smart Contracts et l'API Gateway.
+\end{enumerate}
+
+
+
+% ---- Bibliographie ----
+%\bibliographystyle{ieeetr}
+\inmainchaptersfalse
+
+\begin{thebibliography}{99}
+
+\bibitem{ocpgroup}
+  Groupe OCP,
+  \textit{Rapport Annuel OCP S.A.},
+  \url{https://www.ocpgroup.ma}, consulté en 2025.
+
+\bibitem{usgs2025}
+  U.S. Geological Survey (USGS),
+  \textit{Mineral Commodity Summaries -- Phosphate Rock},
+  U.S. Department of the Interior, January 2025.
+
+\bibitem{schwab2016}
+  K. Schwab,
+  \textit{The Fourth Industrial Revolution},
+  World Economic Forum, Geneva, 2016.
+
+\bibitem{hermann2016}
+  M. Hermann, T. Pentek, B. Otto,
+  \textit{Design Principles for Industrie 4.0 Scenarios},
+  49th Hawaii International Conference on System Sciences (HICSS), pp. 3928--3937, 2016.
+
+\bibitem{mobley2002}
+  R. K. Mobley,
+  \textit{An Introduction to Predictive Maintenance},
+  2nd ed., Butterworth-Heinemann, 2002.
+
+\bibitem{benhanifia2025}
+  A. Benhanifia, Z. Ben Cheikh, P. Moura Oliveira, A. Valente, J. Lima,
+  \textit{Systematic review of predictive maintenance practices in the manufacturing sector},
+  Intelligent Systems with Applications, vol. 26, p. 200501, 2025.
+
+\bibitem{randall2011}
+  R. B. Randall,
+  \textit{Vibration-based Condition Monitoring: Industrial, Aerospace and Automotive Applications},
+  John Wiley \& Sons, 2011.
+
+\bibitem{dewell1984}
+  D. L. Dewell and L. D. Mitchell,
+  ``Detection of a Misaligned Disk Coupling Using Spectrum Analysis,''
+  \textit{ASME Journal of Vibration, Acoustics, Stress, and Reliability in Design},
+  vol. 106, no. 1, pp. 9--16, 1984.
+
+\bibitem{randallandantoni2011}
+  R. B. Randall and J. Antoni,
+  ``Rolling element bearing diagnostics---A tutorial,''
+  \textit{Mechanical Systems and Signal Processing},
+  vol. 25, no. 2, pp. 485--520, 2011.
+
+\bibitem{lee2014}
+  J. Lee, F. Wu, W. Zhao, M. Ghaffari, L. Liao, D. Siegel,
+  \textit{Prognostics and health management design for rotary machinery systems -- Reviews, methodology and applications},
+  Mechanical Systems and Signal Processing, vol. 42, no. 1--2, pp. 314--334, 2014.
+
+\bibitem{mqtt}
+  OASIS Standard,
+  \textit{MQTT Version 3.1.1 Specification},
+  \url{https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html}, 2014.
+
+\bibitem{kreps2011}
+  J. Kreps, N. Narkhede, J. Rao,
+  \textit{Kafka: a Distributed Messaging System for Log Processing},
+  Proceedings of the NetDB Workshop, VLDB, 2011.
+
+\bibitem{kafka}
+  Apache Software Foundation,
+  \textit{Apache Kafka Documentation},
+  \url{https://kafka.apache.org/documentation/}, 2024.
+
+\bibitem{spark}
+  Apache Software Foundation,
+  \textit{Apache Spark Documentation},
+  \url{https://spark.apache.org/docs/latest/}, 2024.
+
+\bibitem{breiman2001}
+  L. Breiman,
+  \textit{Random forests},
+  Machine Learning, vol. 45, no. 1, pp. 5--32, 2001.
+
+\bibitem{sklearn}
+  F. Pedregosa et al.,
+  \textit{Scikit-learn: Machine Learning in Python},
+  Journal of Machine Learning Research, vol. 12, pp. 2825--2830, 2011.
+
+\bibitem{nakamoto2008}
+  S. Nakamoto,
+  \textit{Bitcoin: A Peer-to-Peer Electronic Cash System},
+  \url{https://bitcoin.org/bitcoin.pdf}, 2008.
+
+\bibitem{buterin2014}
+  V. Buterin,
+  \textit{A Next-Generation Smart Contract and Decentralized Application Platform},
+  Ethereum White Paper, 2014.
+
+\bibitem{iso55000}
+  ISO,
+  \textit{ISO 55000:2014 -- Asset management -- Overview, principles and terminology},
+  International Organization for Standardization, 2014.
+
+\bibitem{iso13374}
+  ISO,
+  \textit{ISO 13374-1:2003 -- Condition monitoring and diagnostics of machines},
+  International Organization for Standardization, 2003.
+
+\bibitem{hardhat}
+  Nomic Foundation,
+  \textit{Hardhat -- Ethereum Development Environment},
+  \url{https://hardhat.org/docs}, 2024.
+
+\bibitem{ipfs}
+  Protocol Labs,
+  \textit{IPFS Documentation},
+  \url{https://docs.ipfs.tech/}, 2024.
+
+\bibitem{jardine2006}
+  A. K. S. Jardine, D. Lin, D. Banjevic,
+  \textit{A review on machinery diagnostics and prognostics implementing condition-based maintenance},
+  Mechanical Systems and Signal Processing, vol. 20, no. 7, pp. 1483--1510, 2006.
+
+\bibitem{itil2019}
+  AXELOS,
+  \textit{ITIL Foundation: ITIL 4 Edition},
+  TSO (The Stationery Office), 2019.
+
+\bibitem{springboot}
+  Broadcom / VMware (Spring),
+  \textit{Spring Boot Reference Documentation},
+  \url{https://docs.spring.io/spring-boot/docs/current/reference/html/}, 2024.
+
+\bibitem{ethereum}
+  Ethereum Foundation,
+  \textit{Ethereum Developer Documentation},
+  \url{https://ethereum.org/en/developers/docs/}, 2024.
+
+\bibitem{kubernetes}
+  The Linux Foundation,
+  \textit{Kubernetes Documentation},
+  \url{https://kubernetes.io/docs/home/}, 2024.
+
+\bibitem{react}
+  Meta Open Source,
+  \textit{React -- A JavaScript Library for Building User Interfaces},
+  \url{https://react.dev/}, 2024.
+
+\bibitem{espressif2024}
+  Espressif Systems,
+  \textit{ESP32 Series Datasheet}, Version 5.2,
+  \url{https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf}, 2024.
+
+\bibitem{ds18b20}
+  Analog Devices (Maxim Integrated),
+  \textit{DS18B20 Programmable Resolution 1-Wire Digital Thermometer},
+  \url{https://www.analog.com/media/en/technical-documentation/data-sheets/ds18b20.pdf}.
+
+\bibitem{acs712}
+  Allegro MicroSystems,
+  \textit{ACS712: Fully Integrated, Hall Effect-Based Linear Current Sensor},
+  \url{https://www.allegromicro.com/en/products/sense/current-sensor-ics/integrated-current-sensors/acs712}.
+
+\bibitem{ads1115}
+  Texas Instruments,
+  \textit{ADS111x 16-Bit ADC Datasheet}, SBAS444D,
+  \url{https://www.ti.com/lit/ds/symlink/ads1115.pdf}, 2018.
+
+\bibitem{doe2010}
+  U.S. Department of Energy,
+  \textit{Operations \& Maintenance Best Practices: A Guide to Achieving Operational Efficiency},
+  Federal Energy Management Program, August 2010.
+
+\bibitem{antoni2006}
+  J. Antoni,
+  ``The spectral kurtosis: a useful tool for characterising non-stationary signals,''
+  \textit{Mechanical Systems and Signal Processing},
+  vol.~20, no.~2, pp.~282--307, 2006.
+
+\bibitem{lei2020}
+  Y. Lei, B. Yang, X. Jiang, F. Jia, N. Li, A. K. Nandi,
+  \textit{Applications of machine learning to machine fault diagnosis: A review and roadmap},
+  Mechanical Systems and Signal Processing, vol. 138, 2020.
+
+\bibitem{iso27001}
+  ISO/IEC,
+  \textit{ISO/IEC 27001:2022 -- Information security management systems},
+  International Organization for Standardization, 2022.
+
+\bibitem{hochreiter1997}
+  S. Hochreiter, J. Schmidhuber,
+  \textit{Long short-term memory},
+  Neural Computation, vol. 9, no. 8, pp. 1735--1780, 1997.
+
+\end{thebibliography}
+
+\end{document}
