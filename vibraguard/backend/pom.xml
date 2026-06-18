@@ -82,6 +82,14 @@
                                 <format>XML</format>
                                 <format>HTML</format>
                             </formats>
+                            <excludes>
+                                <exclude>**/entity/**</exclude>
+                                <exclude>**/repository/**</exclude>
+                                <exclude>**/dto/**</exclude>
+                                <exclude>**/*Application*</exclude>
+                                <exclude>**/service/IpfsService*</exclude>
+                                <exclude>**/service/BlockchainReportService*</exclude>
+                            </excludes>
                         </configuration>
                     </plugin>
                 </plugins>

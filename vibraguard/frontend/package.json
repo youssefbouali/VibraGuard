@@ -18,7 +18,7 @@
     "start": "node dist/server/node-build.mjs",
     "test": "vitest --run",
     "test:watch": "vitest",
-    "test:coverage": "vitest --coverage",
+    "test:coverage": "jest --coverage --runInBand",
     "test:jest": "jest --runInBand",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",

@@ -1,5 +1,3 @@
-import { describe, it, expect } from 'vitest'
-
 describe('Utility Tests', () => {
   it('should verify basic utility functions', () => {
     const add = (a: number, b: number) => a + b
