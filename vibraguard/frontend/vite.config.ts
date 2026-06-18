@@ -7,19 +7,19 @@ import { createServer } from "./server";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 8080,
+    port: 30008,
     fs: {
       allow: [".", "./client", "./shared"],
       deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**", "server/**"],
     },
     proxy: {
       "/api": {
-        target: "http://localhost:8080",
+        target: "http://localhost:30008",
         changeOrigin: true,
         secure: false,
       },
       "/ws": {
-        target: "ws://localhost:8080",
+        target: "ws://localhost:30008",
         ws: true,
       },
       "/blockchain-rpc": {

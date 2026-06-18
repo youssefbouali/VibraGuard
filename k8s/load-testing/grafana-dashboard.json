@@ -1,0 +1,181 @@
+{
+  "title": "VibraGuard - Load Test Metrics",
+  "uid": "vibraguard-load-test",
+  "tags": ["vibraguard", "load-test"],
+  "schemaVersion": 36,
+  "version": 1,
+  "timezone": "browser",
+  "panels": [
+    {
+      "title": "Throughput (msg/s)",
+      "type": "stat",
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 6},
+      "targets": [
+        {
+          "expr": "kafka_load_test_throughput",
+          "legendFormat": "Kafka",
+          "instant": true
+        },
+        {
+          "expr": "mqtt_load_test_throughput",
+          "legendFormat": "MQTT",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "yellow", "value": 10000},
+              {"color": "green", "value": 12000}
+            ]
+          },
+          "mappings": []
+        }
+      },
+      "description": "Messages per second throughput for Kafka and MQTT load tests"
+    },
+    {
+      "title": "P95 Latency (ms)",
+      "type": "stat",
+      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 6},
+      "targets": [
+        {
+          "expr": "kafka_load_test_latency_p95_ms",
+          "legendFormat": "Kafka P95",
+          "instant": true
+        },
+        {
+          "expr": "mqtt_load_test_latency_p95_ms",
+          "legendFormat": "MQTT P95",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 145},
+              {"color": "red", "value": 200}
+            ]
+          }
+        }
+      },
+      "description": "95th percentile latency"
+    },
+    {
+      "title": "Latency Percentiles - Kafka (ms)",
+      "type": "bargauge",
+      "gridPos": {"x": 0, "y": 6, "w": 12, "h": 8},
+      "targets": [
+        {"expr": "kafka_load_test_latency_p50_ms", "legendFormat": "P50"},
+        {"expr": "kafka_load_test_latency_p95_ms", "legendFormat": "P95"},
+        {"expr": "kafka_load_test_latency_p99_ms", "legendFormat": "P99"},
+        {"expr": "kafka_load_test_latency_avg_ms", "legendFormat": "Avg"},
+        {"expr": "kafka_load_test_latency_max_ms", "legendFormat": "Max"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 145},
+              {"color": "red", "value": 200}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Latency Percentiles - MQTT (ms)",
+      "type": "bargauge",
+      "gridPos": {"x": 12, "y": 6, "w": 12, "h": 8},
+      "targets": [
+        {"expr": "mqtt_load_test_latency_p50_ms", "legendFormat": "P50"},
+        {"expr": "mqtt_load_test_latency_p95_ms", "legendFormat": "P95"},
+        {"expr": "mqtt_load_test_latency_p99_ms", "legendFormat": "P99"},
+        {"expr": "mqtt_load_test_latency_min_ms", "legendFormat": "Min"},
+        {"expr": "mqtt_load_test_latency_max_ms", "legendFormat": "Max"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 145},
+              {"color": "red", "value": 200}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Throughput Over Time (msg/s)",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 14, "w": 24, "h": 8},
+      "targets": [
+        {
+          "expr": "kafka_load_test_throughput",
+          "legendFormat": "Kafka"
+        },
+        {
+          "expr": "mqtt_load_test_throughput",
+          "legendFormat": "MQTT"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "yellow", "value": 10000},
+              {"color": "green", "value": 12000}
+            ]
+          }
+        }
+      },
+      "description": "Throughput trend across multiple test runs"
+    },
+    {
+      "title": "P95 Latency Over Time (ms)",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 22, "w": 24, "h": 8},
+      "targets": [
+        {
+          "expr": "kafka_load_test_latency_p95_ms",
+          "legendFormat": "Kafka P95"
+        },
+        {
+          "expr": "mqtt_load_test_latency_p95_ms",
+          "legendFormat": "MQTT P95"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 145},
+              {"color": "red", "value": 200}
+            ]
+          }
+        }
+      },
+      "description": "P95 latency trend across multiple test runs"
+    }
+  ]
+}

@@ -1,15 +1,14 @@
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor, act } from "@testing-library/react";
-import { apiRequest } from "@/lib/api";
 import { useAlerts } from "./use-alerts";
 import { useKPIs } from "./use-kpis";
 import { useVibrations } from "./use-vibrations";
 import { useMoteurs } from "./use-moteurs";
 
-jest.mock("@/lib/api", () => ({
-  apiRequest: jest.fn(),
-}));
+jest.mock("@/lib/api", () => ({ apiRequest: jest.fn() }));
+
+const mockApiRequest = (jest.requireMock("@/lib/api") as any).apiRequest;
 
 class MockWebSocket {
   static instances: MockWebSocket[] = [];
@@ -40,8 +39,8 @@ describe("websocket hooks", () => {
   beforeEach(() => {
     (global as any).WebSocket = MockWebSocket as any;
     MockWebSocket.instances = [];
-    (apiRequest as unknown as jest.Mock).mockReset();
-    (apiRequest as unknown as jest.Mock).mockResolvedValue([]);
+    mockApiRequest.mockReset();
+    mockApiRequest.mockResolvedValue([]);
   });
 
   it("useAlerts pushes new alerts into query cache without duplicates", async () => {
@@ -76,7 +75,7 @@ describe("websocket hooks", () => {
   });
 
   it("useKPIs invalidates and refetches on alert message", async () => {
-    (apiRequest as unknown as jest.Mock)
+    mockApiRequest
       .mockResolvedValueOnce({ totalMotors: 1 })
       .mockResolvedValueOnce({ totalMotors: 2 });
 
@@ -84,7 +83,7 @@ describe("websocket hooks", () => {
     const { result } = renderHook(() => useKPIs(), { wrapper: Wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(apiRequest).toHaveBeenCalledWith("GET", "/api/v1/bi/kpis");
+    expect(mockApiRequest).toHaveBeenCalledWith("GET", "/api/v1/bi/kpis");
     expect(MockWebSocket.instances).toHaveLength(1);
     await waitFor(() => expect(MockWebSocket.instances[0].onmessage).toBeTruthy());
 
@@ -92,11 +91,11 @@ describe("websocket hooks", () => {
       MockWebSocket.instances[0].onmessage?.({ data: JSON.stringify({ id: "A1" }) });
     });
 
-    await waitFor(() => expect((apiRequest as unknown as jest.Mock).mock.calls.length).toBeGreaterThanOrEqual(2));
+    await waitFor(() => expect(mockApiRequest.mock.calls.length).toBeGreaterThanOrEqual(2));
   });
 
   it("useVibrations appends websocket data and filters by motorId when provided", async () => {
-    (apiRequest as unknown as jest.Mock).mockResolvedValueOnce([]);
+    mockApiRequest.mockResolvedValueOnce([]);
 
     const { Wrapper } = createWrapper();
     const { result } = renderHook(() => useVibrations("M1"), { wrapper: Wrapper });
@@ -124,7 +123,7 @@ describe("websocket hooks", () => {
   });
 
   it("useMoteurs updates vibration and alert fields via websockets", async () => {
-    (apiRequest as unknown as jest.Mock).mockResolvedValueOnce([
+    mockApiRequest.mockResolvedValueOnce([
       {
         id: "M1",
         type: "x",

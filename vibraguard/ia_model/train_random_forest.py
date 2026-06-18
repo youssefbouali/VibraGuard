@@ -42,27 +42,6 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
 
-# Introduce label noise to achieve 90-95% accuracy
-np.random.seed(42)
-noise_rate = 0.08
-unique_labels = list(y.unique())
-y_train = y_train.copy()
-y_test = y_test.copy()
-
-# Flip training labels
-n_train_flip = int(len(y_train) * noise_rate)
-train_flip_indices = np.random.choice(y_train.index, size=n_train_flip, replace=False)
-for idx in train_flip_indices:
-    choices = [l for l in unique_labels if l != y_train.loc[idx]]
-    y_train.loc[idx] = np.random.choice(choices)
-   
-# Flip testing labels
-n_test_flip = int(len(y_test) * noise_rate)
-test_flip_indices = np.random.choice(y_test.index, size=n_test_flip, replace=False)
-for idx in test_flip_indices:
-    choices = [l for l in unique_labels if l != y_test.loc[idx]]
-    y_test.loc[idx] = np.random.choice(choices)
-
 # --- NETTOYAGE DES DONNÉES ---
 print("Nettoyage des données (Imputation et Outliers)...")
 from sklearn.impute import SimpleImputer
@@ -120,6 +99,25 @@ print(f"Precision: {precision*100:.2f}%")
 print(f"Recall: {recall*100:.2f}%")
 print(f"F1: {f1*100:.2f}%")
 print(f"Cross-Validation Mean Accuracy: {cv_scores.mean()*100:.2f}% (std: {cv_scores.std()*100:.2f}%)")
+
+print()
+print("  Rapport par classe (test set):")
+print("  " + "-"*73)
+print(f"  {'Classe':<27} {'Precision':>8} {'Recall':>8} {'F1':>8} {'Support':>8}")
+print("  " + "-"*73)
+
+from sklearn.metrics import classification_report
+report = classification_report(y_test, y_pred, target_names=rf_model.classes_, digits=3)
+# Convert decimal values to percentages
+import re
+def format_pct(m):
+    val = float(m.group())
+    return f"{val*100:.1f}%"
+report_pct = re.sub(r'\b0\.\d{3}\b', format_pct, report)
+for line in report_pct.split('\n'):
+    if line.strip():
+        print("  " + line)
+print("  " + "-"*73)
 
 # Importance des features
 feature_importance = pd.DataFrame({

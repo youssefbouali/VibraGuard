@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="MQTT P95 Latency Test" enabled="true">
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+        <collectionProp name="Arguments.arguments">
+          <elementProp name="MQTT_BROKER" elementType="Argument">
+            <stringProp name="Argument.name">MQTT_BROKER</stringProp>
+            <stringProp name="Argument.value">vibraguard.mywire.org</stringProp>
+          </elementProp>
+          <elementProp name="MQTT_PORT" elementType="Argument">
+            <stringProp name="Argument.name">MQTT_PORT</stringProp>
+            <stringProp name="Argument.value">30083</stringProp>
+          </elementProp>
+          <elementProp name="MQTT_TOPIC" elementType="Argument">
+            <stringProp name="Argument.name">MQTT_TOPIC</stringProp>
+            <stringProp name="Argument.value">vibraguard/sensors</stringProp>
+          </elementProp>
+          <elementProp name="MOTOR_ID" elementType="Argument">
+            <stringProp name="Argument.name">MOTOR_ID</stringProp>
+            <stringProp name="Argument.value">MTR-Broyeur-04</stringProp>
+          </elementProp>
+        </collectionProp>
+      </elementProp>
+    </TestPlan>
+    <hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="10k Sensors - Latency P95" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <intProp name="LoopController.loops">1</intProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">10000</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">120</stringProp>
+        <longProp name="ThreadGroup.start_time">1700000000000</longProp>
+        <longProp name="ThreadGroup.end_time">1700000000000</longProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+        <stringProp name="ThreadGroup.duration"></stringProp>
+        <stringProp name="ThreadGroup.delay"></stringProp>
+      </ThreadGroup>
+      <hashTree>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="MQTT Publish - Connect/Send/Disconnect" enabled="true">
+          <stringProp name="scriptLanguage">groovy</stringProp>
+          <stringProp name="script"><![CDATA[
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import groovy.json.JsonBuilder;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+String broker = "tcp://" + vars.get("MQTT_BROKER") + ":" + vars.get("MQTT_PORT");
+String topic = vars.get("MQTT_TOPIC");
+String motorId = vars.get("MOTOR_ID");
+String clientId = "jmeter_latency_" + Thread.currentThread().getId() + "_" + UUID.randomUUID().toString().substring(0, 8);
+
+Random rand = ThreadLocalRandom.current();
+
+try {
+    MqttClient client = new MqttClient(broker, clientId);
+    MqttConnectOptions opts = new MqttConnectOptions();
+    opts.setAutomaticReconnect(false);
+    opts.setCleanSession(true);
+    opts.setConnectionTimeout(30);
+    opts.setKeepAliveInterval(60);
+    client.connect(opts);
+
+    Map data = [motor_id: motorId];
+    boolean isAnomaly = rand.nextDouble() < 0.2;
+
+    if (isAnomaly) {
+        String[] scenarios = ["ROULEMENT", "DESEQUILIBRE", "DESALIGNEMENT", "SURCHAUFFE", "ELECTRIQUE"];
+        String scenario = scenarios[rand.nextInt(scenarios.length)];
+        data.status = "anomalous";
+
+        switch (scenario) {
+            case "ROULEMENT":
+                data.vib_rms = Math.round((rand.nextDouble() * 1.5 + 3.5) * 100.0) / 100.0;
+                data.vib_peak = Math.round((rand.nextDouble() * 10.0 + 20.0) * 100.0) / 100.0;
+                data.vib_kurtosis = Math.round((rand.nextDouble() * 5.0 + 7.0) * 100.0) / 100.0;
+                data.current_rms = Math.round((rand.nextDouble() * 1.0 + 8.5) * 100.0) / 100.0;
+                data.current_thd = Math.round((rand.nextDouble() * 2.0 + 4.0) * 100.0) / 100.0;
+                data.temperature = Math.round((rand.nextDouble() * 10.0 + 55.0) * 100.0) / 100.0;
+                break;
+            case "DESEQUILIBRE":
+                data.vib_rms = Math.round((rand.nextDouble() * 5.0 + 9.0) * 100.0) / 100.0;
+                data.vib_peak = Math.round((rand.nextDouble() * 4.0 + 14.0) * 100.0) / 100.0;
+                data.vib_kurtosis = Math.round((rand.nextDouble() * 0.4 + 2.8) * 100.0) / 100.0;
+                data.current_rms = Math.round((rand.nextDouble() * 1.5 + 9.5) * 100.0) / 100.0;
+                data.current_thd = Math.round((rand.nextDouble() * 3.0 + 5.0) * 100.0) / 100.0;
+                data.temperature = Math.round((rand.nextDouble() * 15.0 + 60.0) * 100.0) / 100.0;
+                break;
+            case "DESALIGNEMENT":
+                data.vib_rms = Math.round((rand.nextDouble() * 3.0 + 5.0) * 100.0) / 100.0;
+                data.vib_peak = Math.round((rand.nextDouble() * 5.0 + 10.0) * 100.0) / 100.0;
+                data.vib_kurtosis = Math.round((rand.nextDouble() * 1.5 + 3.0) * 100.0) / 100.0;
+                data.current_rms = Math.round((rand.nextDouble() * 1.5 + 9.0) * 100.0) / 100.0;
+                data.current_thd = Math.round((rand.nextDouble() * 3.0 + 6.0) * 100.0) / 100.0;
+                data.temperature = Math.round((rand.nextDouble() * 10.0 + 70.0) * 100.0) / 100.0;
+                break;
+            case "SURCHAUFFE":
+                data.vib_rms = Math.round((rand.nextDouble() * 1.5 + 3.0) * 100.0) / 100.0;
+                data.vib_peak = Math.round((rand.nextDouble() * 4.0 + 8.0) * 100.0) / 100.0;
+                data.vib_kurtosis = Math.round((rand.nextDouble() * 1.0 + 2.5) * 100.0) / 100.0;
+                data.current_rms = Math.round((rand.nextDouble() * 2.0 + 11.0) * 100.0) / 100.0;
+                data.current_thd = Math.round((rand.nextDouble() * 3.0 + 7.0) * 100.0) / 100.0;
+                data.temperature = Math.round((rand.nextDouble() * 20.0 + 95.0) * 100.0) / 100.0;
+                break;
+            default: // ELECTRIQUE
+                data.vib_rms = Math.round((rand.nextDouble() * 1.5 + 2.5) * 100.0) / 100.0;
+                data.vib_peak = Math.round((rand.nextDouble() * 3.0 + 7.0) * 100.0) / 100.0;
+                data.vib_kurtosis = Math.round((rand.nextDouble() * 1.0 + 2.5) * 100.0) / 100.0;
+                data.current_rms = Math.round((rand.nextDouble() * 7.0 + 15.0) * 100.0) / 100.0;
+                data.current_thd = Math.round((rand.nextDouble() * 12.0 + 18.0) * 100.0) / 100.0;
+                data.temperature = Math.round((rand.nextDouble() * 10.0 + 75.0) * 100.0) / 100.0;
+                break;
+        }
+    } else {
+        data.vib_rms = Math.round((rand.nextDouble() * 1.0 + 2.0) * 100.0) / 100.0;
+        data.vib_peak = Math.round((rand.nextDouble() * 2.0 + 7.0) * 100.0) / 100.0;
+        data.vib_kurtosis = Math.round((rand.nextDouble() * 1.0 + 2.5) * 100.0) / 100.0;
+        data.current_rms = Math.round((rand.nextDouble() * 1.0 + 8.0) * 100.0) / 100.0;
+        data.current_thd = Math.round((rand.nextDouble() * 2.0 + 4.0) * 100.0) / 100.0;
+        data.temperature = Math.round((rand.nextDouble() * 10.0 + 50.0) * 100.0) / 100.0;
+        data.status = "normal";
+    }
+
+    String payload = new JsonBuilder(data).toJson();
+
+    MqttMessage msg = new MqttMessage(payload.getBytes("UTF-8"));
+    msg.setQos(0);
+
+    long start = System.nanoTime();
+    client.publish(topic, msg);
+    long elapsedNs = System.nanoTime() - start;
+    long elapsedMs = TimeUnit.NANOSECONDS.toMillis(elapsedNs);
+
+    SampleResult.setSuccessful(true);
+    SampleResult.setResponseCode("200");
+    SampleResult.setResponseMessage("Published in " + elapsedMs + "ms");
+    SampleResult.setResponseData(payload, "UTF-8");
+    SampleResult.setLatency(elapsedMs);
+    SampleResult.setSampleLabel("MQTT Publish");
+
+    client.disconnect();
+    client.close();
+
+} catch (Exception e) {
+    SampleResult.setSuccessful(false);
+    SampleResult.setResponseCode("500");
+    SampleResult.setResponseMessage("Error: " + e.getMessage());
+    log.error("MQTT latency test error: " + e.getMessage(), e);
+}
+          ]]></stringProp>
+          <stringProp name="parameters"></stringProp>
+          <boolProp name="resetInterpreter">false</boolProp>
+        </JSR223Sampler>
+        <hashTree/>
+        <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="Aggregate Report - Latency" enabled="true">
+          <boolProp name="ResultCollector.success_only">false</boolProp>
+          <objProp>
+            <name>saveConfig</name>
+            <value class="SampleSaveConfiguration">
+              <time>true</time>
+              <latency>true</latency>
+              <timestamp>true</timestamp>
+              <success>true</success>
+              <label>true</label>
+              <code>true</code>
+              <message>true</message>
+              <threadName>true</threadName>
+              <dataType>true</dataType>
+              <encoding>false</encoding>
+              <assertions>true</assertions>
+              <subresults>true</subresults>
+              <responseData>false</responseData>
+              <samplerData>false</samplerData>
+              <xml>false</xml>
+              <fieldNames>true</fieldNames>
+              <responseHeaders>false</responseHeaders>
+              <requestHeaders>false</requestHeaders>
+              <responseDataOnError>false</responseDataOnError>
+              <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+              <assertionsResultsToSave>0</assertionsResultsToSave>
+              <bytes>true</bytes>
+              <sentBytes>true</sentBytes>
+              <url>true</url>
+              <threadCounts>true</threadCounts>
+              <idleTime>true</idleTime>
+              <connectTime>true</connectTime>
+            </value>
+          </objProp>
+          <stringProp name="filename"></stringProp>
+        </ResultCollector>
+        <hashTree/>
+      </hashTree>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>

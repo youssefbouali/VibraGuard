@@ -1,8 +1,15 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { formatTime } from "@/lib/utils";
+
+const VISIBLE_COUNT = 60;
 
 export function TendanceVibratoire({ vibrations = [] }: { vibrations?: any[] }) {
   const [selectedMetric, setSelectedMetric] = useState<string>("vibRms");
+  const [panOffset, setPanOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, offset: 0 });
+  const chartRef = useRef<HTMLDivElement>(null);
+
   const chartW = 640;
   const chartH = 200;
 
@@ -18,6 +25,36 @@ export function TendanceVibratoire({ vibrations = [] }: { vibrations?: any[] }) 
   ];
 
   const currentMetric = METRICS.find(m => m.key === selectedMetric) || METRICS[0];
+
+  const maxPan = Math.max(0, safeVibrations.length - VISIBLE_COUNT);
+  const clampedPan = Math.max(-maxPan, Math.min(0, panOffset));
+  const startIdx = safeVibrations.length - VISIBLE_COUNT + clampedPan;
+  const visibleData = safeVibrations.slice(Math.max(0, startIdx), Math.max(0, startIdx + VISIBLE_COUNT));
+  const visibleDays = visibleData.map(v => v.time);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX, offset: panOffset });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !chartRef.current) return;
+    const rect = chartRef.current.getBoundingClientRect();
+    const svgWidth = rect.width;
+    if (svgWidth === 0) return;
+    const dx = e.clientX - dragStart.x;
+    const pixelPerPoint = svgWidth / VISIBLE_COUNT;
+    const deltaPoints = Math.round(dx / pixelPerPoint);
+    setPanOffset(dragStart.offset + deltaPoints);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseLeave = () => {
+    if (isDragging) setIsDragging(false);
+  };
 
   return (
     <div className="flex flex-col rounded-lg border border-black/[0.08] bg-[#0B1518] p-6">
@@ -49,13 +86,20 @@ export function TendanceVibratoire({ vibrations = [] }: { vibrations?: any[] }) 
       </div>
 
       {/* Chart */}
-      <div className="relative w-full">
+      <div
+        ref={chartRef}
+        className="relative w-full select-none"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+        style={{ cursor: isDragging ? "grabbing" : safeVibrations.length > VISIBLE_COUNT ? "grab" : "default" }}
+      >
         <div className="relative w-full overflow-visible">
           <svg viewBox={`-60 0 ${chartW + 80} ${chartH + 40}`} className="w-full" preserveAspectRatio="none">
             {/* Grid lines and Y-axis labels */}
             {[0, 0.25, 0.5, 0.75, 1].map((frac) => {
               const y = frac * chartH;
-              // Simple inverse calculation for labels (approximate based on current scale)
               const maxVal = chartH / currentMetric.scale;
               const val = ((1 - frac) * maxVal).toFixed(1);
               return (
@@ -70,17 +114,17 @@ export function TendanceVibratoire({ vibrations = [] }: { vibrations?: any[] }) 
 
             {/* Render selected metric line */}
             {(() => {
-              const points = safeVibrations.map((v, i) => [
-                safeVibrations.length > 1 ? (i / (safeVibrations.length - 1)) * chartW : chartW / 2,
+              const points = visibleData.map((v, i) => [
+                visibleData.length > 1 ? (i / (visibleData.length - 1)) * chartW : chartW / 2,
                 chartH - (((v as any)[selectedMetric] || 0) * currentMetric.scale)
               ]);
               const polyline = points.map(([x, y]) => `${x},${y}`).join(" ");
               return (
                 <>
                   <polyline points={polyline} fill="none" stroke={currentMetric.color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                  {safeVibrations.map((v, i) => {
+                  {visibleData.map((v, i) => {
                     if (!v.isAnomalous) return null;
-                    const x = safeVibrations.length > 1 ? (i / (safeVibrations.length - 1)) * chartW : chartW / 2;
+                    const x = visibleData.length > 1 ? (i / (visibleData.length - 1)) * chartW : chartW / 2;
                     const y = chartH - (((v as any)[selectedMetric] || 0) * currentMetric.scale);
                     return <circle key={i} cx={x} cy={y} r="3.5" fill="#EF4444" className="animate-pulse" />;
                   })}
@@ -91,10 +135,10 @@ export function TendanceVibratoire({ vibrations = [] }: { vibrations?: any[] }) 
             {/* X axis labels */}
             {(() => {
               const maxLabels = 5;
-              const step = Math.max(1, Math.floor(days.length / maxLabels));
-              return days.map((day, i) => {
-                if (i % step !== 0 && i !== days.length - 1) return null;
-                const x = i === days.length - 1 ? chartW - 10 : (i / (days.length - 1)) * chartW;
+              const step = Math.max(1, Math.floor(visibleDays.length / maxLabels));
+              return visibleDays.map((day, i) => {
+                if (i % step !== 0 && i !== visibleDays.length - 1) return null;
+                const x = i === visibleDays.length - 1 ? chartW - 10 : (i / (visibleDays.length - 1)) * chartW;
                 return (
                   <text key={`${day}-${i}`} x={x} y={chartH + 28} fill="#64748B" fontSize="11" fontFamily="Inter" textAnchor="middle">
                     {formatTime(day)}
@@ -105,8 +149,9 @@ export function TendanceVibratoire({ vibrations = [] }: { vibrations?: any[] }) 
           </svg>
         </div>
       </div>
+
       {/* Legend / Last Value */}
-      <div className="flex items-center justify-center pt-6 border-t border-white/5 mt-4">
+      <div className="flex items-center justify-between pt-6 border-t border-white/5 mt-4">
         <div className="flex items-center gap-2.5">
           <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: currentMetric.color, boxShadow: `0 0 8px ${currentMetric.color}40` }} />
           <span className="text-[#94A3B8] text-[13px] font-medium">
@@ -116,6 +161,11 @@ export function TendanceVibratoire({ vibrations = [] }: { vibrations?: any[] }) 
             </span>
           </span>
         </div>
+        {safeVibrations.length > VISIBLE_COUNT && (
+          <span className="text-[#4FB3AF] text-[10px]">
+            {isDragging ? "Glisser" : clampedPan < 0 ? `${Math.min(startIdx + VISIBLE_COUNT, safeVibrations.length)}/${safeVibrations.length}` : "← glisser pour naviguer →"}
+          </span>
+        )}
       </div>
     </div>
   );

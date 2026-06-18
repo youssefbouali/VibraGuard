@@ -1,0 +1,160 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kafka-load-test
+  namespace: vibraguard
+  labels:
+    app: kafka-load-test
+    type: performance-test
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app: kafka-load-test
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: kafka-load-test
+          image: confluentinc/cp-kafka:7.5.0
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              echo "=========================================="
+              echo "  VibraGuard - Kafka Load Test"
+              echo "  Target: 10,000 simulated sensors"
+              echo "  Expected: Throughput >= 10000 msg/s"
+              echo "  Expected: P95 Latency <= 200 ms"
+              echo "=========================================="
+
+              KAFKA_BROKER="kafka:9092"
+              TOPIC="vibraguard.sensor-data"
+              TOTAL_MESSAGES=100000
+              NUM_THREADS=100
+              MSGS_PER_THREAD=1200
+
+              echo ""
+              echo "[1/4] Vérification de la connectivité Kafka..."
+              for i in $(seq 1 10); do
+                kafka-topics --bootstrap-server $KAFKA_BROKER --list > /dev/null 2>&1 && break
+                echo "  Tentative $i/10 - En attente de Kafka..."
+                sleep 5
+              done
+
+              echo "[2/4] Création du topic si inexistant..."
+              kafka-topics --bootstrap-server $KAFKA_BROKER \
+                --create --if-not-exists \
+                --topic $TOPIC \
+                --partitions 12 \
+                --replication-factor 1 2>/dev/null || true
+
+              echo ""
+              echo "[3/4] Exécution du test via kafka-producer-perf-test..."
+              echo "  Messages : $TOTAL_MESSAGES | Taille ~150 bytes"
+              echo ""
+
+              kafka-producer-perf-test \
+                --topic $TOPIC \
+                --num-records $TOTAL_MESSAGES \
+                --record-size 150 \
+                --throughput -1 \
+                --producer-props bootstrap.servers=$KAFKA_BROKER acks=1 linger.ms=0 batch.size=16384 \
+                --print-metrics 2>&1 | tee /tmp/perf_results.txt
+
+              echo ""
+              echo "[4/4] Extraction des métriques et export vers Prometheus..."
+
+              RESULTS=$(grep "records sent" /tmp/perf_results.txt | tail -1)
+
+              TOTAL=$(echo "$RESULTS" | sed 's/^ *\([0-9]*\) .*/\1/')
+              THROUGHPUT=$(echo "$RESULTS" | sed 's/.*, \([0-9.]*\) records\/sec.*/\1/')
+              AVG_LAT=$(echo "$RESULTS" | sed 's/.* \([0-9.]*\) ms avg latency.*/\1/')
+              MAX_LAT=$(echo "$RESULTS" | sed 's/.* \([0-9.]*\) ms max latency.*/\1/')
+              P50=$(echo "$RESULTS" | sed 's/.* \([0-9]*\) ms 50th.*/\1/')
+              P95=$(echo "$RESULTS" | sed 's/.* \([0-9]*\) ms 95th.*/\1/')
+              P99=$(echo "$RESULTS" | sed 's/.* \([0-9]*\) ms 99th.*/\1/')
+
+              P95_INT=$(echo "$P95" | cut -d'.' -f1)
+              THROUGHPUT_INT=$(echo "$THROUGHPUT" | cut -d'.' -f1)
+
+              echo ""
+              echo "=========================================="
+              echo "   RÉSULTATS DU TEST KAFKA"
+              echo "=========================================="
+              echo "  Messages envoyés  : ${TOTAL:-N/A}"
+              echo "  Débit (Throughput): ${THROUGHPUT:-N/A} msg/s"
+              echo "  Latence moyenne   : ${AVG_LAT:-N/A} ms"
+              echo "  Latence P50       : ${P50:-N/A} ms"
+              echo "  Latence P95       : ${P95:-N/A} ms"
+              echo "  Latence P99       : ${P99:-N/A} ms"
+              echo "  Latence Max       : ${MAX_LAT:-N/A} ms"
+              echo "------------------------------------------"
+
+              if [ -n "$P95_INT" ] && [ "$P95_INT" -le 200 ]; then
+                echo "  [PASS] P95=${P95} ms <= 200 ms ✓"
+              else
+                echo "  [FAIL] P95=${P95:-N/A} ms > 200 ms ✗"
+              fi
+
+              if [ -n "$THROUGHPUT_INT" ] && [ "$THROUGHPUT_INT" -ge 10000 ]; then
+                echo "  [PASS] Débit=${THROUGHPUT} msg/s >= 10000 msg/s ✓"
+              else
+                echo "  [WARN] Débit=${THROUGHPUT:-N/A} msg/s < 10000 msg/s"
+              fi
+              echo "=========================================="
+
+              echo ""
+              echo "[5/4] Export vers Prometheus Pushgateway..."
+
+              export PATH="$PATH:/usr/bin"
+              apt-get update -qq 2>/dev/null && apt-get install -y -qq curl 2>/dev/null || true
+
+              PUSHGATEWAY="prometheus-prometheus-pushgateway:9091"
+              JOB_NAME="kafka_load_test"
+              INSTANCE="kafka-$(hostname)"
+
+              cat > /tmp/push_metrics.txt << EOFPROM
+              # HELP kafka_load_test_throughput Messages per second
+              # TYPE kafka_load_test_throughput gauge
+              kafka_load_test_throughput{instance="$INSTANCE"} $THROUGHPUT
+              # HELP kafka_load_test_latency_p50_ms P50 latency in ms
+              # TYPE kafka_load_test_latency_p50_ms gauge
+              kafka_load_test_latency_p50_ms{instance="$INSTANCE"} $P50
+              # HELP kafka_load_test_latency_p95_ms P95 latency in ms
+              # TYPE kafka_load_test_latency_p95_ms gauge
+              kafka_load_test_latency_p95_ms{instance="$INSTANCE"} $P95
+              # HELP kafka_load_test_latency_p99_ms P99 latency in ms
+              # TYPE kafka_load_test_latency_p99_ms gauge
+              kafka_load_test_latency_p99_ms{instance="$INSTANCE"} $P99
+              # HELP kafka_load_test_latency_avg_ms Average latency in ms
+              # TYPE kafka_load_test_latency_avg_ms gauge
+              kafka_load_test_latency_avg_ms{instance="$INSTANCE"} $AVG_LAT
+              # HELP kafka_load_test_latency_max_ms Max latency in ms
+              # TYPE kafka_load_test_latency_max_ms gauge
+              kafka_load_test_latency_max_ms{instance="$INSTANCE"} $MAX_LAT
+              # HELP kafka_load_test_total_records Total records sent
+              # TYPE kafka_load_test_total_records gauge
+              kafka_load_test_total_records{instance="$INSTANCE"} $TOTAL
+              EOFPROM
+
+              if wget --post-file=/tmp/push_metrics.txt -q -O- --timeout=5 http://$PUSHGATEWAY/metrics/job/$JOB_NAME 2>/dev/null; then
+                echo "  [OK] Métriques poussées vers Pushgateway ✓"
+              else
+                echo "  [WARN] Impossible d'atteindre Pushgateway, tentative avec curl..."
+                if curl -s --data-binary @/tmp/push_metrics.txt --connect-timeout 5 http://$PUSHGATEWAY/metrics/job/$JOB_NAME 2>/dev/null; then
+                  echo "  [OK] Métriques poussées via curl ✓"
+                else
+                  echo "  [WARN] Pushgateway indisponible, métriques sauvegardées dans /tmp/push_metrics.txt"
+                fi
+              fi
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          env:
+            - name: KAFKA_HEAP_OPTS
+              value: "-Xmx512m -Xms256m"

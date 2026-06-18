@@ -1,0 +1,91 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mqtt-load-test
+  namespace: vibraguard
+  labels:
+    app: mqtt-load-test
+    type: performance-test
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app: mqtt-load-test
+    spec:
+      initContainers:
+      - name: install-mosquitto
+        image: alpine:3.18
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          apk add --no-cache mosquitto-clients bc
+          cp /usr/bin/mosquitto_pub /shared/mosquitto_pub
+        volumeMounts:
+        - mountPath: /shared
+          name: shared-bin
+      containers:
+      - name: mqtt-load-test
+        image: alpine:3.18
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          apk add --no-cache curl python3 py3-pip
+          pip3 install paho-mqtt --break-system-packages 2>/dev/null || pip3 install paho-mqtt
+
+          cp /script/mqtt-load-test.py /tmp/load_test.py
+
+          MQTT_BROKER="mosquitto"
+          MQTT_PORT="1883"
+          TOPIC="vibraguard/sensors"
+          export NUM_WORKERS=8
+          export MSGS_PER_WORKER=15000
+          TOTAL_MESSAGES=$((NUM_WORKERS * MSGS_PER_WORKER))
+
+          echo "=========================================="
+          echo "  VibraGuard - MQTT Load Test (v2)"
+          echo "  Broker : $MQTT_BROKER:$MQTT_PORT"
+          echo "  Topic  : $TOPIC"
+          echo "  Workers: $NUM_WORKERS | Messages/worker: $MSGS_PER_WORKER"
+          echo "  Messages total   : $TOTAL_MESSAGES"
+          echo "  Objectif P95     : <= 200 ms"
+          echo "  Objectif Debit   : >= 12000 msg/s"
+          echo "=========================================="
+
+          echo ""
+          echo "[1/5] Verification connectivite MQTT..."
+          for i in $(seq 1 10); do
+            /shared/mosquitto_pub -h $MQTT_BROKER -p $MQTT_PORT \
+              -t "vibraguard/healthcheck" -m "ping" -q 0 2>/dev/null && break
+            echo "  Tentative $i/10 - En attente du broker MQTT..."
+            sleep 3
+          done
+          echo "  Broker MQTT accessible!"
+
+          echo ""
+          echo "[2/5] Script Python pret dans /tmp/load_test.py"
+
+          echo "[3/5] Execution du test de charge MQTT (Python/paho-mqtt)..."
+          echo "  Workers: $NUM_WORKERS | Messages/worker: $MSGS_PER_WORKER"
+          echo ""
+          python3 /tmp/load_test.py
+        resources:
+          requests:
+            cpu: "1"
+            memory: 256Mi
+          limits:
+            cpu: "2"
+            memory: 512Mi
+        volumeMounts:
+        - mountPath: /shared
+          name: shared-bin
+        - mountPath: /script
+          name: test-script
+      restartPolicy: Never
+      volumes:
+      - name: shared-bin
+        emptyDir: {}
+      - name: test-script
+        configMap:
+          name: mqtt-load-test-script

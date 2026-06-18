@@ -13,7 +13,7 @@ export function createServer() {
   app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
   // Proxy API requests to backend
-  const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
+  const backendUrl = process.env.BACKEND_URL || "http://localhost:30008";
   console.log(`📡 Backend proxy target: ${backendUrl}`);
 
   // Proxy Blockchain RPC requests to internal Kubernetes Hardhat service

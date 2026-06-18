@@ -177,7 +177,6 @@ export default function Reports() {
   const [integrityByReport, setIntegrityByReport] = useState<Record<string, IntegrityStatus>>({});
   const [formData, setFormData] = useState({
     type: "pdf",
-    frequency: "quotidien",
   });
 
   useEffect(() => {
@@ -229,12 +228,11 @@ export default function Reports() {
         const doc = new jsPDF() as any;
         doc.setFontSize(22);
         doc.setTextColor(0, 122, 61);
-        doc.text("VibraGuard - Rapport " + formData.frequency, 14, 22);
+        doc.text("VibraGuard - Rapport", 14, 22);
 
         doc.setFontSize(10);
         doc.setTextColor(100);
         doc.text(`Généré le: ${new Date().toLocaleString()}`, 14, 30);
-        doc.text(`Période: ${formData.frequency}`, 14, 35);
 
         autoTable(doc, {
           startY: 45,
@@ -297,48 +295,6 @@ export default function Reports() {
         });
 
         fileContent = doc.output("dataurlstring");
-      } else {
-        const XLSX = await import("xlsx");
-        const wb = XLSX.utils.book_new();
-
-        const wsData = [
-          ["KPI", "Valeur", "Tendance"],
-          ["MTBF", mtbfValue, "Live"],
-          ["MTTR", mttrValue, "Live"],
-          ["Disponibilité", availabilityValue, "Live"],
-          ["Coût Maintenance", maintenanceCostValue, "Live"],
-          ["Nombre de moteurs", String(kpis?.totalMotors ?? safeMotors.length), "Live"],
-          ["Alertes actives", String(kpis?.activeAlerts ?? safeAlerts.length), "Live"],
-          ["Ordres de travail actifs", String(kpis?.activeWorkOrders ?? safeWorkOrders.length), "Live"],
-        ];
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-        XLSX.utils.book_append_sheet(wb, ws, "Rapport");
-
-        const reliabilitySheetData = [
-          ["Site", "MTBF", "MTTR"],
-          ...reliabilityBySiteRows,
-        ];
-        const reliabilitySheet = XLSX.utils.aoa_to_sheet(reliabilitySheetData);
-        XLSX.utils.book_append_sheet(wb, reliabilitySheet, "MTTR_MTBF Site");
-
-        const motorSheetData = [
-          ["ID", "Type", "Zone", "Localisation", "Etat", "Vibration", "Dernière alerte"],
-          ...(safeMotors.length > 0
-            ? safeMotors.map((motor) => [
-                motor.id || "N/A",
-                motor.type || "N/A",
-                motor.zone || "N/A",
-                motor.localisation || "N/A",
-                motor.etatSante || "N/A",
-                formatMotorVibration(motor.vibrationRMS),
-                motor.derniereAlerte || "Aucune",
-              ])
-            : [["Aucun moteur", "-", "-", "-", "-", "-", "-"]]),
-        ];
-        const motorsSheet = XLSX.utils.aoa_to_sheet(motorSheetData);
-        XLSX.utils.book_append_sheet(wb, motorsSheet, "Moteurs");
-
-        fileContent = XLSX.write(wb, { type: "base64" });
       }
 
       const newReport = await api.generateReport({
@@ -713,26 +669,11 @@ export default function Reports() {
                   className="w-full px-3 py-2 rounded-md border border-white/10 bg-white/5 text-white text-sm"
                 >
                   <option value="pdf">PDF</option>
-                  <option value="excel">Excel</option>
+
                 </select>
               </div>
 
-              <div>
-                <label className="block text-[#E6F0F2] text-sm font-medium mb-2">
-                  Fréquence
-                </label>
-                <select
-                  value={formData.frequency}
-                  onChange={(e) =>
-                    setFormData({ ...formData, frequency: e.target.value })
-                  }
-                  className="w-full px-3 py-2 rounded-md border border-white/10 bg-white/5 text-white text-sm"
-                >
-                  <option value="quotidien">Quotidien</option>
-                  <option value="hebdomadaire">Hebdomadaire</option>
-                  <option value="mensuel">Mensuel</option>
-                </select>
-              </div>
+
 
               <div className="flex gap-3 pt-4">
                 <button

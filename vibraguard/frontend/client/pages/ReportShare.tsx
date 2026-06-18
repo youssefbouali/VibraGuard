@@ -142,6 +142,11 @@ export default function ReportShare() {
               month: 'long',
               year: 'numeric'
             })}
+            {report.createdBy && (
+              <span className="block mt-1 text-vibraguard-500">
+                Généré par {report.createdBy}
+              </span>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

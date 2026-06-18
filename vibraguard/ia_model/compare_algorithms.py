@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_curve, auc
 
 # Algorithmes
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
@@ -113,3 +113,27 @@ plt.xlim(0.8, 1.0)
 plt.tight_layout()
 plt.savefig('models_comparison.png', dpi=150)
 print("\nGraphique de comparaison enregistre: models_comparison.png")
+
+# ================ ROC CURVE POUR CHAQUE MODELE ================
+print("\nGenerating ROC curves for all models...")
+plt.figure(figsize=(10, 8))
+
+for _, row in results_df.iterrows():
+    name = row["Modele"]
+    model = row["ObjetModele"]
+    # Utiliser predict_proba pour obtenir les probabilités (nécessaire pour ROC)
+    y_score = model.predict_proba(X_test_scaled)[:, 1]
+    fpr, tpr, _ = roc_curve(y_test, y_score)
+    roc_auc = auc(fpr, tpr)
+    plt.plot(fpr, tpr, lw=2, label=f'{name} (AUC = {roc_auc:.3f})')
+
+plt.plot([0, 1], [0, 1], 'k--', lw=2, label='Random Guessing')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC Curves - Comparaison des Modèles')
+plt.legend(loc="lower right")
+plt.tight_layout()
+plt.savefig('roc_comparison.png', dpi=150)
+print("roc_comparison.png saved successfully!")

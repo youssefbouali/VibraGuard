@@ -1,0 +1,62 @@
+[
+  {
+    "id": "MTR-Broyeur-01",
+    "zone": "Zone Broyage",
+    "localisation": "Bâtiment A - Niveau 2",
+    "type": "Moteur Asynchrone 3 phases",
+    "puissance": "250 kW",
+    "etatSante": "Critique",
+    "vibrationRMS": 12.45,
+    "derniereAlerte": "2026-06-18T08:14:00Z",
+    "derniereAlerteType": "Déséquilibre Rotorique",
+    "alerteRef": "#ALT-8402"
+  },
+  {
+    "id": "MTR-Conv-12",
+    "zone": "Zone Convoyage",
+    "localisation": "Bâtiment B - Niveau 1",
+    "type": "Moteur à Courant Continu",
+    "puissance": "75 kW",
+    "etatSante": "Attention",
+    "vibrationRMS": 7.82,
+    "derniereAlerte": "2026-06-18T06:45:00Z",
+    "derniereAlerteType": "Usure Roulement",
+    "alerteRef": "#ALT-8401"
+  },
+  {
+    "id": "MTR-Pompe-02",
+    "zone": "Zone Broyage",
+    "localisation": "Bâtiment A - Niveau 1",
+    "type": "Moteur Synchrone",
+    "puissance": "150 kW",
+    "etatSante": "Optimal",
+    "vibrationRMS": 2.34,
+    "derniereAlerte": "2026-06-17T14:22:00Z",
+    "derniereAlerteType": "Sain",
+    "alerteRef": null
+  },
+  {
+    "id": "MTR-Broyeur-04",
+    "zone": "Zone Broyage",
+    "localisation": "Bâtiment A - Niveau 3",
+    "type": "Moteur Asynchrone 3 phases",
+    "puissance": "400 kW",
+    "etatSante": "Critique",
+    "vibrationRMS": 15.67,
+    "derniereAlerte": "2026-06-18T08:14:00Z",
+    "derniereAlerteType": "Déséquilibre Rotorique",
+    "alerteRef": "#ALT-8403"
+  },
+  {
+    "id": "MTR-Vent-A",
+    "zone": "Zone Convoyage",
+    "localisation": "Bâtiment B - Niveau 2",
+    "type": "Moteur à Aimants Permanents",
+    "puissance": "45 kW",
+    "etatSante": "Optimal",
+    "vibrationRMS": 1.89,
+    "derniereAlerte": "2026-06-17T16:30:00Z",
+    "derniereAlerteType": "Sain",
+    "alerteRef": null
+  }
+]

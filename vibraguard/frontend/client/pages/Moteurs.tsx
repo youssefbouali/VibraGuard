@@ -181,10 +181,6 @@ export default function Moteurs() {
     toast.success("Téléchargement des données moteurs lancé");
   };
 
-  const handleDownloadMotor = (motor: Moteur) => {
-    downloadMotorsCsv([motor], `motor-${motor.id}-power-bi.csv`);
-    toast.success(`Téléchargement lancé pour ${motor.id}`);
-  };
 
   return (
     <DashboardLayout breadcrumb="Moteurs">
@@ -344,16 +340,6 @@ export default function Moteurs() {
                       </div>
                     </div>
                     <div className="px-6 py-4 flex items-center justify-end gap-2 pr-10">
-                       <button
-                         onClick={(e) => {
-                           e.stopPropagation();
-                           handleDownloadMotor(m);
-                         }}
-                         className="flex w-8 h-8 items-center justify-center rounded bg-[#0F2730] hover:bg-[#163340] transition-colors shrink-0"
-                         title="Download this motor for Power BI"
-                       >
-                         <Download className="w-4 h-4 text-[#C9E7E6]" />
-                       </button>
                        <ActionBtn><VibrationIcon /></ActionBtn>
                        <DropdownMenu>
                          <DropdownMenuTrigger asChild>
@@ -397,18 +383,7 @@ export default function Moteurs() {
                       <p className="text-white font-medium">{m.type}</p>
                     </div>
                   </div>
-                  <div className="mt-5 pt-4 border-t border-white/5">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDownloadMotor(m);
-                      }}
-                      className="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-white/10 bg-white/5 text-[#E6F0F2] text-xs font-medium hover:bg-white/10 transition-colors"
-                    >
-                      <Download className="w-4 h-4" />
-                      Download Motor Data
-                    </button>
-                  </div>
+
                 </div>
               );
             })}

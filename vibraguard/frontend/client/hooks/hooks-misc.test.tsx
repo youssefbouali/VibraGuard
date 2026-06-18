@@ -1,15 +1,13 @@
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
-import { fetchWorkOrderEvents, getBlockchainStats } from "@/lib/blockchain";
 import { useIsMobile } from "./use-mobile";
 import { useAudit } from "./use-audit";
 import { useBlockchainKPIs } from "./use-blockchain-kpis";
 
-jest.mock("@/lib/blockchain", () => ({
-  fetchWorkOrderEvents: jest.fn(),
-  getBlockchainStats: jest.fn(),
-}));
+const mockFetchWorkOrderEvents = jest.fn();
+const mockGetBlockchainStats = jest.fn();
+jest.mock("@/lib/blockchain", () => ({ fetchWorkOrderEvents: mockFetchWorkOrderEvents, getBlockchainStats: mockGetBlockchainStats }));
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -36,7 +34,7 @@ describe("misc hooks", () => {
   });
 
   it("useAudit returns blockchain events when available", async () => {
-    (fetchWorkOrderEvents as unknown as jest.Mock).mockResolvedValueOnce([
+    mockFetchWorkOrderEvents.mockResolvedValueOnce([
       { hash: "0x1", date: "2025-01-01T00:00:00.000Z" },
     ]);
 
@@ -47,12 +45,12 @@ describe("misc hooks", () => {
   });
 
   it("useBlockchainKPIs derives KPIs and handles unreachable blockchain", async () => {
-    (fetchWorkOrderEvents as unknown as jest.Mock).mockResolvedValueOnce([
+    mockFetchWorkOrderEvents.mockResolvedValueOnce([
       { bloc: "#1", date: "2025-01-01T00:00:00.000Z" },
       { bloc: "#2", date: "2025-01-01T00:00:05.000Z" },
       { bloc: "#2", date: "2025-01-01T00:00:10.000Z" },
     ]);
-    (getBlockchainStats as unknown as jest.Mock).mockResolvedValueOnce({});
+    mockGetBlockchainStats.mockResolvedValueOnce({});
 
     const wrapper = createWrapper();
     const { result } = renderHook(() => useBlockchainKPIs(), { wrapper });
@@ -62,7 +60,7 @@ describe("misc hooks", () => {
     expect(result.current.data?.smartContracts).toBe(1);
     expect(result.current.data?.integrityRate).toBe(100);
 
-    (fetchWorkOrderEvents as unknown as jest.Mock).mockImplementationOnce(() => {
+    mockFetchWorkOrderEvents.mockImplementationOnce(() => {
       throw new Error("down");
     });
 
@@ -72,4 +70,3 @@ describe("misc hooks", () => {
     expect(result2.current.data?.integrityRate).toBe(0);
   });
 });
-

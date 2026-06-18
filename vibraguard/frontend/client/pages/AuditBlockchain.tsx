@@ -9,7 +9,7 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 
 export default function AuditBlockchain() {
   return (
-    <DashboardLayout breadcrumb="OT – Audit Blockchain">
+    <DashboardLayout breadcrumb="Audit Blockchain">
       <div className="flex flex-col gap-6 max-w-full">
         {/* KPI Cards */}
         <AuditKPICards />

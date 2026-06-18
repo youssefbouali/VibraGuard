@@ -51,7 +51,7 @@ const navItems = [
     ),
   },
   {
-    label: "Overview",
+    label: "Rapports BI",
     href: "/rapports-bi",
     icon: (
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -71,7 +71,7 @@ const navItems = [
     ),
   },
   {
-    label: "OT – Audit Blockchain",
+    label: "Audit Blockchain",
     href: "/audit",
     icon: (
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -116,7 +116,7 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
   });
 
   const filteredNavItems = dynamicNavItems.filter((item) => {
-    if (["Overview", "OT – Audit Blockchain"].includes(item.label)) {
+    if (["Rapports BI", "Audit Blockchain"].includes(item.label)) {
       return isAdmin;
     }
     return true;

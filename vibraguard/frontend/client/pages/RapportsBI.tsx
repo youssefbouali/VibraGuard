@@ -136,7 +136,7 @@ export default function RapportsBI() {
   };
 
   return (
-    <DashboardLayout breadcrumb="Overview">
+    <DashboardLayout breadcrumb="Rapports BI">
       <div className="flex flex-col flex-1 min-w-0">
         {/* Page title bar */}
         <div className="flex flex-col border-b border-black/[0.08] shrink-0">

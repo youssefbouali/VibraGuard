@@ -8,7 +8,7 @@ import os
 # ==========================================
 # CONFIGURATION
 # ==========================================
-MQTT_BROKER = os.getenv("MQTT_BROKER", "vibraguard.mywire.org")  # Fallback to mywire
+MQTT_BROKER = os.getenv("MQTT_BROKER", "localhost")  # Fallback to mywire
 MQTT_PORT = int(os.getenv("MQTT_PORT", 30083))        # Default MQTT port for external access
 MQTT_TOPIC = os.getenv("MQTT_TOPIC", "vibraguard/sensors")
 CLIENT_ID = f"vibraguard_external_simulator_{uuid.uuid4()}" # Unique client ID
