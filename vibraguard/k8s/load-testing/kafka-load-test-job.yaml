@@ -1,0 +1,84 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kafka-load-test
+  namespace: vibraguard
+  labels:
+    app: kafka-load-test
+    type: performance-test
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app: kafka-load-test
+    spec:
+      initContainers:
+      - name: wait-for-kafka
+        image: alpine:3.18
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          echo "Attente de Kafka..."
+          for i in $(seq 1 15); do
+            nc -z -w 2 kafka 9092 2>/dev/null && echo "Kafka accessible!" && break
+            echo "  Tentative $i/15..."
+            sleep 4
+          done
+      containers:
+      - name: kafka-load-test
+        image: alpine:3.18
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          apk add --no-cache curl python3 py3-pip
+          pip3 install kafka-python --break-system-packages 2>/dev/null || pip3 install kafka-python
+
+          cp /script/kafka-load-test.py /tmp/load_test.py
+
+          KAFKA_BROKER="kafka:9092"
+          TOPIC="sensor-data"
+          export NUM_WORKERS=8
+          export MSGS_PER_WORKER=15000
+          TOTAL_MESSAGES=$((NUM_WORKERS * MSGS_PER_WORKER))
+
+          echo "=========================================="
+          echo "  VibraGuard - Kafka Load Test"
+          echo "  Broker : $KAFKA_BROKER"
+          echo "  Topic  : $TOPIC"
+          echo "  Workers: $NUM_WORKERS | Messages/worker: $MSGS_PER_WORKER"
+          echo "  Messages total   : $TOTAL_MESSAGES"
+          echo "  Objectif P95     : <= 200 ms"
+          echo "  Objectif Debit   : >= 12000 msg/s"
+          echo "=========================================="
+
+          echo ""
+          echo "[1/5] Verification connectivite Kafka..."
+          for i in $(seq 1 10); do
+            python3 -c "import socket,time; s=socket.socket(); s.settimeout(2); s.connect(('kafka',9092)); s.close(); print('OK')" 2>/dev/null && echo "  Broker Kafka accessible!" && break
+            echo "  Tentative $i/10 - En attente du broker Kafka..."
+            sleep 3
+          done
+          echo ""
+          echo "[2/5] Script Python pret dans /tmp/load_test.py"
+
+          echo "[3/5] Execution du test de charge Kafka (Python/kafka-python)..."
+          echo "  Workers: $NUM_WORKERS | Messages/worker: $MSGS_PER_WORKER"
+          echo ""
+          python3 /tmp/load_test.py
+        resources:
+          requests:
+            cpu: "1"
+            memory: 256Mi
+          limits:
+            cpu: "2"
+            memory: 512Mi
+        volumeMounts:
+        - mountPath: /script
+          name: test-script
+      restartPolicy: Never
+      volumes:
+      - name: test-script
+        configMap:
+          name: kafka-load-test-script

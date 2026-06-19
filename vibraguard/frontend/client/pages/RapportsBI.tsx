@@ -14,11 +14,19 @@ type Tab = "quotidien" | "hebdomadaire" | "mensuel";
 
 export default function RapportsBI() {
   const [activeTab, setActiveTab] = useState<Tab>("hebdomadaire");
-  const [selectedDate, setSelectedDate] = useState("Avril 2026");
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const months = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+    const now = new Date();
+    return `${months[now.getMonth()]} ${now.getFullYear()}`;
+  });
   const [isExporting, setIsExporting] = useState(false);
   const [isDateMenuOpen, setIsDateMenuOpen] = useState(false);
 
-  const availableDates = ["Janvier 2026", "Février 2026", "Mars 2026", "Avril 2026", "Mai 2026"];
+  const availableDates = [
+    "Janvier 2026", "Février 2026", "Mars 2026", "Avril 2026",
+    "Mai 2026", "Juin 2026", "Juillet 2026", "Août 2026",
+    "Septembre 2026", "Octobre 2026", "Novembre 2026", "Décembre 2026"
+  ];
 
   const handleExportPDF = async () => {
     try {
@@ -47,7 +55,7 @@ export default function RapportsBI() {
       doc.setFontSize(10);
       doc.setTextColor(100);
       doc.text(`Généré le: ${new Date().toLocaleString()}`, 14, 30);
-      doc.text("Période: Octobre 2026", 14, 35);
+      doc.text(`Période: ${selectedDate}`, 14, 35);
 
       autoTable(doc, {
         startY: 45,

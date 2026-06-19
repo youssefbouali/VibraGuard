@@ -50,19 +50,7 @@ export function SanteCard({ motor }: { motor: any }) {
             </div>
           </div>
 
-          {/* État badge - overlaps bottom of circle */}
-          <div className="-mt-3 z-10">
-            <span 
-              className="inline-flex items-center px-[14px] py-1 rounded-[12px] font-semibold text-[13px]"
-              style={{ 
-                color: `#${motor.etatColor}`, 
-                backgroundColor: `rgba(${parseInt(motor.etatColor.slice(0,2), 16)}, ${parseInt(motor.etatColor.slice(2,4), 16)}, ${parseInt(motor.etatColor.slice(4,6), 16)}, 0.15)`, 
-                border: `1px solid #${motor.etatColor}4D` 
-              }}
-            >
-              {motor.etatLabel === "Normal" ? "Optimal" : motor.etatLabel === "Attention" ? "Alerte" : motor.etatLabel}
-            </span>
-          </div>
+
         </div>
       </div>
 

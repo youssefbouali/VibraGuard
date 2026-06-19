@@ -8,6 +8,7 @@ target/
 surefire-reports/
 jacoco.exec
 vibraguard/kafka_*
+vibraguard/backup_*
 
 # IDEs
 .idea/

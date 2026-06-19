@@ -235,9 +235,68 @@ public class BIController {
     }
 
     @GetMapping("/mtbf-by-site")
-    public Flux<SiteMtbf> getMtbfBySite() {
-        return Flux.defer(() -> Flux.fromIterable(siteMtbfRepository.findAll()))
-                .subscribeOn(Schedulers.boundedElastic());
+    public Flux<Map<String, Object>> getMtbfBySite() {
+        return Mono.fromCallable(() -> {
+            List<Motor> allMotors = motorRepository.findAll();
+            List<WorkOrder> allOrders = workOrderRepository.findAll();
+
+            Map<String, List<Motor>> motorsBySite = allMotors.stream()
+                    .filter(m -> m.getSite() != null && !m.getSite().trim().isEmpty())
+                    .collect(Collectors.groupingBy(m -> m.getSite().trim()));
+
+            String[] colors = {"#007A3D", "#D93F3F", "#F59E0B", "#3B82F6", "#8B5CF6",
+                    "#EC4899", "#14B8A6", "#F97316", "#6366F1", "#84CC16",
+                    "#06B6D4", "#A855F7"};
+
+            List<Map<String, Object>> result = new ArrayList<>();
+            int colorIdx = 0;
+
+            for (Map.Entry<String, List<Motor>> entry : motorsBySite.entrySet()) {
+                String siteName = entry.getKey();
+                Set<String> motorIds = entry.getValue().stream()
+                        .map(Motor::getId)
+                        .collect(Collectors.toSet());
+
+                List<WorkOrder> siteOrders = allOrders.stream()
+                        .filter(o -> o.getCompletedAt() != null && o.getCreatedAt() != null)
+                        .filter(o -> motorIds.contains(o.getAsset()))
+                        .sorted(Comparator.comparing(WorkOrder::getCompletedAt))
+                        .collect(Collectors.toList());
+
+                double avgMtbfHours = 0.0;
+                if (siteOrders.size() >= 2) {
+                    List<Long> intervals = new ArrayList<>();
+                    WorkOrder previous = null;
+                    for (WorkOrder wo : siteOrders) {
+                        Date start = parseDate(wo.getCreatedAt());
+                        if (previous != null && start != null) {
+                            Date previousEnd = parseDate(previous.getCompletedAt());
+                            if (previousEnd != null) {
+                                long intervalMinutes = (start.getTime() - previousEnd.getTime()) / (1000 * 60);
+                                if (intervalMinutes >= 0) {
+                                    intervals.add(intervalMinutes);
+                                }
+                            }
+                        }
+                        previous = wo;
+                    }
+                    if (!intervals.isEmpty()) {
+                        long totalMinutes = intervals.stream().mapToLong(Long::longValue).sum();
+                        avgMtbfHours = (double) totalMinutes / (intervals.size() * 60.0);
+                    }
+                }
+
+                Map<String, Object> siteMtbf = new HashMap<>();
+                siteMtbf.put("name", siteName);
+                siteMtbf.put("value", (int) Math.round(avgMtbfHours));
+                siteMtbf.put("color", colors[colorIdx % colors.length]);
+                result.add(siteMtbf);
+                colorIdx++;
+            }
+
+            return result;
+        }).flatMapMany(Flux::fromIterable)
+          .subscribeOn(Schedulers.boundedElastic());
     }
 
     @GetMapping("/maintenance-costs")

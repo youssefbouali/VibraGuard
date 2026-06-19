@@ -25,6 +25,13 @@ spec:
               value: "mosquitto"
             - name: KAFKA_BROKER
               value: "kafka:9092"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: 256Mi
+            limits:
+              cpu: "2"
+              memory: 512Mi
 ---
 apiVersion: batch/v1
 kind: Job

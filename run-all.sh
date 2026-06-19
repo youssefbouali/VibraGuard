@@ -103,7 +103,7 @@ RUN apk add --no-cache bash
 WORKDIR /kafka
 COPY . /kafka/
 EXPOSE 9092 2181
-CMD ["/bin/bash", "-c", "bin/zookeeper-server-start.sh config/zookeeper.properties & sleep 5 && bin/kafka-server-start.sh config/server.properties --override listeners=PLAINTEXT://0.0.0.0:9092 --override advertised.listeners=PLAINTEXT://kafka:9092 & sleep 15 && bin/kafka-topics.sh --create --topic sensor-data --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1 --if-not-exists && wait"]
+CMD ["/bin/bash", "-c", "bin/zookeeper-server-start.sh config/zookeeper.properties & sleep 5 && bin/kafka-server-start.sh config/server.properties --override listeners=PLAINTEXT://0.0.0.0:9092 --override advertised.listeners=PLAINTEXT://kafka:9092 --override num.partitions=6 & sleep 15 && bin/kafka-topics.sh --create --topic sensor-data --bootstrap-server localhost:9092 --partitions 6 --replication-factor 1 --if-not-exists && wait"]
 EOF
 
 cd "$KAFKA_DIR"
@@ -399,18 +399,25 @@ spec:
       labels:
         app: mqtt-bridge
     spec:
-      containers:
-        - name: bridge
-          image: vibraguard-ia:latest
-          imagePullPolicy: Never
-          command: ["python3", "-u", "mqtt_to_kafka.py"]
-          env:
-            - name: PYTHONUNBUFFERED
-              value: "1"
-            - name: MQTT_BROKER
-              value: "mosquitto"
-            - name: KAFKA_BROKER
-              value: "kafka:9092"
+          containers:
+            - name: bridge
+              image: vibraguard-ia:latest
+              imagePullPolicy: Never
+              command: ["python3", "-u", "mqtt_to_kafka.py"]
+              env:
+                - name: PYTHONUNBUFFERED
+                  value: "1"
+                - name: MQTT_BROKER
+                  value: "mosquitto"
+                - name: KAFKA_BROKER
+                  value: "kafka:9092"
+              resources:
+                requests:
+                  cpu: "500m"
+                  memory: 256Mi
+                limits:
+                  cpu: "2"
+                  memory: 512Mi
 ---
 apiVersion: batch/v1
 kind: Job

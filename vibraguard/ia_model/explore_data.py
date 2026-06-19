@@ -14,8 +14,8 @@ else:
     print("EXPLORATION DES DONNÉES (Pandas)")
     print("="*50)
 
-    print(f"\n✅ Fichier chargé : {csv_path}")
-    print(f"📏 Taille du dataset : {df.shape[0]} lignes, {df.shape[1]} colonnes")
+    print(f"\nFichier chargé : {csv_path}")
+    print(f"Taille du dataset : {df.shape[0]} lignes, {df.shape[1]} colonnes")
 
     print("\n--- 5 PREMIÈRES LIGNES ---")
     print(df.head())
