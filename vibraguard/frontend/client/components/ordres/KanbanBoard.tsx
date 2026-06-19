@@ -38,7 +38,7 @@ export function KanbanBoard() {
         : "moyenne",
     date: wo.dueDate,
     assignee: wo.assignedTo?.name || wo.assignedTo || "Non assigné",
-    status: wo.status === "Nouveau" ? "todo" : wo.status === "En cours" ? "inprogress" : "done",
+    status: wo.status === "Nouveau" ? "todo" : wo.status === "En cours" ? "inprogress" : wo.status === "Annulé" ? "annule" : "done",
     type: wo.type,
     cost: wo.cost,
     duration: wo.duration,
@@ -64,13 +64,15 @@ export function KanbanBoard() {
   const todo = filtered.filter((t) => t.status === "todo");
   const inprogress = filtered.filter((t) => t.status === "inprogress");
   const done = filtered.filter((t) => t.status === "done");
+  const cancelled = filtered.filter((t) => t.status === "annule");
 
   const handleDrop = async (taskId: string, newColStatus: string) => {
     try {
       const statusMap: Record<string, string> = {
         todo: "Nouveau",
         inprogress: "En cours",
-        done: "Terminé"
+        done: "Terminé",
+        annule: "Annulé"
       };
       
       const newBackendStatus = statusMap[newColStatus];
@@ -94,6 +96,30 @@ export function KanbanBoard() {
       }
     } catch (err) {
       console.error("Drop error:", err);
+    }
+  };
+
+  const handleCancel = async (ot: OT) => {
+    try {
+      const originalWO = apiWorkOrders.find((wo: any) => wo.id === ot.id);
+      if (originalWO) {
+        await toast.promise(
+          api.updateWorkOrder(ot.id, {
+            ...originalWO,
+            status: "Annulé"
+          }),
+          {
+            loading: 'Annulation de l\'ordre...',
+            success: () => {
+              refetch();
+              return 'Ordre annulé avec succès';
+            },
+            error: 'Erreur lors de l\'annulation',
+          }
+        );
+      }
+    } catch (err) {
+      console.error("Cancel error:", err);
     }
   };
 
@@ -123,9 +149,10 @@ export function KanbanBoard() {
           status="todo" 
           tasks={todo} 
           onDrop={handleDrop}
+          onCardCancel={handleCancel}
           onCardClick={(ot) => {
             setSelectedOT(ot);
-            setNewStatus(ot.status === "todo" ? "Nouveau" : ot.status === "inprogress" ? "En cours" : "Terminé");
+            setNewStatus("Nouveau");
             setIsDialogOpen(true);
           }}
         />
@@ -134,9 +161,10 @@ export function KanbanBoard() {
           status="inprogress" 
           tasks={inprogress} 
           onDrop={handleDrop}
+          onCardCancel={handleCancel}
           onCardClick={(ot) => {
             setSelectedOT(ot);
-            setNewStatus(ot.status === "todo" ? "Nouveau" : ot.status === "inprogress" ? "En cours" : "Terminé");
+            setNewStatus("En cours");
             setIsDialogOpen(true);
           }}
         />
@@ -145,12 +173,23 @@ export function KanbanBoard() {
           status="done" 
           tasks={done} 
           onDrop={handleDrop}
+          onCardCancel={handleCancel}
           onCardClick={(ot) => {
             setSelectedOT(ot);
-            setNewStatus(ot.status === "todo" ? "Nouveau" : ot.status === "inprogress" ? "En cours" : "Terminé");
+            setNewStatus("Terminé");
             setIsDialogOpen(true);
           }}
         />
+        {cancelled.length > 0 && (
+          <KanbanColumn 
+            title="Annulé" 
+            status="annule" 
+            tasks={cancelled} 
+            onDrop={handleDrop}
+            onCardCancel={handleCancel}
+            onCardClick={() => {}}
+          />
+        )}
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -174,11 +213,12 @@ export function KanbanBoard() {
 
             <div className="flex flex-col gap-3">
               <label className="text-[#98A6A8] text-xs font-semibold uppercase tracking-wider">Statut de l'intervention</label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-4 gap-2">
                 {[
                   { label: "À faire", value: "Nouveau", color: "bg-[#98A6A8]" },
                   { label: "En cours", value: "En cours", color: "bg-[#0C6CF2]" },
-                  { label: "Terminé", value: "Terminé", color: "bg-[#00924A]" }
+                  { label: "Terminé", value: "Terminé", color: "bg-[#00924A]" },
+                  { label: "Annulé", value: "Annulé", color: "bg-[#D93F3F]" }
                 ].map((s) => (
                   <button
                     key={s.value}
@@ -228,7 +268,7 @@ export function KanbanBoard() {
               className="px-4 py-2 rounded-md bg-[#007A3D] hover:bg-[#006a34] text-white text-sm font-semibold transition-colors disabled:opacity-50 flex items-center gap-2"
             >
               {isUpdating && <Loader2 className="w-4 h-4 animate-spin" />}
-              Mettre à jour
+              {newStatus === "Annulé" ? "Annuler" : "Mettre à jour"}
             </button>
           </DialogFooter>
         </DialogContent>

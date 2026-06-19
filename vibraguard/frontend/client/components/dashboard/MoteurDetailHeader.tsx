@@ -62,6 +62,14 @@ export function MoteurDetailHeader({ motor }: { motor: any }) {
             <span className="inline-flex items-center px-3 py-1.5 rounded text-[12px] font-semibold text-[#C9EDEB] bg-[rgba(201,237,235,0.10)] border border-[rgba(201,237,235,0.20)]">
               {motor.localisation || ""}
             </span>
+            {motor.actif === false && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[12px] font-semibold text-[#98A6A8] bg-[rgba(152,166,168,0.15)] border border-[rgba(152,166,168,0.30)]">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M10.5 10.5L1.5 1.5M1.5 10.5L10.5 1.5" stroke="#98A6A8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Inactif
+              </span>
+            )}
             <span 
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[12px] font-semibold"
               style={{ color: `#${motor.etatColor}`, backgroundColor: `rgba(${parseInt(motor.etatColor.slice(0,2), 16)}, ${parseInt(motor.etatColor.slice(2,4), 16)}, ${parseInt(motor.etatColor.slice(4,6), 16)}, 0.15)`, border: `1px solid #${motor.etatColor}4D` }}

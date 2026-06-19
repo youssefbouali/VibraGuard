@@ -16,6 +16,7 @@ export interface Moteur {
   // Legacy fields if still used
   etatLabel?: string;
   vibration?: string;
+  actif?: boolean;
 }
 
 export function useMoteurs() {

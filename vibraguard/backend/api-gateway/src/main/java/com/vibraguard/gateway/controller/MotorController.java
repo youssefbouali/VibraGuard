@@ -59,6 +59,7 @@ public class MotorController {
                 if (motor.getSpeed() != null) existing.setSpeed(motor.getSpeed());
                 if (motor.getLocalisation() != null) existing.setLocalisation(motor.getLocalisation());
                 if (motor.getSite() != null) existing.setSite(motor.getSite());
+                existing.setActif(motor.isActif());
                 return motorRepository.save(existing);
             }).orElseGet(() -> {
                 motor.setId(id);
@@ -113,6 +114,7 @@ public class MotorController {
                 map.put("zone", m.getSite() != null ? m.getSite() : "Secteur A");
                 map.put("localisation", m.getLocalisation() != null ? m.getLocalisation() : "Niveau 1");
                 map.put("puissance", m.getPower() != null ? m.getPower() : "45 kW");
+                map.put("actif", m.isActif());
                 
                 return map;
             }).collect(Collectors.toList()));

@@ -11,7 +11,7 @@ import { api } from "@/lib/api";
 import { useVibrations } from "@/hooks/use-vibrations";
 import { downloadMotorsCsv } from "@/lib/motor-export";
 import { toast } from "sonner";
-import { Download } from "lucide-react";
+import { Download, Power, PowerOff } from "lucide-react";
 
 const tabs = [
   "Vue d'ensemble",
@@ -75,7 +75,26 @@ export default function MoteurDetail() {
         {/* Motor Header Card */}
         <MoteurDetailHeader motor={motor} />
 
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={async () => {
+              const newActif = !motor.actif;
+              await api.updateMotor(id!, { actif: newActif });
+              setMotor((prev: any) => ({ ...prev, actif: newActif }));
+              toast.success(newActif ? "Moteur activé" : "Moteur désactivé");
+            }}
+            className={`inline-flex items-center gap-2 px-4 h-10 rounded-md border transition-colors text-sm font-medium ${
+              motor.actif === false
+                ? "border-[#007A3D] bg-[#007A3D]/10 text-[#007A3D] hover:bg-[#007A3D]/20"
+                : "border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20"
+            }`}
+          >
+            {motor.actif === false ? (
+              <><Power className="w-4 h-4" /> Activer</>
+            ) : (
+              <><PowerOff className="w-4 h-4" /> Désactiver</>
+            )}
+          </button>
           <button
             onClick={handleDownloadMotor}
             className="inline-flex items-center gap-2 px-4 h-10 rounded-md border border-white/10 bg-[#0F2730] hover:bg-[#163340] transition-colors text-white text-sm font-medium"
