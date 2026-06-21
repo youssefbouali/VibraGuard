@@ -32,4 +32,13 @@ public class AuthController {
         String email = authService.getMeFromToken(token.substring(7));
         return ResponseEntity.ok(authService.getMe(email));
     }
+
+    @PutMapping("/users/confidence-threshold")
+    public ResponseEntity<Void> updateConfidenceThreshold(
+            @RequestHeader("Authorization") String token,
+            @RequestBody java.util.Map<String, Integer> body) {
+        String email = authService.getMeFromToken(token.substring(7));
+        authService.updateConfidenceThreshold(email, body.get("confidenceThreshold"));
+        return ResponseEntity.ok().build();
+    }
 }

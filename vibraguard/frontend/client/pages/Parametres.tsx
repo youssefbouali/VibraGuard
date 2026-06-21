@@ -1,19 +1,30 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { UtilisateursTab } from "./parametres/UtilisateursTab";
+import { SeuilsTab } from "./parametres/SeuilsTab";
 import { useAuth } from "@/lib/auth-context";
+import { toast } from "sonner";
 
 export default function Parametres() {
   const tabs = [
-    "Utilisateurs",
     "Seuils Alertes",
   ];
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get("tab") || "Utilisateurs";
-  const { user } = useAuth();
+  const activeTab = searchParams.get("tab") || "Seuils Alertes";
+  const { user, token } = useAuth();
   const navigate = useNavigate();
   const isAdmin = user?.role ? user.role.toLowerCase().includes("admin") || user.role.toLowerCase().includes("administrateur") : false;
+
+  const [confidenceValue, setConfidenceValue] = useState(51);
+  const [originalValue, setOriginalValue] = useState(51);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (user?.confidenceThreshold) {
+      setConfidenceValue(user.confidenceThreshold);
+      setOriginalValue(user.confidenceThreshold);
+    }
+  }, [user?.confidenceThreshold]);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -23,6 +34,31 @@ export default function Parametres() {
 
   const setActiveTab = (tab: string) => {
     setSearchParams({ tab });
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await fetch("/api/v1/auth/users/confidence-threshold", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ confidenceThreshold: confidenceValue }),
+      });
+      setOriginalValue(confidenceValue);
+      toast.success("Seuil de confiance mis à jour");
+    } catch (err) {
+      console.error("Failed to save:", err);
+      toast.error("Erreur lors de la sauvegarde");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setConfidenceValue(originalValue);
   };
 
   return (
@@ -39,26 +75,26 @@ export default function Parametres() {
             Configuration Système
           </h1>
           <div className="flex items-center gap-3">
-            <button className="flex h-10 items-center px-4 rounded-md border border-black/[0.08] text-[#E6F0F2] text-sm font-medium hover:bg-white/5 transition-colors">
+            <button
+              onClick={handleCancel}
+              disabled={saving}
+              className="flex h-10 items-center px-4 rounded-md border border-black/[0.08] text-[#E6F0F2] text-sm font-medium hover:bg-white/5 transition-colors disabled:opacity-40"
+            >
               Annuler
             </button>
-            <button className="flex h-10 items-center gap-2 px-4 rounded-md bg-[#007A3D] text-white text-sm font-medium hover:bg-[#006633] transition-colors">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path
-                  d="M11.4 2.25C11.7957 2.25564 12.1731 2.41738 12.45 2.7L15.3 5.55C15.5826 5.82695 15.7444 6.20435 15.75 6.6V14.25C15.75 15.0779 15.0779 15.75 14.25 15.75H3.75C2.92213 15.75 2.25 15.0779 2.25 14.25V3.75C2.25 2.92213 2.92213 2.25 3.75 2.25H11.4"
-                  stroke="white"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M12.75 15.75V10.5C12.75 10.0861 12.4139 9.75 12 9.75H6C5.58606 9.75 5.25 10.0861 5.25 10.5V15.75M5.25 2.25V5.25C5.25 5.66394 5.58606 6 6 6H11.25"
-                  stroke="white"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+            <button
+              onClick={handleSave}
+              disabled={saving || confidenceValue === originalValue}
+              className="flex h-10 items-center gap-2 px-4 rounded-md bg-[#007A3D] text-white text-sm font-medium hover:bg-[#006633] transition-colors disabled:opacity-40"
+            >
+              {saving ? (
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path d="M11.4 2.25C11.7957 2.25564 12.1731 2.41738 12.45 2.7L15.3 5.55C15.5826 5.82695 15.7444 6.20435 15.75 6.6V14.25C15.75 15.0779 15.0779 15.75 14.25 15.75H3.75C2.92213 15.75 2.25 15.0779 2.25 14.25V3.75C2.25 2.92213 2.92213 2.25 3.75 2.25H11.4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M12.75 15.75V10.5C12.75 10.0861 12.4139 9.75 12 9.75H6C5.58606 9.75 5.25 10.0861 5.25 10.5V15.75M5.25 2.25V5.25C5.25 5.66394 5.58606 6 6 6H11.25" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
               Enregistrer
             </button>
           </div>
@@ -90,8 +126,8 @@ export default function Parametres() {
 
         {/* Tab content */}
         <div className="flex-1 pb-8">
-          {activeTab === "Utilisateurs" ? (
-            <UtilisateursTab />
+          {activeTab === "Seuils Alertes" ? (
+            <SeuilsTab value={confidenceValue} onChange={setConfidenceValue} />
           ) : (
             <div className="flex items-center justify-center h-48 text-[#C9E7E6] text-sm opacity-50">
               Contenu de l'onglet «{activeTab}» à venir
@@ -102,4 +138,3 @@ export default function Parametres() {
     </DashboardLayout>
   );
 }
-

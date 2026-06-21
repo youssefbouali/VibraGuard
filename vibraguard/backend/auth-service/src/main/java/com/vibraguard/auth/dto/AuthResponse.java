@@ -17,4 +17,5 @@ public class AuthResponse {
     private String phoneNumber;
     private String department;
     private String role;
+    private Integer confidenceThreshold;
 }

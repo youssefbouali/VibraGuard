@@ -79,6 +79,7 @@ public class AuthService {
                 .phoneNumber(user.getPhoneNumber())
                 .department(user.getDepartment())
                 .role(user.getRole())
+                .confidenceThreshold(user.getConfidenceThreshold())
                 .build();
     }
 
@@ -103,6 +104,7 @@ public class AuthService {
                 .phoneNumber(user.getPhoneNumber())
                 .department(user.getDepartment())
                 .role(user.getRole())
+                .confidenceThreshold(user.getConfidenceThreshold())
                 .build();
     }
 
@@ -116,11 +118,21 @@ public class AuthService {
                 .phoneNumber(user.getPhoneNumber())
                 .department(user.getDepartment())
                 .role(user.getRole())
+                .confidenceThreshold(user.getConfidenceThreshold())
                 .build();
     }
 
     public String getMeFromToken(String token) {
         return jwtUtil.extractEmail(token);
+    }
+
+    public void updateConfidenceThreshold(String email, Integer threshold) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (threshold != null) {
+            user.setConfidenceThreshold(Math.max(51, Math.min(100, threshold)));
+        }
+        userRepository.save(user);
     }
 
     @jakarta.annotation.PostConstruct

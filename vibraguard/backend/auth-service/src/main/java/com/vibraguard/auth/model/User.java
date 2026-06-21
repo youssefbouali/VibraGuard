@@ -31,4 +31,9 @@ public class User {
     private String department;
     private String status;
     private String enterprise;
+    private Integer confidenceThreshold = 51;
+
+    public Integer getConfidenceThreshold() {
+        return confidenceThreshold != null ? confidenceThreshold : 51;
+    }
 }

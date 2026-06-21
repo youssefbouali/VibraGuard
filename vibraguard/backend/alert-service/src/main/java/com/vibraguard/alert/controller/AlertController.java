@@ -27,12 +27,15 @@ public class AlertController {
     private JwtUtil jwtUtil;
 
     @GetMapping
-    public Flux<Alert> getAlerts(ServerWebExchange exchange) {
+    public Flux<Alert> getAlerts(ServerWebExchange exchange,
+                                 @RequestParam(name = "minConfidence", required = false) Integer minConfidence) {
         return Flux.defer(() -> {
             String userEmail = extractEmailFromRequest(exchange);
+            int threshold = minConfidence != null ? minConfidence : 0;
             List<Alert> all = alertRepository.findAll();
             List<Alert> sorted = all.stream()
                     .filter(a -> a.getRecipientEmail() == null || a.getRecipientEmail().equals(userEmail))
+                    .filter(a -> a.getScoreConfianceIA() == null || a.getScoreConfianceIA() >= threshold)
                     .sorted((a, b) -> b.getTime().compareTo(a.getTime()))
                     .collect(Collectors.toList());
             return Flux.fromIterable(sorted);

@@ -9,7 +9,7 @@ import { api } from "@/lib/api";
 const ROLES = ["Admin", "Technicien", "Responsable"];
 const DEPARTMENTS = [
     "Direction",
-    "Analyse & ML",
+    "Maintenance Prédictive",
     "Maintenance Ligne A",
     "Maintenance Ligne B",
     "Opérations",
@@ -159,7 +159,7 @@ export default function AjouterUtilisateur() {
                 status,
             });
             toast.success("Utilisateur créé avec succès !");
-            navigate("/parametres");
+            navigate("/users");
         } catch (err: any) {
             toast.error(err.message || "Erreur lors de la création de l'utilisateur");
         }
@@ -168,8 +168,7 @@ export default function AjouterUtilisateur() {
     return (
         <DashboardLayout
             breadcrumbItems={[
-                { label: "Paramètres", href: "/parametres" },
-                { label: "Utilisateurs", href: "/parametres" },
+                { label: "Utilisateurs", href: "/users" },
                 { label: "Ajouter un utilisateur" },
             ]}
         >
@@ -182,7 +181,7 @@ export default function AjouterUtilisateur() {
                     </div>
                     <div className="flex items-center gap-3">
                         <button
-                            onClick={() => navigate("/parametres")}
+                            onClick={() => navigate("/users")}
                             className="flex items-center gap-2 h-10 px-4 rounded-md border border-black/[0.08] text-[#E6F0F2] text-sm font-semibold hover:bg-white/5 transition-colors"
                         >
                             Annuler

@@ -7,6 +7,7 @@ interface User {
     phoneNumber: string;
     department: string;
     role: string;
+    confidenceThreshold?: number;
 }
 
 interface AuthContextType {

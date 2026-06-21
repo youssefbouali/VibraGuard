@@ -23,7 +23,7 @@ export function UtilisateursTab() {
   const DEPARTMENTS = [
     "Tous les départements",
     "Direction",
-    "Analyse & ML",
+    "Maintenance Prédictive",
     "Maintenance Ligne A",
     "Maintenance Ligne B",
     "Opérations",
@@ -343,7 +343,7 @@ export function UtilisateursTab() {
       {/* Add user button */}
       <div>
         <button
-          onClick={() => navigate("/parametres/utilisateurs/ajouter")}
+          onClick={() => navigate("/users/ajouter")}
           className="flex items-center gap-2 h-11 px-5 rounded-md bg-[#007A3D] text-white text-sm font-semibold hover:bg-[#006633] transition-colors"
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -435,7 +435,7 @@ export function UtilisateursTab() {
               {/* Actions */}
                 <div className="flex items-center gap-2 justify-end">
                   <button
-                    onClick={() => navigate(`/parametres/utilisateurs/${u.id}`)}
+                    onClick={() => navigate(`/users/${u.id}`)}
                     className="flex items-center justify-center w-8 h-8 rounded hover:bg-white/5 transition-colors"
                   >
                     <EditIcon />

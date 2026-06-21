@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 
 export interface Alerte {
   id: string;
@@ -12,7 +13,7 @@ export interface Alerte {
   priority: string;
   motorId: string;
   title: string;
-  type?: string; // ALERT or NOTIFICATION
+  type?: string;
   velociteRms?: number;
   accelerationPeak?: number;
   temperature?: number;
@@ -23,18 +24,20 @@ export interface Alerte {
 
 export function useAlerts() {
   const queryClient = useQueryClient();
-  const queryKey = ["/api/v1/ml/alerts"];
+  const { user } = useAuth();
+  const minConfidence = user?.confidenceThreshold ?? 51;
+  const queryKey = ["/api/v1/ml/alerts", minConfidence];
 
   const query = useQuery<Alerte[]>({
     queryKey,
-    queryFn: () => apiRequest("GET", "/api/v1/ml/alerts"),
+    queryFn: () => apiRequest("GET", `/api/v1/ml/alerts?minConfidence=${minConfidence}`),
   });
 
   useEffect(() => {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const host = window.location.host;
     const wsUrl = `${protocol}//${host}/ws/alerts`;
-    
+
     const socket = new WebSocket(wsUrl);
 
     socket.onmessage = (event) => {
@@ -42,9 +45,7 @@ export function useAlerts() {
         const newAlerte: Alerte = JSON.parse(event.data);
         queryClient.setQueryData<Alerte[]>(queryKey, (oldData) => {
           const safeOldData = Array.isArray(oldData) ? oldData : [];
-          // Avoid duplicates
           if (safeOldData.some(a => a.id === newAlerte.id)) return safeOldData;
-          // Add to the beginning (most recent)
           return [newAlerte, ...safeOldData];
         });
       } catch (err) {
@@ -53,7 +54,7 @@ export function useAlerts() {
     };
 
     return () => socket.close();
-  }, [queryClient]);
+  }, [queryClient, queryKey]);
 
   return query;
 }
