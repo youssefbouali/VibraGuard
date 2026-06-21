@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
-const ROLES = ["Admin", "Ingénieur Data", "Technicien", "Responsable"];
+const ROLES = ["Admin", "Technicien", "Responsable"];
 const DEPARTMENTS = [
     "Direction",
     "Analyse & ML",
@@ -145,7 +145,6 @@ export default function AjouterUtilisateur() {
         try {
             const roleMap: Record<string, string> = {
                 "Admin": "ADMIN",
-                "Ingénieur Data": "USER",
                 "Technicien": "USER",
                 "Responsable": "USER",
             };

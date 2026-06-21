@@ -2,10 +2,12 @@ import { Link, useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
 
 export function MoteurDetailHeader({ motor }: { motor: any }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const isCritique = motor.etatLabel.includes("Critique") || motor.etatLabel.includes("Alerte");
   
   const handleDownloadReport = async () => {
@@ -44,6 +46,8 @@ export function MoteurDetailHeader({ motor }: { motor: any }) {
         title: `Rapport ${motor.id}`,
         type: "pdf",
         frequency: "Ponctuel",
+        motorId: motor.id,
+        createdBy: user?.fullName,
         fileContent,
       });
       toast.success("Rapport généré et stocké sur IPFS");

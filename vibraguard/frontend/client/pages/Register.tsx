@@ -60,8 +60,7 @@ export default function Register() {
     try {
       const roleMap: Record<string, string> = {
         "Technicien": "TECHNICIEN",
-        "Ingénieur": "INGENIEUR",
-        "Manager": "MANAGER",
+        "Responsable": "RESPONSABLE",
         "Administrateur": "ADMIN"
       };
 
@@ -360,8 +359,7 @@ export default function Register() {
                     className="flex-1 bg-transparent text-white text-[15px] font-normal outline-none appearance-none cursor-pointer min-w-0"
                   >
                     <option value="Technicien" className="bg-[#0d1a24]">Technicien</option>
-                    <option value="Ingénieur" className="bg-[#0d1a24]">Ingénieur</option>
-                    <option value="Manager" className="bg-[#0d1a24]">Manager</option>
+                    <option value="Responsable" className="bg-[#0d1a24]">Responsable</option>
                     <option value="Administrateur" className="bg-[#0d1a24]">Administrateur</option>
                   </select>
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0 ml-1">

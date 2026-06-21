@@ -3,7 +3,7 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
-import { Copy, Download, Trash2, Plus, Calendar, User, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Copy, Download, Plus, Calendar, User, ShieldCheck, ShieldAlert } from "lucide-react";
 import { verifyReportIntegrity, type ReportIntegrityResult } from "@/lib/blockchain";
 
 interface Report {
@@ -301,6 +301,7 @@ export default function Reports() {
 
       const newReport = await api.generateReport({
         ...formData,
+        createdBy: user?.fullName,
         fileContent,
       });
 
@@ -365,19 +366,6 @@ export default function Reports() {
         toast.error("Échec de la copie");
       }
       document.body.removeChild(textArea);
-    }
-  };
-
-  const handleDelete = async (reportId: string) => {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer ce rapport ?")) return;
-
-    try {
-      await api.deleteReport(reportId);
-      setReports(reports.filter((r) => r.id !== reportId));
-      toast.success("Rapport supprimé");
-    } catch (error) {
-      console.error(error);
-      toast.error("Erreur lors de la suppression");
     }
   };
 
@@ -638,13 +626,6 @@ export default function Reports() {
                         ) : (
                           <ShieldCheck className="w-4 h-4" />
                         )}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(report.id)}
-                        className="flex items-center justify-center w-10 h-10 rounded-md hover:bg-red-500/10 transition-colors text-[#98A6A8] hover:text-red-500"
-                        title="Supprimer le rapport"
-                      >
-                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>

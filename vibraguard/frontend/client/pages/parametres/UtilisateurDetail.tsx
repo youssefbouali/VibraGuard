@@ -20,7 +20,7 @@ interface User {
   phoneNumber?: string;
 }
 
-const ROLES = ["Admin", "Ingénieur Data", "Technicien", "Responsable"];
+const ROLES = ["Admin", "Technicien", "Responsable"];
 const DEPARTMENTS = [
   "Direction",
   "Analyse & ML",
