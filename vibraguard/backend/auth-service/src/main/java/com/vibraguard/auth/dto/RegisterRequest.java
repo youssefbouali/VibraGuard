@@ -11,4 +11,5 @@ public class RegisterRequest {
     private String department;
     private String enterprise;
     private String role;
+    private String status;
 }

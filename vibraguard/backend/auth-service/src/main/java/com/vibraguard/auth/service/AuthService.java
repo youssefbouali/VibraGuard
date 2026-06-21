@@ -24,16 +24,32 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final RestTemplate restTemplate;
 
-    public AuthResponse register(RegisterRequest request) {
+    public AuthResponse register(RegisterRequest request, String adminEmail) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("User already exists");
         }
 
         String role = request.getRole() != null ? request.getRole().toUpperCase() : "USER";
-        String status = "Actif";
+        String status = request.getStatus();
 
-        if (!"ADMIN".equals(role)) {
-            status = "Inactif";
+        if (adminEmail != null) {
+            User admin = userRepository.findByEmail(adminEmail)
+                    .orElseThrow(() -> new RuntimeException("Admin not found"));
+
+            if ("Actif".equals(status) && !"ADMIN".equals(admin.getRole())) {
+                status = "Inactif";
+            } else if (status == null) {
+                status = "Actif";
+                if (!"ADMIN".equals(role)) {
+                    status = "Inactif";
+                }
+            }
+        } else {
+            if ("Actif".equals(status)) {
+                status = "Inactif";
+            } else if (status == null) {
+                status = "Inactif";
+            }
         }
 
         User user = User.builder()
@@ -49,25 +65,6 @@ public class AuthService {
                 .build();
 
         userRepository.save(user);
-
-        try {
-            java.util.Map<String, String> technician = new java.util.HashMap<>();
-            technician.put("id", user.getEmployeeId());
-            technician.put("name", user.getFullName());
-            technician.put("email", user.getEmail());
-            technician.put("department", user.getDepartment() != null ? user.getDepartment() : "Maintenance");
-            technician.put("role", user.getRole());
-            technician.put("status", user.getStatus());
-            technician.put("phoneNumber", user.getPhoneNumber() != null ? user.getPhoneNumber() : "");
-            technician.put("avatarUrl", "");
-            restTemplate.postForEntity(
-                    "http://workorder-service:8084/api/v1/iot/technicians",
-                    technician,
-                    Void.class
-            );
-        } catch (Exception e) {
-            System.err.println("Failed to create technician: " + e.getMessage());
-        }
 
         if ("Inactif".equals(status)) {
             sendNotificationToEnterpriseAdmins(user);
@@ -128,38 +125,32 @@ public class AuthService {
 
     @jakarta.annotation.PostConstruct
     public void seedUser() {
-        if (userRepository.findByEmail("mr.boualiyoussef@gmail.com").isEmpty()) {
+        var existing = userRepository.findByEmail("mr.boualiyoussef@gmail.com");
+        if (existing.isEmpty()) {
             User user = User.builder()
                     .email("mr.boualiyoussef@gmail.com")
                     .fullName("Youssef Bouali")
                     .password(passwordEncoder.encode("password"))
                     .role("ADMIN")
+                    .status("Actif")
                     .enterprise("OCP Group")
                     .employeeId("TECH-4892")
                     .phoneNumber("+212 6 00 11 22 33")
                     .department("Maintenance Prédictive")
                     .build();
             userRepository.save(user);
-
-            try {
-                java.util.Map<String, String> technician = new java.util.HashMap<>();
-                technician.put("id", user.getEmployeeId());
-                technician.put("name", user.getFullName());
-                technician.put("email", user.getEmail());
-            technician.put("department", user.getDepartment() != null ? user.getDepartment() : "Maintenance");
-                technician.put("role", user.getRole());
-                technician.put("status", "Actif");
-                technician.put("phoneNumber", user.getPhoneNumber() != null ? user.getPhoneNumber() : "");
-                technician.put("avatarUrl", "");
-                restTemplate.postForEntity(
-                        "http://workorder-service:8084/api/v1/iot/technicians",
-                        technician,
-                        Void.class
-                );
-            } catch (Exception e) {
-                System.err.println("Failed to create technician for seed user: " + e.getMessage());
-            }
+        } else if (existing.get().getStatus() == null) {
+            User user = existing.get();
+            user.setStatus("Actif");
+            userRepository.save(user);
         }
+        // Fix any other users with null status
+        userRepository.findAll().stream()
+                .filter(u -> u.getStatus() == null)
+                .forEach(u -> {
+                    u.setStatus("Actif");
+                    userRepository.save(u);
+                });
     }
 
     private void sendNotificationToEnterpriseAdmins(User newUser) {
@@ -167,7 +158,8 @@ public class AuthService {
 
         List<User> admins = userRepository.findAll().stream()
                 .filter(u -> "ADMIN".equalsIgnoreCase(u.getRole())
-                        && (u.getEnterprise() == null || newUser.getEnterprise().equalsIgnoreCase(u.getEnterprise())))
+                        && (u.getEnterprise() == null || newUser.getEnterprise().equalsIgnoreCase(u.getEnterprise()))
+                        && !u.getEmail().equals(newUser.getEmail()))
                 .collect(Collectors.toList());
 
         for (User admin : admins) {

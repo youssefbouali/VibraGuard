@@ -28,4 +28,5 @@ public class Motor {
     private String speed;
     private String localisation;
     private String site;
+    private Boolean actif = true;
 }

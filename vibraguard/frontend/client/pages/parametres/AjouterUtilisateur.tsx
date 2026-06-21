@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { api } from "@/lib/api";
 
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
@@ -131,17 +132,38 @@ export default function AjouterUtilisateur() {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
-    const handleCreate = () => {
-        // In a real app, you'd validate and make an API call here
-        if (!name || !email || !role || !department) {
+    const handleCreate = async () => {
+        if (!name || !email || !role || !department || !password) {
             toast.error("Veuillez remplir tous les champs obligatoires.");
             return;
         }
+        if (password !== confirmPassword) {
+            toast.error("Les mots de passe ne correspondent pas.");
+            return;
+        }
 
-        toast.success("Utilisateur créé avec succès !");
-        setTimeout(() => {
+        try {
+            const roleMap: Record<string, string> = {
+                "Admin": "ADMIN",
+                "Ingénieur Data": "USER",
+                "Technicien": "USER",
+                "Responsable": "USER",
+            };
+            await api.registerUser({
+                fullName: name,
+                email,
+                password,
+                department,
+                role: roleMap[role] || "USER",
+                enterprise: "OCP Group",
+                phoneNumber: "",
+                status,
+            });
+            toast.success("Utilisateur créé avec succès !");
             navigate("/parametres");
-        }, 1000);
+        } catch (err: any) {
+            toast.error(err.message || "Erreur lors de la création de l'utilisateur");
+        }
     };
 
     return (

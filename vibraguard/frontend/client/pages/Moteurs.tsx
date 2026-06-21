@@ -35,6 +35,7 @@ interface Moteur {
   derniereAlerteType?: string;
   alerteRef?: string;
   etatColor?: string;
+  actif?: boolean;
 }
 
 const statusConfig: Record<HealthStatus, { color: string; bg: string; border: string; dot: string; glow: string }> = {
@@ -320,7 +321,7 @@ export default function Moteurs() {
                                 m.etatColor === "#F59E0B" ? "Attention" : 
                                 m.etatColor === "#EF4444" ? "Critique" : "Normal");
                 return (
-                  <div key={m.id} className="grid grid-cols-[1.5fr_1fr_1.5fr_1fr_1fr_auto] hover:bg-white/[0.02] transition-colors cursor-pointer" onClick={() => navigate(`/moteurs/${m.id}`)}>
+                  <div key={m.id} className={cn("grid grid-cols-[1.5fr_1fr_1.5fr_1fr_1fr_auto] hover:bg-white/[0.02] transition-colors cursor-pointer", m.actif === false && "opacity-50")} onClick={() => navigate(`/moteurs/${m.id}`)}>
                     <div className="px-6 py-4 flex flex-col">
                       <span className="text-white font-bold">{m.id}</span>
                       <span className="text-[#98A6A8] text-xs">{m.zone} - {m.localisation}</span>
@@ -382,7 +383,7 @@ export default function Moteurs() {
                               m.etatColor === "#F59E0B" ? "Attention" : 
                               m.etatColor === "#EF4444" ? "Critique" : "Normal");
               return (
-                <div key={m.id} onClick={() => navigate(`/moteurs/${m.id}`)} className="bg-[#0B1518] rounded-xl border border-white/5 p-6 hover:border-[#0EA5E9]/30 transition-all cursor-pointer">
+                <div key={m.id} onClick={() => navigate(`/moteurs/${m.id}`)} className={cn("bg-[#0B1518] rounded-xl border border-white/5 p-6 hover:border-[#0EA5E9]/30 transition-all cursor-pointer", m.actif === false && "opacity-50")}>
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-2">
                       <div className="p-3 rounded-lg bg-[#0C6CF2]/10"><MoteurIcon /></div>

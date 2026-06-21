@@ -36,6 +36,7 @@ public class MotorController {
             if (motor.getEtatColor() == null) motor.setEtatColor("#10B981");
             if (motor.getVibration() == null) motor.setVibration("0.00");
             if (motor.getVibrationColor() == null) motor.setVibrationColor("#10B981");
+            if (motor.getActif() == null) motor.setActif(true);
             return motorRepository.save(motor);
         }).subscribeOn(Schedulers.boundedElastic());
     }
@@ -55,6 +56,7 @@ public class MotorController {
                 if (motor.getSpeed() != null) existing.setSpeed(motor.getSpeed());
                 if (motor.getLocalisation() != null) existing.setLocalisation(motor.getLocalisation());
                 if (motor.getSite() != null) existing.setSite(motor.getSite());
+                if (motor.getActif() != null) existing.setActif(motor.getActif());
                 return motorRepository.save(existing);
             }).orElseGet(() -> {
                 motor.setId(id);
@@ -104,6 +106,7 @@ public class MotorController {
                 map.put("zone", m.getSite() != null ? m.getSite() : "Secteur A");
                 map.put("localisation", m.getLocalisation() != null ? m.getLocalisation() : "Niveau 1");
                 map.put("puissance", m.getPower() != null ? m.getPower() : "45 kW");
+                map.put("actif", m.getActif() != null ? m.getActif() : true);
                 return map;
             }).collect(Collectors.toList()));
         }).subscribeOn(Schedulers.boundedElastic());

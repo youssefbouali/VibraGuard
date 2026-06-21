@@ -3,6 +3,7 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { cn } from "@/lib/utils";
 import { useAlerts } from "@/hooks/use-alerts";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import { 
   Bell, 
   CheckCircle, 
@@ -21,6 +22,7 @@ type NotificationLevel = "Critique" | "Alerte" | "Attention" | "Tous";
 
 export default function Notifications() {
   const { data: alerts = [], isLoading, refetch } = useAlerts() as any;
+  const { user } = useAuth();
   const [filter, setFilter] = useState<NotificationLevel>("Tous");
   const [search, setSearch] = useState("");
 
@@ -60,7 +62,8 @@ export default function Notifications() {
   const filteredAlerts = alerts.filter((a: any) => {
     const matchesFilter = filter === "Tous" || a.level === filter;
     const matchesSearch = a.message.toLowerCase().includes(search.toLowerCase());
-    return matchesFilter && matchesSearch;
+    const matchesUser = !a.recipientEmail || a.recipientEmail === user?.email;
+    return matchesFilter && matchesSearch && matchesUser;
   });
 
   return (

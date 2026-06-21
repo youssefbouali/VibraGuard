@@ -3,8 +3,11 @@ package com.vibraguard.alert.controller;
 import com.vibraguard.alert.entity.*;
 import com.vibraguard.alert.repository.*;
 import com.vibraguard.alert.service.AlertStreamService;
+import com.vibraguard.common.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -20,16 +23,32 @@ public class AlertController {
     private AlertRepository alertRepository;
     @Autowired
     private AlertStreamService alertStreamService;
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @GetMapping
-    public Flux<Alert> getAlerts() {
+    public Flux<Alert> getAlerts(ServerWebExchange exchange) {
         return Flux.defer(() -> {
+            String userEmail = extractEmailFromRequest(exchange);
             List<Alert> all = alertRepository.findAll();
             List<Alert> sorted = all.stream()
+                    .filter(a -> a.getRecipientEmail() == null || a.getRecipientEmail().equals(userEmail))
                     .sorted((a, b) -> b.getTime().compareTo(a.getTime()))
                     .collect(Collectors.toList());
             return Flux.fromIterable(sorted);
         }).subscribeOn(Schedulers.boundedElastic());
+    }
+
+    private String extractEmailFromRequest(ServerWebExchange exchange) {
+        String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            try {
+                return jwtUtil.extractEmail(authHeader.substring(7));
+            } catch (Exception e) {
+                System.err.println("Failed to extract email from JWT: " + e.getMessage());
+            }
+        }
+        return null;
     }
 
     @PostMapping
@@ -45,7 +64,9 @@ public class AlertController {
                 alert.setType("ALERT");
             }
             Alert saved = alertRepository.save(alert);
-            alertStreamService.emit(saved);
+            if (alert.getRecipientEmail() == null) {
+                alertStreamService.emit(saved);
+            }
             return saved;
         }).subscribeOn(Schedulers.boundedElastic());
     }

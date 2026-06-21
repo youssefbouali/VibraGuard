@@ -28,12 +28,12 @@ export function KanbanBoard() {
 
   // Map backend work orders to frontend OT interface
   const mappedTasks: OT[] = (apiWorkOrders || []).map(wo => ({
-    id: wo.id,
-    title: wo.title,
-    machine: wo.asset,
-    priority: wo.priority.toLowerCase() === "critique" || wo.priority.toLowerCase() === "haute" 
+    id: wo.id ?? "",
+    title: wo.title ?? "",
+    machine: wo.asset ?? "",
+    priority: (wo.priority ?? "").toLowerCase() === "critique" || (wo.priority ?? "").toLowerCase() === "haute" 
       ? "haute" 
-      : wo.priority.toLowerCase() === "basse" 
+      : (wo.priority ?? "").toLowerCase() === "basse" 
         ? "basse" 
         : "moyenne",
     date: wo.dueDate,

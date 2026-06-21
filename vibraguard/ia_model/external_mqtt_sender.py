@@ -7,14 +7,13 @@ import os
 
 # ==========================================
 # CONFIGURATION
-# ==========================================
-MQTT_BROKER = os.getenv("MQTT_BROKER", "localhost")  # Fallback to mywire
+# ==================================
+MQTT_BROKER = os.geMQTT_BROKER = os.getenv("MQTT_BROKER", "localhost")  # Fallback to mywire
 MQTT_PORT = int(os.getenv("MQTT_PORT", 30083))        # Default MQTT port for external access
 MQTT_TOPIC = os.getenv("MQTT_TOPIC", "vibraguard/sensors")
 CLIENT_ID = f"vibraguard_external_simulator_{uuid.uuid4()}" # Unique client ID
-MOTOR_ID = os.getenv("MOTOR_ID", "MTR-Malaxeur-1") # Specify the motor ID here
-
-# Optional: Add Username and Password if your broker requires authentication
+MOTOR_ID = os.getenv("MOTOR_ID", "MTR-Broyeur-1") # Specify the motor ID here
+# Add Username and Password if your broker requires authentication
 MQTT_USER = None   # e.g., "my_username"
 MQTT_PASS = None   # e.g., "my_password"
 

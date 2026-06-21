@@ -16,8 +16,10 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {
-        return ResponseEntity.ok(authService.register(request));
+    public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request,
+                                                  @RequestHeader(value = "Authorization", required = false) String token) {
+        String adminEmail = token != null ? authService.getMeFromToken(token.substring(7)) : null;
+        return ResponseEntity.ok(authService.register(request, adminEmail));
     }
 
     @PostMapping("/login")
