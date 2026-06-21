@@ -178,6 +178,8 @@ export default function Reports() {
   const [formData, setFormData] = useState({
     type: "pdf",
   });
+  const [reportPage, setReportPage] = useState(1);
+  const reportsPerPage = 10;
 
   useEffect(() => {
     loadReports();
@@ -303,6 +305,7 @@ export default function Reports() {
       });
 
       setReports([newReport, ...reports]);
+      setReportPage(1);
       setShowGenerateModal(false);
       toast.success("Rapport généré et stocké sur IPFS");
     } catch (error) {
@@ -465,6 +468,9 @@ export default function Reports() {
     });
   };
 
+  const totalReportPages = Math.max(1, Math.ceil(reports.length / reportsPerPage));
+  const paginatedReports = reports.slice((reportPage - 1) * reportsPerPage, reportPage * reportsPerPage);
+
   return (
     <DashboardLayout breadcrumb="Rapports">
       <div className="flex flex-col flex-1 min-w-0">
@@ -533,8 +539,9 @@ export default function Reports() {
                 </p>
               </div>
             ) : (
+              <>
               <div className="grid gap-4">
-                {reports.map((report) => (
+                {paginatedReports.map((report) => (
                   <div
                     key={report.id}
                     className="flex items-center gap-4 p-4 rounded-lg border border-white/10 bg-white/[0.02] hover:bg-white/5 transition-colors"
@@ -643,6 +650,17 @@ export default function Reports() {
                   </div>
                 ))}
               </div>
+              {reports.length > reportsPerPage && (
+                <div className="flex items-center justify-between pt-4 mt-4 border-t border-white/[0.05]">
+                  <span className="text-[13px] text-[#64748B]">{reports.length} rapports</span>
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => setReportPage(Math.max(1, reportPage - 1))} disabled={reportPage === 1} className="flex items-center h-7 px-3 rounded text-[12px] font-medium text-[#94A3B8] hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">Précédent</button>
+                    <span className="text-[12px] text-[#64748B]">{reportPage}/{totalReportPages}</span>
+                    <button onClick={() => setReportPage(Math.min(totalReportPages, reportPage + 1))} disabled={reportPage === totalReportPages} className="flex items-center h-7 px-3 rounded text-[12px] font-medium text-[#94A3B8] hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">Suivant</button>
+                  </div>
+                </div>
+              )}
+              </>
             )}
           </div>
         </div>

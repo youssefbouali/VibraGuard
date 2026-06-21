@@ -402,6 +402,15 @@ export default function Moteurs() {
                       >
                         {m.actif === false ? <Power className="w-3.5 h-3.5" /> : <PowerOff className="w-3.5 h-3.5" />}
                       </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button onClick={(e) => e.stopPropagation()} className="p-1"><MoreHorizontal className="w-4 h-4 text-[#C9E7E6]" /></button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="bg-[#0D1316] text-white">
+                          <DropdownMenuItem onClick={(e) => {e.stopPropagation(); setSelectedMotor(m); setIsUpdateDialogOpen(true);}}>Modifier</DropdownMenuItem>
+                          <DropdownMenuItem className="text-red-500" onClick={async (e) => {e.stopPropagation(); await api.deleteMotor(m.id); refetch();}}>Supprimer</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                   <h3 className="text-white font-bold text-lg mb-1">{m.id}</h3>

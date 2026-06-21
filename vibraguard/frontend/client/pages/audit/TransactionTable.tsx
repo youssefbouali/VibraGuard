@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAudit } from "@/hooks/use-audit";
 import { toast } from "@/components/ui/use-toast";
 import { ethers } from "ethers";
@@ -39,6 +40,8 @@ const VerifyIcon = () => (
 
 export function TransactionTable() {
   const { data: rawAudit = [], isLoading } = useAudit();
+  const [page, setPage] = useState(1);
+  const perPage = 10;
 
   const transactions: Transaction[] = rawAudit.map((tx, idx) => ({
     hash: tx.hash,
@@ -50,6 +53,9 @@ export function TransactionTable() {
       name: tx.user || "Inconnu"
     }
   }));
+
+  const totalPages = Math.max(1, Math.ceil(transactions.length / perPage));
+  const paginated = transactions.slice((page - 1) * perPage, page * perPage);
 
   const copyHash = async (hash: string) => {
     try {
@@ -133,7 +139,7 @@ export function TransactionTable() {
             </tr>
           </thead>
           <tbody>
-            {transactions.map((tx, idx) => (
+            {paginated.map((tx, idx) => (
               <tr
                 key={idx}
                 className="border-b border-black/[0.08] last:border-b-0 hover:bg-white/[0.02] transition-colors"
@@ -200,6 +206,16 @@ export function TransactionTable() {
           </tbody>
         </table>
       </div>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-6 py-3 border-t border-black/[0.08]">
+          <span className="text-[13px] text-[#64748B]">{transactions.length} transactions</span>
+          <div className="flex items-center gap-3">
+            <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className="flex items-center h-7 px-2.5 rounded text-[12px] font-medium text-[#94A3B8] hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">Précédent</button>
+            <span className="text-[12px] text-[#64748B]">{page}/{totalPages}</span>
+            <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages} className="flex items-center h-7 px-2.5 rounded text-[12px] font-medium text-[#94A3B8] hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">Suivant</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

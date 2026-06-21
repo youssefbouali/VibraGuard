@@ -42,9 +42,10 @@ const SEVERITY_COLORS: Record<string, { dot: string; text: string; border: strin
 
 interface OTFormProps {
   onCancel: () => void;
+  initialMotorId?: string;
 }
 
-export function OTForm({ onCancel }: OTFormProps) {
+export function OTForm({ onCancel, initialMotorId }: OTFormProps) {
   const [moteur, setMoteur] = useState("");
   const [anomalie, setAnoalie] = useState("");
   const [severity, setSeverity] = useState("Critique");
@@ -90,7 +91,10 @@ export function OTForm({ onCancel }: OTFormProps) {
         setAvailableTechnicians(technicians);
         setAvailableParts(invParts);
         
-        if (motors.length > 0) setMoteur(motors[0].id);
+        if (motors.length > 0) {
+          const match = initialMotorId && motors.find((m) => m.id === initialMotorId);
+          setMoteur(match ? match.id : motors[0].id);
+        }
         if (isTechnician && user?.fullName) {
           setTechnicien(user.fullName);
         } else if (technicians.length > 0) {
@@ -104,7 +108,7 @@ export function OTForm({ onCancel }: OTFormProps) {
       }
     };
     fetchData();
-  }, []);
+  }, [initialMotorId]);
 
   useEffect(() => {
     if (isTechnician && user?.fullName) {

@@ -1,11 +1,14 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
 
 export function MoteurDetailHeader({ motor }: { motor: any }) {
+  const navigate = useNavigate();
   const isCritique = motor.etatLabel.includes("Critique") || motor.etatLabel.includes("Alerte");
   
-  const handleDownloadReport = () => {
+  const handleDownloadReport = async () => {
     const doc = new jsPDF();
 
     // Title
@@ -35,8 +38,19 @@ export function MoteurDetailHeader({ motor }: { motor: any }) {
       headStyles: { fillStyle: 'fill', fillColor: [0, 122, 61] }
     });
 
-    // Save PDF
-    doc.save(`Rapport_${motor.id}.pdf`);
+    try {
+      const fileContent = doc.output("dataurlstring");
+      await api.generateReport({
+        title: `Rapport ${motor.id}`,
+        type: "pdf",
+        frequency: "Ponctuel",
+        fileContent,
+      });
+      toast.success("Rapport généré et stocké sur IPFS");
+      navigate("/reports");
+    } catch (error) {
+      toast.error("Erreur lors de la génération du rapport");
+    }
   };
 
   return (
@@ -100,7 +114,7 @@ export function MoteurDetailHeader({ motor }: { motor: any }) {
         {/* Action buttons */}
         <div className="flex flex-col gap-3 shrink-0 sm:items-end">
           <Link 
-            to="/ordres-de-travail/creer"
+            to={`/ordres-de-travail/creer?motorId=${motor.id}`}
             className="flex items-center gap-2 px-5 h-11 rounded-md bg-[#007A3D] hover:bg-[#006633] transition-colors text-white text-[14px] font-semibold whitespace-nowrap"
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">

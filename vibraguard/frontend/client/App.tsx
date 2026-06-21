@@ -32,6 +32,7 @@ import NotFound from "./pages/NotFound";
 
 import { AuthProvider } from "@/lib/auth-context";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import GuestRoute from "@/components/auth/GuestRoute";
 
 const queryClient = new QueryClient();
 
@@ -43,9 +44,9 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            <Route path="/" element={<GuestRoute><Index /></GuestRoute>} />
+            <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+            <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
 

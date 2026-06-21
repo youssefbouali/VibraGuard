@@ -21,6 +21,8 @@ import { useWorkOrders } from "@/hooks/use-work-orders";
 export function KanbanBoard() {
   const { data: apiWorkOrders, isLoading, refetch } = useWorkOrders();
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const perPage = 20;
   const [selectedOT, setSelectedOT] = useState<OT | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -61,10 +63,17 @@ export function KanbanBoard() {
       t.machine.toLowerCase().includes(search.toLowerCase())
   );
 
-  const todo = filtered.filter((t) => t.status === "todo");
-  const inprogress = filtered.filter((t) => t.status === "inprogress");
-  const done = filtered.filter((t) => t.status === "done");
-  const cancelled = filtered.filter((t) => t.status === "annule");
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+  const paginated = filtered.slice((page - 1) * perPage, page * perPage);
+
+  const todo = paginated.filter((t) => t.status === "todo");
+  const inprogress = paginated.filter((t) => t.status === "inprogress");
+  const done = paginated.filter((t) => t.status === "done");
+  const cancelled = paginated.filter((t) => t.status === "annule");
 
   const handleDrop = async (taskId: string, newColStatus: string) => {
     try {
@@ -191,6 +200,17 @@ export function KanbanBoard() {
           />
         )}
       </div>
+
+      {filtered.length > perPage && (
+        <div className="flex items-center justify-between px-10 pb-6 shrink-0">
+          <span className="text-[13px] text-[#64748B]">{filtered.length} ordres de travail</span>
+          <div className="flex items-center gap-3">
+            <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className="flex items-center h-7 px-3 rounded text-[12px] font-medium text-[#94A3B8] hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">Précédent</button>
+            <span className="text-[12px] text-[#64748B]">{page}/{totalPages}</span>
+            <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages} className="flex items-center h-7 px-3 rounded text-[12px] font-medium text-[#94A3B8] hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">Suivant</button>
+          </div>
+        </div>
+      )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="bg-[#0A1114] border-white/10 text-white max-w-md">

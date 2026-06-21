@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAlerts } from "@/hooks/use-alerts";
 import { formatTime } from "@/lib/utils";
@@ -49,6 +50,8 @@ function AlerteIcon({ type }: { type: AlertData["iconType"] }) {
 
 export function AlertesRecentes() {
   const navigate = useNavigate();
+  const [page, setPage] = useState(1);
+  const perPage = 5;
 
   const { data: rawAlerts = [], isLoading } = useAlerts();
 
@@ -67,6 +70,9 @@ export function AlertesRecentes() {
       iconType: a.priority === "high" ? "critical" : a.priority === "medium" ? "warning" : "temp"
     };
   });
+
+  const totalPages = Math.max(1, Math.ceil(alertes.length / perPage));
+  const paginated = alertes.slice((page - 1) * perPage, page * perPage);
 
   if (isLoading) {
     return (
@@ -96,9 +102,9 @@ export function AlertesRecentes() {
         </Link>
       </div>
  
-      {/* Alerts list - Limited to 5 and scrollable */}
+      {/* Alerts list */}
       <div className="flex flex-col gap-3 flex-1 max-h-[500px] overflow-y-auto pr-1">
-        {alertes.slice(0, 5).map((alerte) => (
+        {paginated.map((alerte) => (
           <button
             key={alerte.id}
             onClick={() => navigate(`/moteurs/${alerte.motorId}`)}
@@ -115,6 +121,17 @@ export function AlertesRecentes() {
           </button>
         ))}
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-3 mt-3 border-t border-white/[0.05]">
+          <span className="text-[11px] text-[#64748B]">{alertes.length} alertes</span>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className="px-2.5 py-1 rounded text-[11px] font-medium text-[#94A3B8] hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">Précédent</button>
+            <span className="text-[11px] text-[#64748B]">{page}/{totalPages}</span>
+            <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages} className="px-2.5 py-1 rounded text-[11px] font-medium text-[#94A3B8] hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">Suivant</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
