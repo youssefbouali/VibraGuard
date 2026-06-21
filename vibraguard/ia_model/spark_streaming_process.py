@@ -126,8 +126,8 @@ def write_to_backend(batch_df, epoch_id):
         }
         call_api(f"iot/motors/{motor}", method="PUT", data=motor_update)
 
-        if is_anomaly:
-            print(f"🚨 ANOMALY DETECTED for {motor}! Prediction: {prediction_val}")
+        if is_anomaly and confidence_val >= 51:
+            print(f"🚨 ANOMALY DETECTED for {motor} (confidence: {confidence_val}%)! Prediction: {prediction_val}")
 
             # 2. Create Alert
             alert_payload = {

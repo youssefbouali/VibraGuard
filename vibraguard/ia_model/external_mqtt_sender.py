@@ -39,7 +39,7 @@ def generate_sensor_data():
                 "current_rms": random.uniform(8.5, 9.5),
                 "current_thd": random.uniform(4.0, 6.0),
                 "temperature": random.uniform(55.0, 65.0),
-                "status": "anomalous"
+                #"status": "anomalous"
             }
         elif scenario == "DESEQUILIBRE":
             # DESEQUILIBRE: Very High RMS, moderate Peak
@@ -51,7 +51,7 @@ def generate_sensor_data():
                 "current_rms": random.uniform(9.5, 11.0),
                 "current_thd": random.uniform(5.0, 8.0),
                 "temperature": random.uniform(60.0, 75.0),
-                "status": "anomalous"
+                #"status": "anomalous"
             }
         elif scenario == "DESALIGNEMENT":
             # DESALIGNEMENT: Moderate RMS and Peak, some temperature rise
@@ -63,7 +63,7 @@ def generate_sensor_data():
                 "current_rms": random.uniform(9.0, 10.5),
                 "current_thd": random.uniform(6.0, 9.0),
                 "temperature": random.uniform(70.0, 80.0),
-                "status": "anomalous"
+                #"status": "anomalous"
             }
         elif scenario == "SURCHAUFFE":
             # SURCHAUFFE: Extreme Temperature
@@ -75,7 +75,7 @@ def generate_sensor_data():
                 "current_rms": random.uniform(11.0, 13.0),
                 "current_thd": random.uniform(7.0, 10.0),
                 "temperature": random.uniform(95.0, 115.0),
-                "status": "anomalous"
+                #"status": "anomalous"
             }
         else: # ELECTRIQUE
             # SURCHARGE_ELECTRIQUE: High Current and THD
@@ -87,7 +87,7 @@ def generate_sensor_data():
                 "current_rms": random.uniform(15.0, 22.0),
                 "current_thd": random.uniform(18.0, 30.0),
                 "temperature": random.uniform(75.0, 85.0),
-                "status": "anomalous"
+                #"status": "anomalous"
             }
     else:
         # NORMAL / NONE
@@ -99,7 +99,7 @@ def generate_sensor_data():
             "current_rms": random.uniform(8.0, 9.0),
             "current_thd": random.uniform(4.0, 6.0),
             "temperature": random.uniform(50.0, 60.0),
-            "status": "normal"
+            #"status": "normal"
         }
     return data
 

@@ -18,7 +18,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Loader2, Trash2, Edit, MoreHorizontal, Save, X, Plus, Download } from "lucide-react";
+import { Loader2, Trash2, Edit, MoreHorizontal, Save, X, Plus, Download, Power, PowerOff } from "lucide-react";
 import { useMoteurs } from "@/hooks/use-moteurs";
 
 type HealthStatus = "Critique" | "Alerte" | "Optimal" | "Attention" | "Normal"; // Backward compatibility included
@@ -181,6 +181,13 @@ export default function Moteurs() {
     toast.success("Téléchargement des données moteurs lancé");
   };
 
+  const handleToggleActif = async (m: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newActif = m.actif === false;
+    await api.updateMotor(m.id, { actif: newActif });
+    refetch();
+    toast.success(newActif ? `${m.id} activé` : `${m.id} désactivé`);
+  };
 
   return (
     <DashboardLayout breadcrumb="Moteurs">
@@ -341,6 +348,17 @@ export default function Moteurs() {
                     </div>
                     <div className="px-6 py-4 flex items-center justify-end gap-2 pr-10">
                        <ActionBtn><VibrationIcon /></ActionBtn>
+                       <button
+                         onClick={(e) => handleToggleActif(m, e)}
+                         className={`flex w-8 h-8 items-center justify-center rounded transition-colors shrink-0 ${
+                           m.actif === false
+                             ? "bg-[#007A3D]/20 hover:bg-[#007A3D]/30 text-[#007A3D]"
+                             : "bg-red-500/10 hover:bg-red-500/20 text-red-400"
+                         }`}
+                         title={m.actif === false ? "Activer" : "Désactiver"}
+                       >
+                         {m.actif === false ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
+                       </button>
                        <DropdownMenu>
                          <DropdownMenuTrigger asChild>
                            <button onClick={(e) => e.stopPropagation()} className="p-2"><MoreHorizontal className="w-4 h-4 text-[#C9E7E6]" /></button>
@@ -366,8 +384,24 @@ export default function Moteurs() {
               return (
                 <div key={m.id} onClick={() => navigate(`/moteurs/${m.id}`)} className="bg-[#0B1518] rounded-xl border border-white/5 p-6 hover:border-[#0EA5E9]/30 transition-all cursor-pointer">
                   <div className="flex justify-between items-start mb-4">
-                    <div className="p-3 rounded-lg bg-[#0C6CF2]/10"><MoteurIcon /></div>
-                    <HealthBadge status={status} />
+                    <div className="flex items-center gap-2">
+                      <div className="p-3 rounded-lg bg-[#0C6CF2]/10"><MoteurIcon /></div>
+                      {m.actif === false && <span className="text-[10px] font-bold uppercase text-[#98A6A8] bg-[rgba(152,166,168,0.15)] px-1.5 py-0.5 rounded">Inactif</span>}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <HealthBadge status={status} />
+                      <button
+                        onClick={(e) => handleToggleActif(m, e)}
+                        className={`flex w-7 h-7 items-center justify-center rounded transition-colors ${
+                          m.actif === false
+                            ? "bg-[#007A3D]/20 hover:bg-[#007A3D]/30 text-[#007A3D]"
+                            : "bg-red-500/10 hover:bg-red-500/20 text-red-400"
+                        }`}
+                        title={m.actif === false ? "Activer" : "Désactiver"}
+                      >
+                        {m.actif === false ? <Power className="w-3.5 h-3.5" /> : <PowerOff className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
                   </div>
                   <h3 className="text-white font-bold text-lg mb-1">{m.id}</h3>
                   <p className="text-[#98A6A8] text-sm mb-6">{m.zone} • {m.localisation}</p>

@@ -74,6 +74,9 @@ public class WorkOrderController {
                 if ("Terminé".equalsIgnoreCase(workOrder.getStatus()) && !"Terminé".equalsIgnoreCase(existing.getStatus())) {
                     existing.setCompletedAt(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
                 }
+                if ("Annulé".equalsIgnoreCase(workOrder.getStatus()) && !"Annulé".equalsIgnoreCase(existing.getStatus())) {
+                    existing.setCancelledAt(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+                }
                 existing.setStatus(workOrder.getStatus());
                 existing.setPriority(workOrder.getPriority());
                 if (utils.isAdmin(principal)) {

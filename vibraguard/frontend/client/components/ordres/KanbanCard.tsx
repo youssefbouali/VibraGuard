@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 export type Priority = "haute" | "moyenne" | "basse";
-export type Status = "todo" | "inprogress" | "done";
+export type Status = "todo" | "inprogress" | "done" | "annule";
 
 export interface OT {
   id: string;
@@ -136,39 +136,57 @@ const avatarMap: Record<string, string> = {
 interface KanbanCardProps {
   ot: OT;
   onClick?: () => void;
+  onCancel?: () => void;
 }
 
-export function KanbanCard({ ot, onClick }: KanbanCardProps) {
+export function KanbanCard({ ot, onClick, onCancel }: KanbanCardProps) {
   const isDone = ot.status === "done";
+  const isCancelled = ot.status === "annule";
 
   return (
     <div
-      draggable
+      draggable={!isCancelled}
       onDragStart={(e) => {
         e.dataTransfer.setData("taskId", ot.id);
         e.dataTransfer.effectAllowed = "move";
       }}
-      onClick={onClick}
+      onClick={isCancelled ? undefined : onClick}
       className={cn(
-        "flex flex-col gap-3 p-4 rounded-md border border-black/[0.08] bg-[#0B1518] shadow-[0_4px_12px_rgba(0,0,0,0.2)] cursor-pointer hover:border-white/10 transition-colors",
-        isDone && "opacity-70"
+        "flex flex-col gap-3 p-4 rounded-md border border-black/[0.08] bg-[#0B1518] shadow-[0_4px_12px_rgba(0,0,0,0.2)] transition-colors",
+        isCancelled ? "opacity-40 cursor-not-allowed border-red-900/30" : "cursor-pointer hover:border-white/10",
+        isDone && !isCancelled && "opacity-70"
       )}
     >
-      {/* Top row: ID + Priority */}
+      {/* Top row: ID + Priority + Cancel button */}
       <div className="flex items-center justify-between">
         <span className="font-mono text-[13px] font-medium text-[#C9E7E6]">{ot.id}</span>
-        {isDone ? (
-          <DonePriorityBadge priority={ot.priority} />
-        ) : (
-          <PriorityBadge priority={ot.priority} />
-        )}
+        <div className="flex items-center gap-2">
+          {isCancelled ? (
+            <span className="text-[11px] font-bold uppercase text-[#D93F3F] bg-[rgba(217,63,63,0.15)] px-2 py-1 rounded">Annulé</span>
+          ) : isDone ? (
+            <DonePriorityBadge priority={ot.priority} />
+          ) : (
+            <PriorityBadge priority={ot.priority} />
+          )}
+          {onCancel && !isCancelled && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onCancel(); }}
+              className="flex items-center justify-center w-6 h-6 rounded hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors"
+              title="Annuler l'ordre de travail"
+            >
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M9 3L3 9M3 3L9 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Title */}
       <p
         className={cn(
           "text-[15px] font-semibold leading-[1.4]",
-          isDone ? "text-[#98A6A8] line-through" : "text-[#E6F0F2]"
+          isCancelled ? "text-[#64748B] line-through" : isDone ? "text-[#98A6A8] line-through" : "text-[#E6F0F2]"
         )}
       >
         {ot.title}

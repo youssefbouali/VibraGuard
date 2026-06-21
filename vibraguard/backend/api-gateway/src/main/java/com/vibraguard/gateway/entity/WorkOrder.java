@@ -29,4 +29,5 @@ public class WorkOrder {
     private String parts;
     private String createdAt;
     private String completedAt;
+    private String cancelledAt;
 }
