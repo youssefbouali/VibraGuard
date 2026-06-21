@@ -36,3 +36,5 @@ USER sparkuser
 # Default command: Runs the Spark streaming job
 CMD ["spark-submit", "--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0", "spark_streaming_process.py"]
 
+
+# Build timestamp: 20260621222246

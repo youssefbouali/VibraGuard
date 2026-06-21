@@ -23,7 +23,9 @@ MQTT_PASS = None   # e.g., "my_password"
 # ==========================================
 def generate_sensor_data():
     """Generates synthetic sensor data aligned with training CSV types."""
-    is_anomaly = random.random() < 1
+    is_anomaly = random.random() < 1 #anomaly
+    #is_anomaly = random.random() < 0 #normal
+    #is_anomaly = random.random() < 0.5 #50%
     
     if is_anomaly:
         scenario = random.choice(["ROULEMENT", "DESEQUILIBRE", "DESALIGNEMENT", "SURCHAUFFE", "ELECTRIQUE"])
@@ -107,9 +109,9 @@ def generate_sensor_data():
 # ==========================================
 def on_connect(client, userdata, flags, reason_code, properties):
     if reason_code == 0:
-        print(f"✅ Successfully connected to external MQTT Broker at {MQTT_BROKER}")
+        print(f"[OK] Successfully connected to external MQTT Broker at {MQTT_BROKER}")
     else:
-        print(f"❌ Failed to connect, return code {reason_code}")
+        print(f"[FAIL] Failed to connect, return code {reason_code}")
 
 def on_publish(client, userdata, mid, reason_code, properties):
     pass # Optional: can be used to track successful message deliveries
@@ -136,7 +138,7 @@ def main():
         print("Connecting...")
         client.connect(MQTT_BROKER, MQTT_PORT, 60)
     except Exception as e:
-        print(f"❌ Connection failed: {str(e)}")
+        print(f"[FAIL] Connection failed: {str(e)}")
         print(f"Note: Ensure that port {MQTT_PORT} is open on the router/firewall for {MQTT_BROKER}")
         return
 
@@ -151,12 +153,12 @@ def main():
             sensor_data = generate_sensor_data()
             payload = json.dumps(sensor_data)
             
-            # 2. Publish to the remote domain
-            result = client.publish(MQTT_TOPIC, payload, qos=0)
+            # 2. Publish to the remote domain with QoS 1 so messages are stored by broker
+            result = client.publish(MQTT_TOPIC, payload, qos=1)
             
             # 3. Log to console
-            status_indicator = "🔴" if sensor_data["temperature"] > 70.0 else "🟢"
-            print(f"[{status_indicator}] Sent to {MQTT_BROKER} -> {payload}")
+            status_indicator = "ANOM" if sensor_data["temperature"] > 70.0 else "OK"
+            print(f"Sent to {MQTT_BROKER} -> {payload}")
             
             # 4. Wait before sending the next one
             time.sleep(2)

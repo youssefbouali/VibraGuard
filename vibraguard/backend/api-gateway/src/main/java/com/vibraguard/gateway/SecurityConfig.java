@@ -36,6 +36,9 @@ public class SecurityConfig {
                         .pathMatchers("/api/v1/auth/**", "/login", "/register", "/forgot-password").permitAll()
                         .pathMatchers("/api/v1/reports/**").permitAll()
                         .pathMatchers("/ws/**").permitAll()
+                        .pathMatchers("/api/v1/iot/**").permitAll()
+                        .pathMatchers("/api/v1/bi/**").permitAll()
+                        .pathMatchers("/api/v1/ml/**").permitAll()
                         .anyExchange().authenticated());
         return http.build();
     }

@@ -7,7 +7,7 @@ Usage:
   python scripts/db_tool.py --export
   python scripts/db_tool.py --export --mongodb-only
   python scripts/db_tool.py --export --oracle-only --output-dir ./backup_20260619
-  python scripts/db_tool.py --import --dump-dir ./backup_20260619_024132
+  python scripts/db_tool.py --import --dump-dir ./backup_20260621_140022
   python scripts/db_tool.py --import --mongodb-only --dump-dir ./backup_20260619
   python scripts/db_tool.py --import --oracle-only --dump-dir ./backup_20260619
 """

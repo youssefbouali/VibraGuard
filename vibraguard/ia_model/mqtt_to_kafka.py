@@ -23,25 +23,34 @@ def get_producer():
             producer = KafkaProducer(
                 bootstrap_servers=[KAFKA_BROKER],
                 value_serializer=lambda v: json.dumps(v).encode('utf-8'),
-                acks='1',
+                acks=1,
                 linger_ms=10,
                 batch_size=65536,
-                compression_type='snappy',
+                compression_type=None,
                 max_in_flight_requests_per_connection=5,
-                api_version=(3, 4, 1),
             )
+            print("Kafka producer created")
         except Exception as e:
             print(f"Error creating Kafka producer: {e}")
     return producer
 
-get_producer()
+def init_producer_with_retry():
+    for i in range(30):
+        if get_producer() is not None:
+            return True
+        print(f"Retrying Kafka connection ({i+1}/30)...")
+        time.sleep(2)
+    return False
+
+init_producer_with_retry()
 
 def flush_loop():
     while True:
         time.sleep(FLUSH_INTERVAL)
-        if producer:
+        p = producer
+        if p:
             try:
-                producer.flush()
+                p.flush()
             except Exception as e:
                 print(f"Flush error: {e}")
 
@@ -58,7 +67,10 @@ def on_message(client, userdata, msg):
         data = json.loads(payload)
         prod = get_producer()
         if prod:
-            prod.send(KAFKA_TOPIC, data)
+            future = prod.send(KAFKA_TOPIC, data)
+            future.get(timeout=10)
+            prod.flush()
+            print(f"Sent to Kafka: {data.get('motor_id', '?')}")
     except Exception as e:
         print(f"Error processing message: {e}")
 
