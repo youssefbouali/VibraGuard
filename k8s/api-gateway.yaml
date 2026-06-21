@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: vibraguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: vibraguard-api-gateway:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+            - name: AUTH_SERVICE_URL
+              value: "http://auth-service:8081"
+            - name: MOTOR_SERVICE_URL
+              value: "http://motor-service:8082"
+            - name: ALERT_SERVICE_URL
+              value: "http://alert-service:8083"
+            - name: WORKORDER_SERVICE_URL
+              value: "http://workorder-service:8084"
+            - name: INVENTORY_SERVICE_URL
+              value: "http://inventory-service:8085"
+            - name: BLOCKCHAIN_SERVICE_URL
+              value: "http://blockchain-service:8086"
+            - name: BI_SERVICE_URL
+              value: "http://bi-service:8088"
+            - name: MOTOR_SERVICE_HOST
+              value: "motor-service"
+            - name: ALERT_SERVICE_HOST
+              value: "alert-service"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: vibraguard
+spec:
+  type: NodePort
+  selector:
+    app: api-gateway
+  ports:
+    - port: 80
+      targetPort: 8080
+      nodePort: 30007

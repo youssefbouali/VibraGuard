@@ -10,7 +10,15 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>common</module>
         <module>api-gateway</module>
+        <module>auth-service</module>
+        <module>motor-service</module>
+        <module>alert-service</module>
+        <module>workorder-service</module>
+        <module>inventory-service</module>
+        <module>blockchain-service</module>
+        <module>bi-service</module>
     </modules>
 
     <properties>
@@ -34,6 +42,11 @@
                 <version>${spring-cloud.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.vibraguard</groupId>
+                <artifactId>common</artifactId>
+                <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -65,30 +78,21 @@
                         <executions>
                             <execution>
                                 <id>prepare-agent</id>
-                                <goals>
-                                    <goal>prepare-agent</goal>
-                                </goals>
+                                <goals><goal>prepare-agent</goal></goals>
                             </execution>
                             <execution>
                                 <id>report</id>
                                 <phase>test</phase>
-                                <goals>
-                                    <goal>report</goal>
-                                </goals>
+                                <goals><goal>report</goal></goals>
                             </execution>
                         </executions>
                         <configuration>
-                            <formats>
-                                <format>XML</format>
-                                <format>HTML</format>
-                            </formats>
+                            <formats><format>XML</format><format>HTML</format></formats>
                             <excludes>
                                 <exclude>**/entity/**</exclude>
                                 <exclude>**/repository/**</exclude>
                                 <exclude>**/dto/**</exclude>
                                 <exclude>**/*Application*</exclude>
-                                <exclude>**/service/IpfsService*</exclude>
-                                <exclude>**/service/BlockchainReportService*</exclude>
                             </excludes>
                         </configuration>
                     </plugin>

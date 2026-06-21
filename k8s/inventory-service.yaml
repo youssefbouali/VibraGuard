@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-service
+  namespace: vibraguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inventory-service
+  template:
+    metadata:
+      labels:
+        app: inventory-service
+    spec:
+      containers:
+        - name: inventory-service
+          image: vibraguard-inventory-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8085
+          env:
+            - name: DB_URL
+              value: "jdbc:oracle:thin:@oracle-db.vibraguard.svc.cluster.local:1521:xe"
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: oracle-db-credentials
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: oracle-db-credentials
+                  key: password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory-service
+  namespace: vibraguard
+spec:
+  selector:
+    app: inventory-service
+  ports:
+    - port: 8085
+      targetPort: 8085

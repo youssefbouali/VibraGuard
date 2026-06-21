@@ -1,0 +1,29 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: blockchain-service
+  datasource:
+    url: ${DB_URL:jdbc:oracle:thin:@oracle-db.vibraguard.svc.cluster.local:1521:xe}
+    driver-class-name: oracle.jdbc.OracleDriver
+    username: ${DB_USERNAME:system}
+    password: ${DB_PASSWORD:password}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+ipfs:
+  api:
+    url: ${IPFS_API_URL:http://ipfs:5001}
+
+blockchain:
+  rpc:
+    url: ${BLOCKCHAIN_RPC_URL:http://blockchain:8545}
+  chain-id: ${BLOCKCHAIN_CHAIN_ID:31337}
+  gas-limit: ${BLOCKCHAIN_GAS_LIMIT:500000}
+  workorder-registry:
+    address: ${BLOCKCHAIN_WORKORDER_REGISTRY_ADDRESS:}
+  account:
+    private-key: ${BLOCKCHAIN_PRIVATE_KEY:0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80}

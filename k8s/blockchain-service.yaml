@@ -1,11 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blockchain-service
+  namespace: vibraguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blockchain-service
+  template:
+    metadata:
+      labels:
+        app: blockchain-service
+    spec:
+      containers:
+        - name: blockchain-service
+          image: vibraguard-blockchain-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8086
+          env:
+            - name: DB_URL
+              value: "jdbc:oracle:thin:@oracle-db.vibraguard.svc.cluster.local:1521:xe"
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: oracle-db-credentials
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: oracle-db-credentials
+                  key: password
+            - name: BLOCKCHAIN_RPC_URL
+              value: "http://blockchain:8545"
+            - name: IPFS_API_URL
+              value: "http://ipfs:5001"
+---
 apiVersion: v1
 kind: Service
 metadata:
-  name: blockchain
+  name: blockchain-service
   namespace: vibraguard
 spec:
   selector:
-    app: blockchain
+    app: blockchain-service
   ports:
-    - port: 8545
-      targetPort: 8545
+    - port: 8086
+      targetPort: 8086

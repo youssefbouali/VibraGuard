@@ -21,7 +21,7 @@ spec:
             - containerPort: 3000
           env:
             - name: BACKEND_URL
-              value: "http://backend"
+              value: "http://api-gateway"
             - name: VITE_WORKORDER_REGISTRY_ADDRESS
               valueFrom:
                 configMapKeyRef:

@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bi-service
+  namespace: vibraguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bi-service
+  template:
+    metadata:
+      labels:
+        app: bi-service
+    spec:
+      containers:
+        - name: bi-service
+          image: vibraguard-bi-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8088
+          env:
+            - name: DB_URL
+              value: "jdbc:oracle:thin:@oracle-db.vibraguard.svc.cluster.local:1521:xe"
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: oracle-db-credentials
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: oracle-db-credentials
+                  key: password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bi-service
+  namespace: vibraguard
+spec:
+  selector:
+    app: bi-service
+  ports:
+    - port: 8088
+      targetPort: 8088

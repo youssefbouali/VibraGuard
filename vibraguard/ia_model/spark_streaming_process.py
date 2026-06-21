@@ -16,7 +16,7 @@ KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka:9092")
 KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "sensor-data")
 MODEL_PATH = "vibraguard_rf_model.joblib"
 SCALER_PATH = "vibraguard_scaler.joblib"
-BACKEND_URL = os.getenv("BACKEND_URL", "http://backend.vibraguard.svc.cluster.local/api/v1")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://api-gateway.vibraguard.svc.cluster.local/api/v1")
 
 # Load Model and Scaler
 print("Loading model and scaler...")

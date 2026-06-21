@@ -398,12 +398,15 @@ eval $(minikube docker-env)
 echo "Project Root: $PROJECT_ROOT"
 
 # ---------------- BACKEND ----------------
-echo "Build backend image..."
-cd "$PROJECT_ROOT/backend/api-gateway"
-
+echo "Build backend images..."
+cd "$PROJECT_ROOT/backend"
 mvn clean package -DskipTests
 
-docker build -t vibraguard-backend:latest .
+for SERVICE in api-gateway auth-service motor-service alert-service workorder-service inventory-service blockchain-service bi-service; do
+    echo "Building $SERVICE image..."
+    cd "$PROJECT_ROOT/backend/$SERVICE"
+    docker build -t vibraguard-$SERVICE:latest .
+done
 
 # ---------------- FRONTEND ----------------
 echo "Build frontend image..."
@@ -421,47 +424,125 @@ cd "$PROJECT_ROOT"
 mkdir -p k8s
 cd k8s
 
-# BACKEND DEPLOYMENT
-cat <<EOF > backend-deployment.yaml
+# API GATEWAY
+cat <<EOF > api-gateway.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backend
+  name: api-gateway
   namespace: vibraguard
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: backend
+      app: api-gateway
   template:
     metadata:
       labels:
-        app: backend
+        app: api-gateway
     spec:
       containers:
-        - name: backend
-          image: vibraguard-backend:latest
+        - name: api-gateway
+          image: vibraguard-api-gateway:latest
           imagePullPolicy: Never
           ports:
             - containerPort: 8080
-EOF
-
-# BACKEND SERVICE
-cat <<EOF > backend-service.yaml
+          env:
+            - name: AUTH_SERVICE_URL
+              value: "http://auth-service:8081"
+            - name: MOTOR_SERVICE_URL
+              value: "http://motor-service:8082"
+            - name: ALERT_SERVICE_URL
+              value: "http://alert-service:8083"
+            - name: WORKORDER_SERVICE_URL
+              value: "http://workorder-service:8084"
+            - name: INVENTORY_SERVICE_URL
+              value: "http://inventory-service:8085"
+            - name: BLOCKCHAIN_SERVICE_URL
+              value: "http://blockchain-service:8086"
+            - name: BI_SERVICE_URL
+              value: "http://bi-service:8088"
+            - name: MOTOR_SERVICE_HOST
+              value: "motor-service"
+            - name: ALERT_SERVICE_HOST
+              value: "alert-service"
+---
 apiVersion: v1
 kind: Service
 metadata:
-  name: backend
+  name: api-gateway
   namespace: vibraguard
 spec:
   type: NodePort
   selector:
-    app: backend
+    app: api-gateway
   ports:
     - port: 80
       targetPort: 8080
       nodePort: 30007
 EOF
+
+for SVC in auth-service motor-service alert-service workorder-service inventory-service blockchain-service bi-service; do
+    PORT=""
+    case $SVC in
+        auth-service) PORT=8081 ;;
+        motor-service) PORT=8082 ;;
+        alert-service) PORT=8083 ;;
+        workorder-service) PORT=8084 ;;
+        inventory-service) PORT=8085 ;;
+        blockchain-service) PORT=8086 ;;
+        bi-service) PORT=8088 ;;
+    esac
+
+    cat <<EOF > $SVC.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: $SVC
+  namespace: vibraguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: $SVC
+  template:
+    metadata:
+      labels:
+        app: $SVC
+    spec:
+      containers:
+        - name: $SVC
+          image: vibraguard-$SVC:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: $PORT
+          env:
+            - name: DB_URL
+              value: "jdbc:oracle:thin:@oracle-db.vibraguard.svc.cluster.local:1521:xe"
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: oracle-db-credentials
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: oracle-db-credentials
+                  key: password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: $SVC
+  namespace: vibraguard
+spec:
+  selector:
+    app: $SVC
+  ports:
+    - port: $PORT
+      targetPort: $PORT
+EOF
+done
 
 # FRONTEND DEPLOYMENT
 cat <<EOF > frontend-deployment.yaml
@@ -488,7 +569,7 @@ spec:
             - containerPort: 3000
           env:
             - name: BACKEND_URL
-              value: "http://backend"
+              value: "http://api-gateway"
 EOF
 
 # FRONTEND SERVICE
