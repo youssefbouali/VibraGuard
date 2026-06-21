@@ -7,11 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 export default function Parametres() {
   const tabs = [
     "Utilisateurs",
-    "Capteurs IoT",
     "Seuils Alertes",
-    "Modèles ML",
-    "IPFS",
-    "Kafka",
   ];
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "Utilisateurs";

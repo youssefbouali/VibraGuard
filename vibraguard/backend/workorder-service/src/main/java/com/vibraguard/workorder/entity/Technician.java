@@ -16,6 +16,11 @@ public class Technician {
     @Id
     private String id;
     private String name;
-    private String specialization;
+    private String email;
+    private String department;
+    private String role;
+    private String status;
+    private String phoneNumber;
+    private String lastConnection;
     private String avatarUrl;
 }

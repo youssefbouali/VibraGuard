@@ -50,6 +50,25 @@ public class AuthService {
 
         userRepository.save(user);
 
+        try {
+            java.util.Map<String, String> technician = new java.util.HashMap<>();
+            technician.put("id", user.getEmployeeId());
+            technician.put("name", user.getFullName());
+            technician.put("email", user.getEmail());
+            technician.put("department", user.getDepartment() != null ? user.getDepartment() : "Maintenance");
+            technician.put("role", user.getRole());
+            technician.put("status", user.getStatus());
+            technician.put("phoneNumber", user.getPhoneNumber() != null ? user.getPhoneNumber() : "");
+            technician.put("avatarUrl", "");
+            restTemplate.postForEntity(
+                    "http://workorder-service:8084/api/v1/iot/technicians",
+                    technician,
+                    Void.class
+            );
+        } catch (Exception e) {
+            System.err.println("Failed to create technician: " + e.getMessage());
+        }
+
         if ("Inactif".equals(status)) {
             sendNotificationToEnterpriseAdmins(user);
         }
@@ -121,6 +140,25 @@ public class AuthService {
                     .department("Maintenance Prédictive")
                     .build();
             userRepository.save(user);
+
+            try {
+                java.util.Map<String, String> technician = new java.util.HashMap<>();
+                technician.put("id", user.getEmployeeId());
+                technician.put("name", user.getFullName());
+                technician.put("email", user.getEmail());
+            technician.put("department", user.getDepartment() != null ? user.getDepartment() : "Maintenance");
+                technician.put("role", user.getRole());
+                technician.put("status", "Actif");
+                technician.put("phoneNumber", user.getPhoneNumber() != null ? user.getPhoneNumber() : "");
+                technician.put("avatarUrl", "");
+                restTemplate.postForEntity(
+                        "http://workorder-service:8084/api/v1/iot/technicians",
+                        technician,
+                        Void.class
+                );
+            } catch (Exception e) {
+                System.err.println("Failed to create technician for seed user: " + e.getMessage());
+            }
         }
     }
 

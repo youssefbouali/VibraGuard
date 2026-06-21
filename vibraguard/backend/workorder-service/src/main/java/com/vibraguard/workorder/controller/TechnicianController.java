@@ -18,6 +18,12 @@ public class TechnicianController {
     @Autowired
     private TechnicianRepository technicianRepository;
 
+    @PostMapping
+    public Mono<ResponseEntity<Technician>> createTechnician(@RequestBody Technician technician) {
+        return Mono.fromCallable(() -> ResponseEntity.ok(technicianRepository.save(technician)))
+                .subscribeOn(Schedulers.boundedElastic());
+    }
+
     @GetMapping
     public Flux<Technician> getTechnicians() {
         return Flux.defer(() -> Flux.fromIterable(technicianRepository.findAll()))
@@ -38,7 +44,12 @@ public class TechnicianController {
             if (existing.isPresent()) {
                 Technician t = existing.get();
                 if (technician.getName() != null) t.setName(technician.getName());
-                if (technician.getSpecialization() != null) t.setSpecialization(technician.getSpecialization());
+                if (technician.getEmail() != null) t.setEmail(technician.getEmail());
+                if (technician.getDepartment() != null) t.setDepartment(technician.getDepartment());
+                if (technician.getRole() != null) t.setRole(technician.getRole());
+                if (technician.getStatus() != null) t.setStatus(technician.getStatus());
+                if (technician.getPhoneNumber() != null) t.setPhoneNumber(technician.getPhoneNumber());
+                if (technician.getLastConnection() != null) t.setLastConnection(technician.getLastConnection());
                 return ResponseEntity.ok(technicianRepository.save(t));
             }
             return ResponseEntity.notFound().<Technician>build();
