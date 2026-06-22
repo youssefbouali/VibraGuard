@@ -3,13 +3,19 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { useVibrations } from "@/hooks/use-vibrations";
 import { toast } from "sonner";
 
 export function MoteurDetailHeader({ motor }: { motor: any }) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { data: vibrations = [] } = useVibrations(motor.id);
   const isCritique = motor.etatLabel.includes("Critique");
-  
+
+  const lastVibration = vibrations.length > 0 ? vibrations[vibrations.length - 1] : null;
+  const formatNumber = (value?: number | null) =>
+    typeof value === "number" && Number.isFinite(value) ? value.toFixed(2) : "N/A";
+
   const handleDownloadReport = async () => {
     const doc = new jsPDF();
 
@@ -17,7 +23,7 @@ export function MoteurDetailHeader({ motor }: { motor: any }) {
     doc.setFontSize(20);
     doc.setTextColor(0, 122, 61); // Green theme
     doc.text(`Rapport Technique : ${motor.id}`, 14, 22);
-    
+
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text(`Généré le : ${new Date().toLocaleString()}`, 14, 30);
@@ -31,13 +37,19 @@ export function MoteurDetailHeader({ motor }: { motor: any }) {
         ['Type', motor.type],
         ['État de Santé', motor.etatLabel],
         ['Santé (%)', `${motor.etatPct}%`],
-        ['Vibration RMS', motor.vibration],
+        ['Vibration Initiale', motor.vibration || 'N/A'],
+        ['Vibration Actuelle', lastVibration ? `${formatNumber(lastVibration.vibRms)} mm/s` : 'N/A'],
+        ['Vib Peak', lastVibration ? formatNumber(lastVibration.vibPeak) : 'N/A'],
+        ['Vib Kurtosis', lastVibration ? formatNumber(lastVibration.vibKurtosis) : 'N/A'],
+        ['Température', lastVibration ? `${formatNumber(lastVibration.temperature)} °C` : 'N/A'],
+        ['Courant RMS', lastVibration ? `${formatNumber(lastVibration.currentRms)} A` : 'N/A'],
+        ['Anomalie', lastVibration ? (lastVibration.isAnomalous ? 'Oui' : 'Non') : 'N/A'],
         ['Vitesse Nominale', motor.speed || 'N/A'],
         ['Puissance', motor.power || 'N/A'],
         ['Localisation', motor.localisation || ''],
       ],
       theme: 'striped',
-      headStyles: { fillStyle: 'fill', fillColor: [0, 122, 61] }
+      headStyles: { fillColor: [0, 122, 61] }
     });
 
     try {

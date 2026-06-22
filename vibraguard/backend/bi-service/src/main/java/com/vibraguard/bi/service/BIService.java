@@ -35,6 +35,9 @@ public class BIService {
     @Value("${motor-service.url:http://motor-service.vibraguard.svc.cluster.local:8082}")
     private String motorServiceUrl;
 
+    @Value("${alert-service.url:http://alert-service.vibraguard.svc.cluster.local:8083}")
+    private String alertServiceUrl;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     private static final String[] SITE_COLORS = {"#3B82F6", "#F59E0B", "#10B981", "#EF4444", "#8B5CF6", "#EC4899", "#14B8A6", "#F97316"};
@@ -227,14 +230,12 @@ public class BIService {
         int criticalMotors = 0;
         int totalMotors = allMotors.size();
         double avgHealth = 100.0;
-        int alertsCount = 0;
         try {
             Map[] motors = restTemplate.getForObject(motorServiceUrl + "/api/v1/iot/motors", Map[].class);
             if (motors != null) {
                 totalMotors = motors.length;
                 double healthSum = 0;
                 for (Map m : motors) {
-                    String etatLabel = (String) m.get("etatLabel");
                     Object etatPct = m.get("etatPct");
                     boolean isCritical = etatPct instanceof Number && ((Number) etatPct).doubleValue() < 50;
                     if (isCritical) criticalMotors++;
@@ -242,10 +243,6 @@ public class BIService {
                         healthSum += ((Number) etatPct).doubleValue();
                     } else {
                         healthSum += 100;
-                    }
-                    // Count alerts from motor health: if motor is in Attention or Critique with recent alert
-                    if (isCritical || (etatLabel != null && etatLabel.contains("Attention"))) {
-                        alertsCount++;
                     }
                 }
                 avgHealth = totalMotors > 0 ? healthSum / totalMotors : 100;
@@ -256,6 +253,18 @@ public class BIService {
             if (uptimeKpi.isPresent() && uptimeKpi.get().getNumericValue() != null) {
                 avgHealth = uptimeKpi.get().getNumericValue();
             }
+        }
+
+        // Fetch real total alerts count from alert-service
+        int alertsCount = 0;
+        try {
+            Map countResult = restTemplate.getForObject(alertServiceUrl + "/api/v1/ml/alerts/count", Map.class);
+            if (countResult != null && countResult.get("count") instanceof Number) {
+                alertsCount = ((Number) countResult.get("count")).intValue();
+            }
+        } catch (Exception e) {
+            // Fallback: use criticalMotors if alert-service unreachable
+            alertsCount = criticalMotors;
         }
 
         double uptimePct2 = Math.max(0, Math.min(100, avgHealth));

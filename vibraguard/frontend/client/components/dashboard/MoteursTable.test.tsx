@@ -32,7 +32,7 @@ describe("MoteursTable", () => {
     expect(screen.getByText("Moteur")).toBeInTheDocument();
     expect(screen.getByText("Type")).toBeInTheDocument();
     expect(screen.getByText("État Santé")).toBeInTheDocument();
-    expect(screen.getByText("Vibration RMS")).toBeInTheDocument();
+    expect(screen.getByText("Vibration Initiale")).toBeInTheDocument();
     expect(screen.getByText("Action")).toBeInTheDocument();
   });
 

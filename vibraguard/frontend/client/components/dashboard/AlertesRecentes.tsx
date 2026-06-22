@@ -34,9 +34,11 @@ function WarningIcon() {
 
 function TempIcon() {
   return (
-    <div className="flex w-10 h-10 shrink-0 items-center justify-center rounded-[10px] bg-[rgba(245,158,11,0.10)]">
+    <div className="flex w-10 h-10 shrink-0 items-center justify-center rounded-[10px] bg-[rgba(14,165,233,0.10)]">
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path d="M11.6666 3.33334V12.1167C12.9731 12.871 13.6101 14.4089 13.2196 15.8662C12.8292 17.3234 11.5086 18.3368 9.99989 18.3368C8.49121 18.3368 7.17062 17.3234 6.78014 15.8662C6.38967 14.4089 7.02667 12.871 8.33323 12.1167V3.33334C8.33323 2.41348 9.08004 1.66667 9.99989 1.66667C10.9198 1.66667 11.6666 2.41348 11.6666 3.33334" stroke="#F59E0B" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="10" cy="10" r="8.33333" stroke="#0EA5E9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M10 9.16667V13.3333" stroke="#0EA5E9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="10" cy="6.66667" r="0.833333" fill="#0EA5E9" />
       </svg>
     </div>
   );

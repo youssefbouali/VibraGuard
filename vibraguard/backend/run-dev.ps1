@@ -34,6 +34,9 @@ foreach ($module in $modules) {
     $job = Start-Job -Name $module -ScriptBlock {
         param($mod, $log)
         cd "C:\projects\VibraGuard\vibraguard\backend"
+        if ($mod -eq "bi-service") {
+            $env:ALERT_SERVICE_URL = "http://localhost:8083"
+        }
         mvn spring-boot:run -pl $mod > $log 2>&1
     } -ArgumentList $module, $logFile
     

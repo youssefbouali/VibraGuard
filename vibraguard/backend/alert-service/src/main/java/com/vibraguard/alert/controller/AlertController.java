@@ -26,6 +26,14 @@ public class AlertController {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @GetMapping("/count")
+    public Mono<Map<String, Long>> getAlertsCount() {
+        return Mono.fromCallable(() -> {
+            long count = alertRepository.countByType("ALERT");
+            return Map.of("count", count);
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
+
     @GetMapping
     public Flux<Alert> getAlerts(ServerWebExchange exchange,
                                  @RequestParam(name = "minConfidence", required = false) Integer minConfidence) {

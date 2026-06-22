@@ -1,10 +1,16 @@
 import paho.mqtt.client as mqtt
 from kafka import KafkaProducer
-from queue import Queue
+from queue import SimpleQueue
+
+
 import json
 import os
 import threading
 import time
+
+import orjson
+
+
 
 MQTT_BROKER = os.getenv("MQTT_BROKER", "mosquitto")
 MQTT_PORT = int(os.getenv("MQTT_PORT", 1883))
@@ -16,7 +22,7 @@ KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka:9092")
 KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "sensor-data")
 
 producer = None
-msg_queue = Queue(maxsize=10000)
+msg_queue = SimpleQueue()
 sent_count = 0
 
 def get_producer():
@@ -25,10 +31,7 @@ def get_producer():
         try:
             producer = KafkaProducer(
                 bootstrap_servers=[KAFKA_BROKER],
-                value_serializer=lambda v: json.dumps(
-                v,
-                separators=(',', ':')
-            ).encode("utf-8"),
+                value_serializer=orjson.dumps,
                 acks=0,
                 linger_ms=10,
                 batch_size=65536,

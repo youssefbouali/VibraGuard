@@ -13,3 +13,9 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+motor-service:
+  url: ${MOTOR_SERVICE_URL:http://motor-service.vibraguard.svc.cluster.local:8082}
+
+alert-service:
+  url: ${ALERT_SERVICE_URL:http://alert-service.vibraguard.svc.cluster.local:8083}

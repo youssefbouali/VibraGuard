@@ -86,8 +86,9 @@ export function CartographieSante() {
 
   const mappedMoteurs: Moteur[] = (apiMoteurs || []).map(m => {
     let status: MoteurStatus = "ok";
-    if (m.etatLabel === "Critique") status = "critical";
-    else if (m.etatLabel === "Attention") status = "warning";
+    const label = m.etatLabel || "";
+    if (label.includes("Critique")) status = "critical";
+    else if (label.includes("Attention") || label.includes("Alerte")) status = "warning";
     
     return {
       id: m.id,

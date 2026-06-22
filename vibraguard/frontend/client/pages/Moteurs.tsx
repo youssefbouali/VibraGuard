@@ -69,13 +69,6 @@ const statusConfig: Record<HealthStatus, { color: string; bg: string; border: st
   },
 };
 
-const vibrationColor: Record<string, string> = {
-  Critique: "text-[#D93F3F]",
-  Attention: "text-[#F2A900]",
-  Normal: "text-[#007A3D]",
-  Optimal: "text-[#007A3D]",
-};
-
 // SVG icons
 const MoteurIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -326,7 +319,7 @@ export default function Moteurs() {
                       <span className="text-[#98A6A8] text-xs">{m.puissance}</span>
                     </div>
                     <div className="px-6 py-4 flex items-center gap-1">
-                      <span className={cn("font-bold text-lg", vibrationColor[status])}>
+                      <span className="font-bold text-lg text-[#E2E8F0]">
                         {typeof m.vibrationRMS === 'number' ? m.vibrationRMS.toFixed(2) : String(m.vibration || "0.00").replace(' mm/s', '')}
                       </span>
                       <span className="text-[#98A6A8] text-xs">mm/s</span>
@@ -402,7 +395,7 @@ export default function Moteurs() {
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
                     <div>
                       <p className="text-[#64748B] text-[10px] font-bold uppercase mb-1">Vibration</p>
-                      <p className={cn("text-xl font-bold", vibrationColor[status])}>
+                      <p className="text-xl font-bold text-[#E2E8F0]">
                         {typeof m.vibrationRMS === 'number' ? m.vibrationRMS.toFixed(2) : String(m.vibration || "0.00").replace(' mm/s', '')} <span className="text-xs font-normal opacity-60">mm/s</span>
                       </p>
                     </div>

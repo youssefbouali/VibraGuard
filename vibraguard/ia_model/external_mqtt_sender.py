@@ -12,7 +12,7 @@ MQTT_BROKER = os.getenv("MQTT_BROKER", "localhost")
 MQTT_PORT = int(os.getenv("MQTT_PORT", 30083))
 MQTT_TOPIC = os.getenv("MQTT_TOPIC", "vibraguard/sensors")
 CLIENT_ID = f"vibraguard_external_simulator_{uuid.uuid4()}"
-MOTOR_ID = os.getenv("MOTOR_ID", "MTR-Malaxeur-1")
+MOTOR_ID = os.getenv("MOTOR_ID", "MTR-Convoyeur-1")
 MQTT_USER = os.getenv("MQTT_USER", "vibraguard")
 MQTT_PASS = os.getenv("MQTT_PASS", "VibraGuard2024!")
 
@@ -22,9 +22,9 @@ MQTT_PASS = os.getenv("MQTT_PASS", "VibraGuard2024!")
 # ==========================================
 def generate_sensor_data():
     """Generates synthetic sensor data aligned with training CSV types."""
-    #is_anomaly = random.random() < 0 #normal
+    is_anomaly = random.random() < 0 #normal
     #is_anomaly = random.random() < 1 #anomaly
-    is_anomaly = random.random() < 0.5 #50%
+    #is_anomaly = random.random() < 0.5 #50%
     
     if is_anomaly:
         scenario = random.choice(["ROULEMENT", "DESEQUILIBRE", "DESALIGNEMENT", "SURCHAUFFE", "ELECTRIQUE"])

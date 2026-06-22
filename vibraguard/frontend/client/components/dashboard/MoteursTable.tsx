@@ -36,7 +36,7 @@ function TrendFlat() {
 export function MoteursTable() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
-  const perPage = 5;
+  const perPage = 10;
 
   const { data: rows = [], isLoading } = useMoteurs();
 
@@ -75,7 +75,7 @@ export function MoteursTable() {
               <th className="pb-3 text-[12px] font-medium text-[#64748B] border-b border-white/[0.05] pr-4">Moteur</th>
               <th className="pb-3 text-[12px] font-medium text-[#64748B] border-b border-white/[0.05] pr-4">Type</th>
               <th className="pb-3 text-[12px] font-medium text-[#64748B] border-b border-white/[0.05] pr-4">État Santé</th>
-              <th className="pb-3 text-[12px] font-medium text-[#64748B] border-b border-white/[0.05] pr-4">Vibration RMS</th>
+              <th className="pb-3 text-[12px] font-medium text-[#64748B] border-b border-white/[0.05] pr-4">Vibration Initiale</th>
               <th className="pb-3 text-[12px] font-medium text-[#64748B] border-b border-white/[0.05]">Action</th>
             </tr>
           </thead>
@@ -106,10 +106,10 @@ export function MoteursTable() {
                 </td>
                 <td className="py-5 pr-4">
                   <div className="flex items-center gap-1">
-                    <span className="text-sm font-semibold" style={{ color: row.vibrationColor }}>
+                    <span className="text-sm font-semibold text-[#E2E8F0]">
                       {String(row.vibration).replace(' mm/s', '')} mm/s
                     </span>
-                    {row.trendIcon === "up" && <TrendUp color={row.vibrationColor} />}
+                    {row.trendIcon === "up" && <TrendUp color="#94A3B8" />}
                     {row.trendIcon === "flat" && <TrendFlat />}
                   </div>
                 </td>

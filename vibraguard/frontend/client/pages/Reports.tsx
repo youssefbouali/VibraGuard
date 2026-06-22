@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { api } from "@/lib/api";
+import { api, apiRequest } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
 import { Copy, Download, Plus, Calendar, User, ShieldCheck, ShieldAlert } from "lucide-react";
@@ -41,9 +41,23 @@ interface MotorReport {
   zone?: string;
   localisation?: string;
   puissance?: string;
-  etatSante?: string;
-  vibrationRMS?: number;
+  // API fields (from /api/v1/iot/motors)
+  etatLabel?: string;    // actual field returned: e.g. "85% Normal"
+  etatSante?: string;    // alias if ever mapped
+  vibration?: string | number; // actual field returned: e.g. "1.23"
+  vibrationRMS?: number; // alias if ever mapped
   derniereAlerte?: string;
+}
+
+interface VibrationData {
+  motorId?: string;
+  time: string;
+  vibRms: number;
+  vibPeak: number;
+  vibKurtosis: number;
+  temperature: number;
+  currentRms: number;
+  isAnomalous: boolean;
 }
 
 interface WorkOrderReport {
@@ -202,18 +216,33 @@ export default function Reports() {
     try {
       setGenerating(true);
 
-      const [kpis, motors, alerts, workOrders, mtbfBySite] = await Promise.all([
+      const [kpis, motors, alerts, workOrders, mtbfBySite, allVibrations] = await Promise.all([
         api.getBIKPIs() as Promise<ReportKpis>,
         api.getMotors() as Promise<MotorReport[]>,
         api.getAlerts() as Promise<AlertReport[]>,
         api.getWorkOrders() as Promise<WorkOrderReport[]>,
         api.getMtbfBySite() as Promise<SiteMetric[]>,
+        apiRequest<VibrationData[]>("GET", "/api/v1/iot/motors/vibrations"),
       ]);
 
       const safeMotors = Array.isArray(motors) ? motors : [];
       const safeAlerts = Array.isArray(alerts) ? alerts : [];
       const safeWorkOrders = Array.isArray(workOrders) ? workOrders : [];
       const safeMtbfBySite = Array.isArray(mtbfBySite) ? mtbfBySite : [];
+      const safeVibrations = Array.isArray(allVibrations) ? allVibrations : [];
+
+      // Build map of motorId -> latest vibration (by time)
+      const latestVibrationByMotor = new Map<string, VibrationData>();
+      for (const v of safeVibrations) {
+        if (!v.motorId) continue;
+        const existing = latestVibrationByMotor.get(v.motorId);
+        if (!existing || new Date(v.time).getTime() > new Date(existing.time).getTime()) {
+          latestVibrationByMotor.set(v.motorId, v);
+        }
+      }
+
+      const formatNumber = (value?: number | null) =>
+        typeof value === "number" && Number.isFinite(value) ? value.toFixed(2) : "N/A";
 
       const mtbfValue = formatHours(kpis?.mtbf);
       const mttrValue = formatHours(kpis?.mttr);
@@ -227,7 +256,7 @@ export default function Reports() {
         const { jsPDF } = await import("jspdf");
         const { default: autoTable } = await import("jspdf-autotable");
 
-        const doc = new jsPDF() as any;
+        const doc = new jsPDF("landscape") as any;
         doc.setFontSize(22);
         doc.setTextColor(0, 122, 61);
         doc.text("VibraGuard - Rapport", 14, 22);
@@ -279,21 +308,53 @@ export default function Reports() {
 
         autoTable(doc, {
           startY: (doc as any).lastAutoTable.finalY + 18,
-          head: [["ID", "Type", "Zone", "Localisation", "Etat", "Vibration", "Dernière alerte"]],
+          head: [[
+            "ID",
+            "Type",
+            "Zone",
+            "Localisation",
+            "Etat",
+            "Vibration Initiale",
+            "Vibration Actuelle",
+            "Vib Peak",
+            "Vib Kurtosis",
+            "Température",
+            "Courant RMS",
+            "Anomalie",
+          ]],
           body: safeMotors.length > 0
-            ? safeMotors.map((motor) => [
-                motor.id || "N/A",
-                motor.type || "N/A",
-                motor.zone || "N/A",
-                motor.localisation || "N/A",
-                motor.etatSante || "N/A",
-                formatMotorVibration(motor.vibrationRMS),
-                motor.derniereAlerte || "Aucune",
-              ])
-            : [["Aucun moteur", "-", "-", "-", "-", "-", "-"]],
+            ? safeMotors.map((motor) => {
+                // API returns etatLabel (e.g. "85% Normal") and vibration (string e.g. "1.23")
+                const etat = motor.etatSante || motor.etatLabel || "Normal";
+                const initialVibNum =
+                  typeof motor.vibrationRMS === "number" && Number.isFinite(motor.vibrationRMS)
+                    ? motor.vibrationRMS
+                    : typeof motor.vibration === "string"
+                    ? parseFloat(motor.vibration)
+                    : typeof motor.vibration === "number"
+                    ? motor.vibration
+                    : NaN;
+                const initialVibStr = Number.isFinite(initialVibNum) ? `${initialVibNum.toFixed(2)} mm/s` : "N/A";
+                const lastVib = latestVibrationByMotor.get(motor.id);
+                return [
+                  motor.id || "-",
+                  motor.type || "-",
+                  motor.zone || motor.site || "-",
+                  motor.localisation || "-",
+                  etat,
+                  initialVibStr,
+                  lastVib ? `${formatNumber(lastVib.vibRms)} mm/s` : "N/A",
+                  lastVib ? formatNumber(lastVib.vibPeak) : "N/A",
+                  lastVib ? formatNumber(lastVib.vibKurtosis) : "N/A",
+                  lastVib ? `${formatNumber(lastVib.temperature)} °C` : "N/A",
+                  lastVib ? `${formatNumber(lastVib.currentRms)} A` : "N/A",
+                  lastVib ? (lastVib.isAnomalous ? "Oui" : "Non") : "N/A",
+                ];
+              })
+            : [["Aucun moteur", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-"]],
           theme: "grid",
           headStyles: { fillColor: [0, 122, 61] },
-          styles: { fontSize: 8, cellPadding: 2 },
+          styles: { fontSize: 7, cellPadding: 1.5 },
         });
 
         fileContent = doc.output("dataurlstring");
