@@ -43,7 +43,6 @@ export function MoteurDetailHeader({ motor }: { motor: any }) {
         ['Vib Kurtosis', lastVibration ? formatNumber(lastVibration.vibKurtosis) : 'N/A'],
         ['Température', lastVibration ? `${formatNumber(lastVibration.temperature)} °C` : 'N/A'],
         ['Courant RMS', lastVibration ? `${formatNumber(lastVibration.currentRms)} A` : 'N/A'],
-        ['Anomalie', lastVibration ? (lastVibration.isAnomalous ? 'Oui' : 'Non') : 'N/A'],
         ['Vitesse Nominale', motor.speed || 'N/A'],
         ['Puissance', motor.power || 'N/A'],
         ['Localisation', motor.localisation || ''],

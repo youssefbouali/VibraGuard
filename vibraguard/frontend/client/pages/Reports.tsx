@@ -267,12 +267,12 @@ export default function Reports() {
 
         autoTable(doc, {
           startY: 45,
-          head: [["Paramètre", "Valeur", "Tendance"]],
+          head: [["Paramètre", "Valeur"]],
           body: [
-            ["MTBF", mtbfValue, "Live"],
-            ["MTTR", mttrValue, "Live"],
-            ["Disponibilité", availabilityValue, "Live"],
-            ["Coût Maintenance", maintenanceCostValue, "Live"],
+            ["MTBF", mtbfValue],
+            ["MTTR", mttrValue],
+            ["Disponibilité", availabilityValue],
+            ["Coût Maintenance", maintenanceCostValue],
           ],
           theme: "grid",
           headStyles: { fillColor: [0, 122, 61] },
@@ -320,7 +320,6 @@ export default function Reports() {
             "Vib Kurtosis",
             "Température",
             "Courant RMS",
-            "Anomalie",
           ]],
           body: safeMotors.length > 0
             ? safeMotors.map((motor) => {
@@ -348,10 +347,9 @@ export default function Reports() {
                   lastVib ? formatNumber(lastVib.vibKurtosis) : "N/A",
                   lastVib ? `${formatNumber(lastVib.temperature)} °C` : "N/A",
                   lastVib ? `${formatNumber(lastVib.currentRms)} A` : "N/A",
-                  lastVib ? (lastVib.isAnomalous ? "Oui" : "Non") : "N/A",
                 ];
               })
-            : [["Aucun moteur", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-"]],
+            : [["Aucun moteur", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-"]],
           theme: "grid",
           headStyles: { fillColor: [0, 122, 61] },
           styles: { fontSize: 7, cellPadding: 1.5 },

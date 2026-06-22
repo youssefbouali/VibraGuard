@@ -35,7 +35,6 @@ export default function RapportsBI() {
       
       const kpis = await api.getBIKPIs();
       const mtbfArr = await api.getMtbfBySite();
-      const costs = await api.getMaintenanceCosts();
 
       const formatTrend = (t: any) => {
         if (!t) return "";
@@ -59,11 +58,6 @@ export default function RapportsBI() {
         ? mtbfArr.map((s: any) => ({ "Site": s.name, "MTBF (h)": s.value }))
         : [{ "Site": "Aucune donnée", "MTBF (h)": "" }];
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mtbfData), "MTBF par Site");
-
-      const costData = costs.length > 0
-        ? costs.map((c: any) => ({ "Mois": c.month, "Réel": c.reel, "Budget": c.budget }))
-        : [{ "Mois": "Aucune donnée", "Réel": "", "Budget": "" }];
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(costData), "Coûts Maintenance");
 
       XLSX.writeFile(wb, "VibraGuard_BI_Data.xlsx");
       toast.success("Données Excel exportées");

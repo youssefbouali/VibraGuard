@@ -8,7 +8,10 @@ export interface WorkOrder {
   status: string;
   assignedTo: string;
   dueDate: string;
+  createdAt?: string;
+  completedAt?: string;
   priority: string;
+  cost?: number;
 }
 
 export function useWorkOrders() {
