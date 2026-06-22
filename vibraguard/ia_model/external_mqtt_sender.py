@@ -23,8 +23,8 @@ MQTT_PASS = None   # e.g., "my_password"
 # ==========================================
 def generate_sensor_data():
     """Generates synthetic sensor data aligned with training CSV types."""
-    is_anomaly = random.random() < 1 #anomaly
-    #is_anomaly = random.random() < 0 #normal
+    #is_anomaly = random.random() < 0 #anomaly
+    is_anomaly = random.random() < 1 #normal
     #is_anomaly = random.random() < 0.5 #50%
     
     if is_anomaly:

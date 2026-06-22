@@ -10,6 +10,7 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import reactor.core.publisher.Mono;
 import java.util.Arrays;
@@ -33,12 +34,10 @@ public class SecurityConfig {
                 ))
                 .addFilterAt(jwtAuthFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/api/v1/auth/**", "/login", "/register", "/forgot-password").permitAll()
-                        .pathMatchers("/api/v1/reports/**").permitAll()
+                        .pathMatchers("/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/forgot-password", "/api/v1/auth/reset-password").permitAll()
+                        .pathMatchers(HttpMethod.POST, "/api/v1/iot/motors/vibrations").permitAll()
+                        .pathMatchers(HttpMethod.POST, "/api/v1/ml/alerts").permitAll()
                         .pathMatchers("/ws/**").permitAll()
-                        .pathMatchers("/api/v1/iot/**").permitAll()
-                        .pathMatchers("/api/v1/bi/**").permitAll()
-                        .pathMatchers("/api/v1/ml/**").permitAll()
                         .anyExchange().authenticated());
         return http.build();
     }
