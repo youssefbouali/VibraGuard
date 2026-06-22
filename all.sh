@@ -632,9 +632,11 @@ kubectl expose pod oracle-db \
   --port=1521 \
   -n vibraguard
 
-# Mosquitto (MQTT)
+# Mosquitto (MQTT) with authentication
 echo "Déploiement de Mosquitto..."
-helm install mosquitto k8s-at-home/mosquitto -n vibraguard
+kubectl apply -f k8s/mqtt-credentials.yaml -n vibraguard
+kubectl apply -f k8s/mosquitto-config.yaml -n vibraguard
+kubectl apply -f k8s/mosquitto-deployment.yaml -n vibraguard
 
 # Kafka
 echo "Déploiement de Kafka..."

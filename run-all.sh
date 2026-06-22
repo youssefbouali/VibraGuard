@@ -20,7 +20,7 @@ echo "🚀 Starting VibraGuard Platform Deployment from: $ROOT_DIR"
 # 1. Verify/Start Minikube
 if ! minikube status > /dev/null 2>&1; then
     echo "📦 Starting Minikube..."
-    minikube start --driver=docker --cpus=4 --memory=8192mb --ports=30008:30008,30007:30007,30083:30083,30090:30090,30092:30092
+    minikube start --driver=docker --cpus=6 --memory=12288mb --ports=30008:30008,30007:30007,30083:30083,30090:30090,30092:30092
 else
     echo "✅ Minikube is already running."
 fi
@@ -81,10 +81,14 @@ else
     echo "✅ Oracle DB is already running."
 fi
 
-# Distributed Services
-helm upgrade --install mosquitto k8s-at-home/mosquitto -n $NAMESPACE \
-    --set service.main.type=NodePort \
-    --set "service.main.ports.mqtt.nodePort=30083"
+# MQTT Credentials
+kubectl apply -f "$ROOT_DIR/k8s/mqtt-credentials.yaml" -n $NAMESPACE
+
+# Mosquitto Config
+kubectl apply -f "$ROOT_DIR/k8s/mosquitto-config.yaml" -n $NAMESPACE
+
+# Mosquitto MQTT Broker with authentication
+kubectl apply -f "$ROOT_DIR/k8s/mosquitto-deployment.yaml" -n $NAMESPACE
 
 # Kafka: Custom Kubernetes Container Built from Apache Archive
 echo "📦 Building Custom Kafka Docker Image..."
@@ -471,6 +475,16 @@ spec:
                   value: "1"
                 - name: MQTT_BROKER
                   value: "mosquitto"
+                - name: MQTT_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: mqtt-credentials
+                      key: username
+                - name: MQTT_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: mqtt-credentials
+                      key: password
                 - name: KAFKA_BROKER
                   value: "kafka:9092"
               resources:

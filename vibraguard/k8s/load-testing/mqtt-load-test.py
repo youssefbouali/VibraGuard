@@ -3,6 +3,9 @@ import json, os, random, sys, multiprocessing as mp, time, urllib.request
 MQTT_BROKER = os.environ.get('MQTT_BROKER', 'mosquitto')
 MQTT_PORT = int(os.environ.get('MQTT_PORT', 1883))
 TOPIC = os.environ.get('TOPIC', 'vibraguard/sensors')
+MQTT_USER = os.environ.get('MQTT_USER', 'vibraguard')
+MQTT_PASS = os.environ.get('MQTT_PASS', 'VibraGuard2024!')
+
 NUM_WORKERS = int(os.environ.get('NUM_WORKERS', '8'))
 MSGS_PER_WORKER = int(os.environ.get('MSGS_PER_WORKER', '15000'))
 PUSHGATEWAY = os.environ.get('PUSHGATEWAY', 'prometheus-prometheus-pushgateway:9091')
@@ -19,6 +22,7 @@ for i in range(128):
 def worker(wid, queue):
     import paho.mqtt.client as mqtt
     c = mqtt.Client(client_id=f'lt{wid}-{random.randint(0,99999)}', protocol=mqtt.MQTTv311, callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
+    c.username_pw_set(MQTT_USER, MQTT_PASS)
     c.connect(MQTT_BROKER, MQTT_PORT, 60)
     c.loop_start()
     pub = c.publish

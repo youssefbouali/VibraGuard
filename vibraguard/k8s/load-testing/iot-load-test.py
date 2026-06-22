@@ -3,6 +3,9 @@ import json, os, random, sys, multiprocessing as mp, time, urllib.request, threa
 MQTT_BROKER = os.environ.get('MQTT_BROKER', 'mosquitto')
 MQTT_PORT = int(os.environ.get('MQTT_PORT', 1883))
 MQTT_TOPIC = os.environ.get('MQTT_TOPIC', 'vibraguard/sensors')
+MQTT_USER = os.environ.get('MQTT_USER', 'vibraguard')
+MQTT_PASS = os.environ.get('MQTT_PASS', 'VibraGuard2024!')
+
 KAFKA_BROKER = os.environ.get('KAFKA_BROKER', 'kafka:9092')
 KAFKA_TOPIC = os.environ.get('KAFKA_TOPIC', 'sensor-data')
 NUM_WORKERS = int(os.environ.get('NUM_WORKERS', '20'))
@@ -58,6 +61,7 @@ def kafka_consumer():
 def mqtt_worker(wid, queue):
     import paho.mqtt.client as mqtt
     c = mqtt.Client(client_id=f'lt{wid}-{random.randint(0,99999)}', protocol=mqtt.MQTTv311, callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
+    c.username_pw_set(MQTT_USER, MQTT_PASS)
     c.connect(MQTT_BROKER, MQTT_PORT, 60)
     c.loop_start()
     pub = c.publish

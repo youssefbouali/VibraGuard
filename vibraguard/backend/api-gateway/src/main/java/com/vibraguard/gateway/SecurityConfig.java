@@ -37,6 +37,7 @@ public class SecurityConfig {
                         .pathMatchers("/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/forgot-password", "/api/v1/auth/reset-password").permitAll()
                         .pathMatchers(HttpMethod.POST, "/api/v1/iot/motors/vibrations").permitAll()
                         .pathMatchers(HttpMethod.POST, "/api/v1/ml/alerts").permitAll()
+                        .pathMatchers(HttpMethod.POST, "/api/v1/bi/kpis/upsert").permitAll()
                         .pathMatchers("/ws/**").permitAll()
                         .anyExchange().authenticated());
         return http.build();

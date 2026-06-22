@@ -8,7 +8,7 @@ import { toast } from "sonner";
 export function MoteurDetailHeader({ motor }: { motor: any }) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const isCritique = motor.etatLabel.includes("Critique") || motor.etatLabel.includes("Alerte");
+  const isCritique = motor.etatLabel.includes("Critique");
   
   const handleDownloadReport = async () => {
     const doc = new jsPDF();
@@ -91,7 +91,7 @@ export function MoteurDetailHeader({ motor }: { motor: any }) {
                 </g>
                 <defs><clipPath id="critique-clip"><rect width="12" height="12" fill="white"/></clipPath></defs>
               </svg>
-              {motor.etatLabel === "Normal" ? "Optimal" : motor.etatLabel === "Attention" ? "Alerte" : motor.etatLabel}
+              {motor.etatLabel === "Normal" ? "Optimal" : motor.etatLabel === "Attention" ? "Critique" : motor.etatLabel}
             </span>
           </div>
 

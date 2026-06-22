@@ -23,6 +23,16 @@ spec:
                   value: "1"
                 - name: MQTT_BROKER
                   value: "mosquitto"
+                - name: MQTT_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: mqtt-credentials
+                      key: username
+                - name: MQTT_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: mqtt-credentials
+                      key: password
                 - name: KAFKA_BROKER
                   value: "kafka:9092"
               resources:

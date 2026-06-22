@@ -28,6 +28,8 @@ spec:
           export MQTT_BROKER="mosquitto"
           export MQTT_PORT="1883"
           export MQTT_TOPIC="vibraguard/sensors"
+          export MQTT_USER="vibraguard"
+          export MQTT_PASS="VibraGuard2024!"
           export KAFKA_BROKER="kafka:9092"
           export KAFKA_TOPIC="sensor-data"
           export NUM_WORKERS=20
@@ -50,7 +52,7 @@ spec:
           echo ""
           echo "[1/5] Verification connectivite MQTT..."
           for i in $(seq 1 10); do
-            python3 -c "import paho.mqtt.client as mqtt, time; c=mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION2); c.connect('$MQTT_BROKER',$MQTT_PORT,10); c.publish('vibraguard/healthcheck','ping',qos=0); c.disconnect(); print('OK')" 2>/dev/null && echo "  Broker MQTT accessible!" && break
+            python3 -c "import paho.mqtt.client as mqtt, time; c=mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION2); c.username_pw_set('$MQTT_USER','$MQTT_PASS'); c.connect('$MQTT_BROKER',$MQTT_PORT,10); c.publish('vibraguard/healthcheck','ping',qos=0); c.disconnect(); print('OK')" 2>/dev/null && echo "  Broker MQTT accessible!" && break
             echo "  Tentative $i/10 - En attente du broker MQTT..."
             sleep 3
           done

@@ -112,21 +112,21 @@ export function AlertesTable({
   return (
     <div className="flex flex-col w-full overflow-x-auto">
       {/* Header row */}
-      <div className="flex min-w-[700px]">
+      <div className="flex min-w-[900px]">
         {["ID Alerte", "Moteur", "Type de Défaut", "Sévérité", "Confiance", "Date & Heure", "Statut", "Actions"].map(
           (col) => (
             <div
               key={col}
               className={cn(
                 "px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.6px] text-[#64748B] border-b border-white/5 shrink-0",
-                col === "ID Alerte" ? "w-[90px]" :
-                col === "Moteur" ? "w-[100px]" :
-                col === "Type de Défaut" ? "w-[130px]" :
-                col === "Sévérité" ? "w-[110px]" :
-                col === "Confiance" ? "w-[110px]" :
-                col === "Date & Heure" ? "w-[110px]" :
-                col === "Statut" ? "w-[100px]" :
-                "w-[100px]"
+                col === "ID Alerte" ? "w-[110px]" :
+                col === "Moteur" ? "w-[130px]" :
+                col === "Type de Défaut" ? "flex-1 min-w-[200px]" :
+                col === "Sévérité" ? "w-[120px]" :
+                col === "Confiance" ? "w-[130px]" :
+                col === "Date & Heure" ? "w-[140px]" :
+                col === "Statut" ? "w-[120px]" :
+                "w-[110px]"
               )}
             >
               {col}
@@ -136,7 +136,7 @@ export function AlertesTable({
       </div>
 
       {/* Body */}
-      <div className="flex flex-col gap-[7px] pt-2 min-w-[700px]">
+      <div className="flex flex-col gap-[7px] pt-2 min-w-[900px]">
         {alertes.map((alerte) => {
           const isSelected = alerte.id === selectedId;
           const sev = severiteConfig[alerte.severite] || severiteConfig["Mineur"];
@@ -154,28 +154,28 @@ export function AlertesTable({
               )}
             >
               {/* ID */}
-              <div className="w-[90px] px-4 py-4 flex items-center shrink-0">
+              <div className="w-[110px] px-4 py-4 flex items-center shrink-0">
                 <span className="text-[#94A3B8] text-sm font-mono leading-tight whitespace-pre-line">
                   {alerte.id}
                 </span>
               </div>
 
               {/* Moteur */}
-              <div className="w-[100px] px-4 py-4 flex items-center shrink-0">
+              <div className="w-[130px] px-4 py-4 flex items-center shrink-0">
                 <span className="text-[#E2E8F0] text-sm font-semibold leading-tight whitespace-pre-line">
                   {alerte.moteur}
                 </span>
               </div>
 
               {/* Type de Défaut */}
-              <div className="w-[130px] px-4 py-4 flex items-center shrink-0">
+              <div className="flex-1 min-w-[200px] px-4 py-4 flex items-center">
                 <span className="text-[#CBD5E1] text-sm leading-tight">
                   {alerte.typeDefaut}
                 </span>
               </div>
 
               {/* Sévérité */}
-              <div className="w-[110px] px-4 py-4 flex items-center shrink-0">
+              <div className="w-[120px] px-4 py-4 flex items-center shrink-0">
                 <span
                   className={cn(
                     "flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-semibold",
@@ -190,19 +190,19 @@ export function AlertesTable({
               </div>
 
               {/* Confiance */}
-              <div className="w-[110px] px-4 py-4 flex items-center shrink-0">
+              <div className="w-[130px] px-4 py-4 flex items-center shrink-0">
                 <ConfidenceBar value={alerte.confiance} severite={alerte.severite} />
               </div>
 
               {/* Date & Heure */}
-              <div className="w-[110px] px-4 py-4 flex items-center shrink-0">
+              <div className="w-[140px] px-4 py-4 flex items-center shrink-0">
                 <span className="text-[#94A3B8] text-sm leading-tight whitespace-pre-line">
                   {alerte.dateHeure}
                 </span>
               </div>
 
               {/* Statut */}
-              <div className="w-[100px] px-4 py-4 flex items-center shrink-0">
+              <div className="w-[120px] px-4 py-4 flex items-center shrink-0">
                 <span
                   className={cn(
                     "px-2 py-1 rounded-md border text-xs font-medium",
@@ -216,7 +216,7 @@ export function AlertesTable({
               </div>
 
               {/* Actions */}
-              <div className="w-[100px] px-4 py-4 flex items-center gap-2 shrink-0">
+              <div className="w-[110px] px-4 py-4 flex items-center gap-2 shrink-0">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();

@@ -21,7 +21,7 @@ import {
 import { Loader2, Trash2, Edit, MoreHorizontal, Save, X, Plus, Download, Power, PowerOff } from "lucide-react";
 import { useMoteurs } from "@/hooks/use-moteurs";
 
-type HealthStatus = "Critique" | "Alerte" | "Optimal" | "Attention" | "Normal"; // Backward compatibility included
+type HealthStatus = "Critique" | "Optimal" | "Attention" | "Normal";
 
 interface Moteur {
   id: string;
@@ -53,13 +53,6 @@ const statusConfig: Record<HealthStatus, { color: string; bg: string; border: st
     dot: "bg-[#F2A900]",
     glow: "shadow-[0_0_8px_0_#F2A900]",
   },
-  Alerte: {
-    color: "text-[#F2A900]",
-    bg: "bg-[rgba(242,169,0,0.10)]",
-    border: "border-[rgba(242,169,0,0.20)]",
-    dot: "bg-[#F2A900]",
-    glow: "shadow-[0_0_8px_0_#F2A900]",
-  },
   Normal: {
     color: "text-[#007A3D]",
     bg: "bg-[rgba(0,122,61,0.10)]",
@@ -79,7 +72,6 @@ const statusConfig: Record<HealthStatus, { color: string; bg: string; border: st
 const vibrationColor: Record<string, string> = {
   Critique: "text-[#D93F3F]",
   Attention: "text-[#F2A900]",
-  Alerte: "text-[#F2A900]",
   Normal: "text-[#007A3D]",
   Optimal: "text-[#007A3D]",
 };
@@ -116,7 +108,7 @@ function HealthBadge({ status }: { status: HealthStatus }) {
   const cfg = statusConfig[status] || statusConfig["Normal"];
   const labelMap: Record<string, string> = {
     "Normal": "Optimal",
-    "Attention": "Alerte",
+    "Attention": "Critique",
     "Critique": "Critique"
   };
   return (
@@ -156,9 +148,10 @@ export default function Moteurs() {
   const filtered = (apiMoteurs || []).filter((m: any) => {
     const matchesSearch = (m.id + m.localisation + m.zone).toLowerCase().includes(search.toLowerCase());
     const matchesZone = selectedZone === "Toutes les zones" || m.zone === selectedZone;
-    let status = m.etatSante || (m.etatColor === "bg-[#007A3D]" ? "Optimal" : m.etatColor === "bg-[#F2A900]" ? "Alerte" : "Critique");
+    let status = m.etatSante || (m.etatColor === "bg-[#007A3D]" ? "Optimal" : "Critique");
     if (status === "Normal") status = "Optimal";
-    if (status === "Attention") status = "Alerte";
+    if (status === "Attention") status = "Critique";
+    if (status === "Alerte") status = "Critique";
     const matchesStatus = selectedStatus === "Tous" || status === selectedStatus;
     return matchesSearch && matchesZone && matchesStatus;
   });
@@ -170,7 +163,7 @@ export default function Moteurs() {
   const paginatedMoteurs = filtered.slice(startIndex, startIndex + perPage);
 
   const zones = ["Toutes les zones", ...new Set((apiMoteurs || []).map((m: any) => m.zone))];
-  const statuses = ["Tous", "Optimal", "Alerte", "Critique"];
+  const statuses = ["Tous", "Optimal", "Critique"];
 
   const handleDownloadAllMotors = () => {
     if (!apiMoteurs || apiMoteurs.length === 0) {
@@ -267,7 +260,7 @@ export default function Moteurs() {
               <DropdownMenuContent className="bg-[#0D1316] border-white/10 text-white min-w-[160px]">
                 {statuses.map(s => (
                   <DropdownMenuItem key={s} onClick={() => { setSelectedStatus(s); setCurrentPage(1); }} className="hover:bg-white/5 cursor-pointer flex items-center gap-2">
-                    {s !== "Tous" && <div className={cn("w-2 h-2 rounded-full", (s === "Optimal" || s === "Normal") ? "bg-[#007A3D]" : (s === "Alerte" || s === "Attention") ? "bg-[#F2A900]" : "bg-[#D93F3F]")} />}
+                    {s !== "Tous" && <div className={cn("w-2 h-2 rounded-full", (s === "Optimal" || s === "Normal") ? "bg-[#007A3D]" : "bg-[#D93F3F]")} />}
                     {s}
                   </DropdownMenuItem>
                 ))}
@@ -305,14 +298,13 @@ export default function Moteurs() {
         {/* View content */}
         {view === "liste" ? (
           <div className="rounded-lg border border-black/[0.08] bg-[#0B1518] overflow-x-auto">
-            <div className="grid grid-cols-[1.5fr_1fr_1.5fr_1fr_1fr_auto] border-b border-black/[0.08] bg-[rgba(15,39,48,0.30)]">
-              <div className="px-6 py-4 text-[13px] font-medium text-[#C9E7E6]">ID / Loc</div>
-              <div className="px-6 py-4 text-[13px] font-medium text-[#C9E7E6]">Santé</div>
-              <div className="px-6 py-4 text-[13px] font-medium text-[#C9E7E6]">Type / Pwr</div>
-              <div className="px-6 py-4 text-[13px] font-medium text-[#C9E7E6]">Vibration</div>
-              <div className="px-6 py-4 text-[13px] font-medium text-[#C9E7E6]">Alerte</div>
-              <div className="px-6 py-4 text-right pr-10 text-[13px] font-medium text-[#C9E7E6]">Actions</div>
-            </div>
+                <div className="grid grid-cols-[1.5fr_1fr_1.5fr_1fr_auto] border-b border-black/[0.08] bg-[rgba(15,39,48,0.30)]">
+                  <div className="px-6 py-4 text-[13px] font-medium text-[#C9E7E6]">ID / Loc</div>
+                  <div className="px-6 py-4 text-[13px] font-medium text-[#C9E7E6]">Santé</div>
+                  <div className="px-6 py-4 text-[13px] font-medium text-[#C9E7E6]">Type / Pwr</div>
+                  <div className="px-6 py-4 text-[13px] font-medium text-[#C9E7E6]">Vibration</div>
+                  <div className="px-6 py-4 text-right pr-10 text-[13px] font-medium text-[#C9E7E6]">Actions</div>
+                </div>
 
             <div className="divide-y divide-black/[0.08]">
               {paginatedMoteurs.map((m: any) => {
@@ -321,7 +313,7 @@ export default function Moteurs() {
                                 m.etatColor === "#F59E0B" ? "Attention" : 
                                 m.etatColor === "#EF4444" ? "Critique" : "Normal");
                 return (
-                  <div key={m.id} className={cn("grid grid-cols-[1.5fr_1fr_1.5fr_1fr_1fr_auto] hover:bg-white/[0.02] transition-colors cursor-pointer", m.actif === false && "opacity-50")} onClick={() => navigate(`/moteurs/${m.id}`)}>
+                  <div key={m.id} className={cn("grid grid-cols-[1.5fr_1fr_1.5fr_1fr_auto] hover:bg-white/[0.02] transition-colors cursor-pointer", m.actif === false && "opacity-50")} onClick={() => navigate(`/moteurs/${m.id}`)}>
                     <div className="px-6 py-4 flex flex-col">
                       <span className="text-white font-bold">{m.id}</span>
                       <span className="text-[#98A6A8] text-xs">{m.zone} - {m.localisation}</span>
@@ -338,14 +330,6 @@ export default function Moteurs() {
                         {typeof m.vibrationRMS === 'number' ? m.vibrationRMS.toFixed(2) : String(m.vibration || "0.00").replace(' mm/s', '')}
                       </span>
                       <span className="text-[#98A6A8] text-xs">mm/s</span>
-                    </div>
-                    <div className="px-6 py-4 text-sm font-medium">
-                      <div className="flex flex-col">
-                        <span className={cn("text-xs uppercase", (m.derniereAlerteType && m.derniereAlerteType !== 'Sain') ? "text-[#EF4444]" : "text-[#10B981]")}>
-                          {m.derniereAlerteType || "Aucun"}
-                        </span>
-                        <span className="text-[#64748B] text-[10px]">{m.derniereAlerte ? formatTime(m.derniereAlerte) : "N/A"}</span>
-                      </div>
                     </div>
                     <div className="px-6 py-4 flex items-center justify-end gap-2 pr-10">
                        <ActionBtn><VibrationIcon /></ActionBtn>
