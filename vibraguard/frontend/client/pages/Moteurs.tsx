@@ -18,10 +18,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Loader2, Trash2, Edit, MoreHorizontal, Save, X, Plus, Download } from "lucide-react";
+import { Loader2, Trash2, Edit, MoreHorizontal, Save, X, Plus, Download, Power, PowerOff } from "lucide-react";
 import { useMoteurs } from "@/hooks/use-moteurs";
 
-type HealthStatus = "Critique" | "Alerte" | "Optimal" | "Attention" | "Normal"; // Backward compatibility included
+type HealthStatus = "Critique" | "Optimal" | "Attention" | "Normal";
 
 interface Moteur {
   id: string;
@@ -35,6 +35,7 @@ interface Moteur {
   derniereAlerteType?: string;
   alerteRef?: string;
   etatColor?: string;
+  actif?: boolean;
 }
 
 const statusConfig: Record<HealthStatus, { color: string; bg: string; border: string; dot: string; glow: string }> = {
@@ -46,13 +47,6 @@ const statusConfig: Record<HealthStatus, { color: string; bg: string; border: st
     glow: "shadow-[0_0_8px_0_#D93F3F]",
   },
   Attention: {
-    color: "text-[#F2A900]",
-    bg: "bg-[rgba(242,169,0,0.10)]",
-    border: "border-[rgba(242,169,0,0.20)]",
-    dot: "bg-[#F2A900]",
-    glow: "shadow-[0_0_8px_0_#F2A900]",
-  },
-  Alerte: {
     color: "text-[#F2A900]",
     bg: "bg-[rgba(242,169,0,0.10)]",
     border: "border-[rgba(242,169,0,0.20)]",
@@ -73,14 +67,6 @@ const statusConfig: Record<HealthStatus, { color: string; bg: string; border: st
     dot: "bg-[#007A3D]",
     glow: "shadow-[0_0_8px_0_#007A3D]",
   },
-};
-
-const vibrationColor: Record<string, string> = {
-  Critique: "text-[#D93F3F]",
-  Attention: "text-[#F2A900]",
-  Alerte: "text-[#F2A900]",
-  Normal: "text-[#007A3D]",
-  Optimal: "text-[#007A3D]",
 };
 
 // SVG icons
@@ -115,7 +101,7 @@ function HealthBadge({ status }: { status: HealthStatus }) {
   const cfg = statusConfig[status] || statusConfig["Normal"];
   const labelMap: Record<string, string> = {
     "Normal": "Optimal",
-    "Attention": "Alerte",
+    "Attention": "Critique",
     "Critique": "Critique"
   };
   return (
@@ -155,9 +141,10 @@ export default function Moteurs() {
   const filtered = (apiMoteurs || []).filter((m: any) => {
     const matchesSearch = (m.id + m.localisation + m.zone).toLowerCase().includes(search.toLowerCase());
     const matchesZone = selectedZone === "Toutes les zones" || m.zone === selectedZone;
-    let status = m.etatSante || (m.etatColor === "bg-[#007A3D]" ? "Optimal" : m.etatColor === "bg-[#F2A900]" ? "Alerte" : "Critique");
+    let status = m.etatSante || (m.etatColor === "bg-[#007A3D]" ? "Optimal" : "Critique");
     if (status === "Normal") status = "Optimal";
-    if (status === "Attention") status = "Alerte";
+    if (status === "Attention") status = "Critique";
+    if (status === "Alerte") status = "Critique";
     const matchesStatus = selectedStatus === "Tous" || status === selectedStatus;
     return matchesSearch && matchesZone && matchesStatus;
   });
@@ -169,7 +156,7 @@ export default function Moteurs() {
   const paginatedMoteurs = filtered.slice(startIndex, startIndex + perPage);
 
   const zones = ["Toutes les zones", ...new Set((apiMoteurs || []).map((m: any) => m.zone))];
-  const statuses = ["Tous", "Optimal", "Alerte", "Critique"];
+  const statuses = ["Tous", "Optimal", "Critique"];
 
   const handleDownloadAllMotors = () => {
     if (!apiMoteurs || apiMoteurs.length === 0) {
@@ -181,6 +168,13 @@ export default function Moteurs() {
     toast.success("Téléchargement des données moteurs lancé");
   };
 
+  const handleToggleActif = async (m: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newActif = m.actif === false;
+    await api.updateMotor(m.id, { actif: newActif });
+    refetch();
+    toast.success(newActif ? `${m.id} activé` : `${m.id} désactivé`);
+  };
 
   return (
     <DashboardLayout breadcrumb="Moteurs">
@@ -259,7 +253,7 @@ export default function Moteurs() {
               <DropdownMenuContent className="bg-[#0D1316] border-white/10 text-white min-w-[160px]">
                 {statuses.map(s => (
                   <DropdownMenuItem key={s} onClick={() => { setSelectedStatus(s); setCurrentPage(1); }} className="hover:bg-white/5 cursor-pointer flex items-center gap-2">
-                    {s !== "Tous" && <div className={cn("w-2 h-2 rounded-full", (s === "Optimal" || s === "Normal") ? "bg-[#007A3D]" : (s === "Alerte" || s === "Attention") ? "bg-[#F2A900]" : "bg-[#D93F3F]")} />}
+                    {s !== "Tous" && <div className={cn("w-2 h-2 rounded-full", (s === "Optimal" || s === "Normal") ? "bg-[#007A3D]" : "bg-[#D93F3F]")} />}
                     {s}
                   </DropdownMenuItem>
                 ))}
@@ -297,14 +291,13 @@ export default function Moteurs() {
         {/* View content */}
         {view === "liste" ? (
           <div className="rounded-lg border border-black/[0.08] bg-[#0B1518] overflow-x-auto">
-            <div className="grid grid-cols-[1.5fr_1fr_1.5fr_1fr_1fr_auto] border-b border-black/[0.08] bg-[rgba(15,39,48,0.30)]">
-              <div className="px-6 py-4 text-[13px] font-medium text-[#C9E7E6]">ID / Loc</div>
-              <div className="px-6 py-4 text-[13px] font-medium text-[#C9E7E6]">Santé</div>
-              <div className="px-6 py-4 text-[13px] font-medium text-[#C9E7E6]">Type / Pwr</div>
-              <div className="px-6 py-4 text-[13px] font-medium text-[#C9E7E6]">Vibration</div>
-              <div className="px-6 py-4 text-[13px] font-medium text-[#C9E7E6]">Alerte</div>
-              <div className="px-6 py-4 text-right pr-10 text-[13px] font-medium text-[#C9E7E6]">Actions</div>
-            </div>
+                <div className="grid grid-cols-[1.5fr_1fr_1.5fr_1fr_auto] border-b border-black/[0.08] bg-[rgba(15,39,48,0.30)]">
+                  <div className="px-6 py-4 text-[13px] font-medium text-[#C9E7E6]">ID / Loc</div>
+                  <div className="px-6 py-4 text-[13px] font-medium text-[#C9E7E6]">Santé</div>
+                  <div className="px-6 py-4 text-[13px] font-medium text-[#C9E7E6]">Type / Pwr</div>
+                  <div className="px-6 py-4 text-[13px] font-medium text-[#C9E7E6]">Vibration</div>
+                  <div className="px-6 py-4 text-right pr-10 text-[13px] font-medium text-[#C9E7E6]">Actions</div>
+                </div>
 
             <div className="divide-y divide-black/[0.08]">
               {paginatedMoteurs.map((m: any) => {
@@ -313,7 +306,7 @@ export default function Moteurs() {
                                 m.etatColor === "#F59E0B" ? "Attention" : 
                                 m.etatColor === "#EF4444" ? "Critique" : "Normal");
                 return (
-                  <div key={m.id} className="grid grid-cols-[1.5fr_1fr_1.5fr_1fr_1fr_auto] hover:bg-white/[0.02] transition-colors cursor-pointer" onClick={() => navigate(`/moteurs/${m.id}`)}>
+                  <div key={m.id} className={cn("grid grid-cols-[1.5fr_1fr_1.5fr_1fr_auto] hover:bg-white/[0.02] transition-colors cursor-pointer", m.actif === false && "opacity-50")} onClick={() => navigate(`/moteurs/${m.id}`)}>
                     <div className="px-6 py-4 flex flex-col">
                       <span className="text-white font-bold">{m.id}</span>
                       <span className="text-[#98A6A8] text-xs">{m.zone} - {m.localisation}</span>
@@ -326,21 +319,24 @@ export default function Moteurs() {
                       <span className="text-[#98A6A8] text-xs">{m.puissance}</span>
                     </div>
                     <div className="px-6 py-4 flex items-center gap-1">
-                      <span className={cn("font-bold text-lg", vibrationColor[status])}>
+                      <span className="font-bold text-lg text-[#E2E8F0]">
                         {typeof m.vibrationRMS === 'number' ? m.vibrationRMS.toFixed(2) : String(m.vibration || "0.00").replace(' mm/s', '')}
                       </span>
                       <span className="text-[#98A6A8] text-xs">mm/s</span>
                     </div>
-                    <div className="px-6 py-4 text-sm font-medium">
-                      <div className="flex flex-col">
-                        <span className={cn("text-xs uppercase", (m.derniereAlerteType && m.derniereAlerteType !== 'Sain') ? "text-[#EF4444]" : "text-[#10B981]")}>
-                          {m.derniereAlerteType || "Aucun"}
-                        </span>
-                        <span className="text-[#64748B] text-[10px]">{m.derniereAlerte ? formatTime(m.derniereAlerte) : "N/A"}</span>
-                      </div>
-                    </div>
                     <div className="px-6 py-4 flex items-center justify-end gap-2 pr-10">
                        <ActionBtn><VibrationIcon /></ActionBtn>
+                       <button
+                         onClick={(e) => handleToggleActif(m, e)}
+                         className={`flex w-8 h-8 items-center justify-center rounded transition-colors shrink-0 ${
+                           m.actif === false
+                             ? "bg-[#007A3D]/20 hover:bg-[#007A3D]/30 text-[#007A3D]"
+                             : "bg-red-500/10 hover:bg-red-500/20 text-red-400"
+                         }`}
+                         title={m.actif === false ? "Activer" : "Désactiver"}
+                       >
+                         {m.actif === false ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
+                       </button>
                        <DropdownMenu>
                          <DropdownMenuTrigger asChild>
                            <button onClick={(e) => e.stopPropagation()} className="p-2"><MoreHorizontal className="w-4 h-4 text-[#C9E7E6]" /></button>
@@ -364,17 +360,42 @@ export default function Moteurs() {
                               m.etatColor === "#F59E0B" ? "Attention" : 
                               m.etatColor === "#EF4444" ? "Critique" : "Normal");
               return (
-                <div key={m.id} onClick={() => navigate(`/moteurs/${m.id}`)} className="bg-[#0B1518] rounded-xl border border-white/5 p-6 hover:border-[#0EA5E9]/30 transition-all cursor-pointer">
+                <div key={m.id} onClick={() => navigate(`/moteurs/${m.id}`)} className={cn("bg-[#0B1518] rounded-xl border border-white/5 p-6 hover:border-[#0EA5E9]/30 transition-all cursor-pointer", m.actif === false && "opacity-50")}>
                   <div className="flex justify-between items-start mb-4">
-                    <div className="p-3 rounded-lg bg-[#0C6CF2]/10"><MoteurIcon /></div>
-                    <HealthBadge status={status} />
+                    <div className="flex items-center gap-2">
+                      <div className="p-3 rounded-lg bg-[#0C6CF2]/10"><MoteurIcon /></div>
+                      {m.actif === false && <span className="text-[10px] font-bold uppercase text-[#98A6A8] bg-[rgba(152,166,168,0.15)] px-1.5 py-0.5 rounded">Inactif</span>}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <HealthBadge status={status} />
+                      <button
+                        onClick={(e) => handleToggleActif(m, e)}
+                        className={`flex w-7 h-7 items-center justify-center rounded transition-colors ${
+                          m.actif === false
+                            ? "bg-[#007A3D]/20 hover:bg-[#007A3D]/30 text-[#007A3D]"
+                            : "bg-red-500/10 hover:bg-red-500/20 text-red-400"
+                        }`}
+                        title={m.actif === false ? "Activer" : "Désactiver"}
+                      >
+                        {m.actif === false ? <Power className="w-3.5 h-3.5" /> : <PowerOff className="w-3.5 h-3.5" />}
+                      </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button onClick={(e) => e.stopPropagation()} className="p-1"><MoreHorizontal className="w-4 h-4 text-[#C9E7E6]" /></button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="bg-[#0D1316] text-white">
+                          <DropdownMenuItem onClick={(e) => {e.stopPropagation(); setSelectedMotor(m); setIsUpdateDialogOpen(true);}}>Modifier</DropdownMenuItem>
+                          <DropdownMenuItem className="text-red-500" onClick={async (e) => {e.stopPropagation(); await api.deleteMotor(m.id); refetch();}}>Supprimer</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
                   <h3 className="text-white font-bold text-lg mb-1">{m.id}</h3>
                   <p className="text-[#98A6A8] text-sm mb-6">{m.zone} • {m.localisation}</p>
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
                     <div>
                       <p className="text-[#64748B] text-[10px] font-bold uppercase mb-1">Vibration</p>
-                      <p className={cn("text-xl font-bold", vibrationColor[status])}>
+                      <p className="text-xl font-bold text-[#E2E8F0]">
                         {typeof m.vibrationRMS === 'number' ? m.vibrationRMS.toFixed(2) : String(m.vibration || "0.00").replace(' mm/s', '')} <span className="text-xs font-normal opacity-60">mm/s</span>
                       </p>
                     </div>

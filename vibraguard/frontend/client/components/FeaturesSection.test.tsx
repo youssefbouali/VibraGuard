@@ -22,6 +22,6 @@ describe("FeaturesSection", () => {
   it("renders feature descriptions", () => {
     render(<FeaturesSection />);
     expect(screen.getByText(/Collectez et visualisez/)).toBeInTheDocument();
-    expect(screen.getByText(/Système de notification multi-canaux/)).toBeInTheDocument();
+    expect(screen.getByText(/Système de notification avec escalade/)).toBeInTheDocument();
   });
 });

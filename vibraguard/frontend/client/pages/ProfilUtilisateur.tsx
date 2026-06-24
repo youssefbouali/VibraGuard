@@ -42,14 +42,16 @@ function InterventionRow({ title, subtitle, status, iconBg, icon }: Intervention
         </div>
         <div className="flex flex-col gap-1">
           <span className="text-[#E6F0F2] text-sm font-medium">{title}</span>
-          <div className="flex items-center gap-2">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0">
-              <path d="M6.99996 11.667V12.8337M6.99996 1.16699V2.33366M9.91663 11.667V12.8337M9.91663 1.16699V2.33366M1.16663 7.00033H2.33329M1.16663 9.91699H2.33329M1.16663 4.08366H2.33329M11.6666 7.00033H12.8333M11.6666 9.91699H12.8333M11.6666 4.08366H12.8333M4.08329 11.667V12.8337M4.08329 1.16699V2.33366" stroke="#98A6A8" strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M3.50004 2.33301H10.5C11.1439 2.33301 11.6667 2.85577 11.6667 3.49967V10.4997C11.6667 11.1436 11.1439 11.6663 10.5 11.6663H3.50004C2.85614 11.6663 2.33337 11.1436 2.33337 10.4997V3.49967C2.33337 2.85577 2.85614 2.33301 3.50004 2.33301V2.33301" stroke="#98A6A8" strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M5.24996 4.66699H8.74996C9.07191 4.66699 9.33329 4.92838 9.33329 5.25033V8.75033C9.33329 9.07228 9.07191 9.33366 8.74996 9.33366H5.24996C4.92801 9.33366 4.66663 9.07228 4.66663 8.75033V5.25033C4.66663 4.92838 4.92801 4.66699 5.24996 4.66699V4.66699" stroke="#98A6A8" strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span className="text-[#98A6A8] text-[13px]">{subtitle}</span>
-          </div>
+          {subtitle && (
+            <div className="flex items-center gap-2">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0">
+                <path d="M6.99996 11.667V12.8337M6.99996 1.16699V2.33366M9.91663 11.667V12.8337M9.91663 1.16699V2.33366M1.16663 7.00033H2.33329M1.16663 9.91699H2.33329M1.16663 4.08366H2.33329M11.6666 7.00033H12.8333M11.6666 9.91699H12.8333M11.6666 4.08366H12.8333M4.08329 11.667V12.8337M4.08329 1.16699V2.33366" stroke="#98A6A8" strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M3.50004 2.33301H10.5C11.1439 2.33301 11.6667 2.85577 11.6667 3.49967V10.4997C11.6667 11.1436 11.1439 11.6663 10.5 11.6663H3.50004C2.85614 11.6663 2.33337 11.1436 2.33337 10.4997V3.49967C2.33337 2.85577 2.85614 2.33301 3.50004 2.33301V2.33301" stroke="#98A6A8" strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M5.24996 4.66699H8.74996C9.07191 4.66699 9.33329 4.92838 9.33329 5.25033V8.75033C9.33329 9.07228 9.07191 9.33366 8.74996 9.33366H5.24996C4.92801 9.33366 4.66663 9.07228 4.66663 8.75033V5.25033C4.66663 4.92838 4.92801 4.66699 5.24996 4.66699V4.66699" stroke="#98A6A8" strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span className="text-[#98A6A8] text-[13px]">{subtitle}</span>
+            </div>
+          )}
         </div>
       </div>
       <span
@@ -245,7 +247,16 @@ export default function ProfilUtilisateur() {
                       key={wo.id}
                       id={wo.id}
                       title={`${wo.id} : ${wo.title}`}
-                      subtitle={`${wo.equipment} • Échéance : ${wo.deadline}`}
+                      subtitle={
+                        [wo.equipment, wo.deadline].some(Boolean)
+                          ? [
+                              wo.equipment,
+                              wo.deadline ? `Échéance : ${wo.deadline}` : null,
+                            ]
+                              .filter(Boolean)
+                              .join(" • ")
+                          : null
+                      }
                       status={wo.status === "Terminé" ? "Terminé" : "En cours"}
                       iconBg={wo.status === "Terminé" ? "bg-[rgba(0,122,61,0.15)]" : "bg-[rgba(12,108,242,0.15)]"}
                       icon={

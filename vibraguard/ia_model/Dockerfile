@@ -19,15 +19,19 @@ COPY sensor_data_training.csv .
 COPY spark_streaming_process.py .
 COPY mqtt_to_kafka.py .
 COPY mqtt_sensor_simulator.py .
+COPY vibraguard_rf_model.joblib .
+COPY vibraguard_scaler.joblib .
 
 # Run training during build to generate .joblib files
-RUN python3 train_random_forest.py
+# RUN python3 train_random_forest.py
 
 # Environment variables
 ENV KAFKA_BROKER="kafka:9092"
 ENV MQTT_BROKER="mosquitto"
 ENV KAFKA_TOPIC="sensor-data"
 ENV MQTT_TOPIC="vibraguard/sensors"
+ENV MQTT_USER="vibraguard"
+ENV MQTT_PASS="VibraGuard2024!"
 
 # Create a non-root user and switch appropriately
 RUN useradd -m sparkuser
@@ -36,3 +40,5 @@ USER sparkuser
 # Default command: Runs the Spark streaming job
 CMD ["spark-submit", "--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0", "spark_streaming_process.py"]
 
+
+# Build timestamp: 20260621222246

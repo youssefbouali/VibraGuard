@@ -9,9 +9,7 @@ import { DernieresAlertes } from "@/components/dashboard/DernieresAlertes";
 import { Header } from "@/components/dashboard/Header";
 import { api } from "@/lib/api";
 import { useVibrations } from "@/hooks/use-vibrations";
-import { downloadMotorsCsv } from "@/lib/motor-export";
 import { toast } from "sonner";
-import { Download } from "lucide-react";
 
 const tabs = [
   "Vue d'ensemble",
@@ -64,26 +62,11 @@ export default function MoteurDetail() {
     );
   }
 
-  const handleDownloadMotor = () => {
-    downloadMotorsCsv([motor], `motor-${motor.id}-power-bi.csv`);
-    toast.success(`Téléchargement lancé pour ${motor.id}`);
-  };
-
   return (
     <DashboardLayout breadcrumb="Moteurs / Détails">
       <div className="flex flex-col gap-4 sm:gap-6 lg:gap-8 max-w-full lg:max-w-[1400px]">
         {/* Motor Header Card */}
         <MoteurDetailHeader motor={motor} />
-
-        <div className="flex justify-end">
-          <button
-            onClick={handleDownloadMotor}
-            className="inline-flex items-center gap-2 px-4 h-10 rounded-md border border-white/10 bg-[#0F2730] hover:bg-[#163340] transition-colors text-white text-sm font-medium"
-          >
-            <Download className="w-4 h-4" />
-            Download Motor Data
-          </button>
-        </div>
 
         {/* Tabs */}
         <div className="flex items-start gap-3 sm:gap-6 lg:gap-8 border-b border-black/[0.08] overflow-x-auto">
@@ -147,7 +130,7 @@ export default function MoteurDetail() {
              <h3 className="text-[#E6F0F2] text-lg font-semibold mb-4">Interventions de Maintenance</h3>
              <p className="text-[#98A6A8] mb-6">Aucune intervention planifiée pour ce moteur.</p>
              <Link 
-               to="/ordres-de-travail/creer"
+                to={`/ordres-de-travail/creer?motorId=${motor.id}`}
                className="inline-flex items-center px-4 py-2 rounded-md bg-[#007A3D] text-white text-sm hover:bg-[#006633]"
              >
                Créer un Ordre de Travail

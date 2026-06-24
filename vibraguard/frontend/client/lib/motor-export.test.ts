@@ -25,8 +25,6 @@ describe("downloadMotorsCsv", () => {
           puissance: "45 kW",
           etatSante: "Normal",
           vibrationRMS: 1.2345,
-          derniereAlerte: "2025-01-01",
-          derniereAlerteType: "Anomalie",
         },
       ],
       "motors.csv",
@@ -42,6 +40,7 @@ describe("downloadMotorsCsv", () => {
       reader.readAsText(capturedBlob as Blob);
     });
     expect(text).toContain("Motor ID");
+    expect(text).toContain("Vibration RMS Initial (mm/s)");
     expect(text).toContain('"MTR-1"');
     expect(text).toContain('"A ""Zone"""');
 

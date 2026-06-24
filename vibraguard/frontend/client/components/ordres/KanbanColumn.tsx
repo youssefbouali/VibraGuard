@@ -1,21 +1,23 @@
 import { KanbanCard, OT } from "./KanbanCard";
 
-type ColumnStatus = "todo" | "inprogress" | "done";
+type ColumnStatus = "todo" | "inprogress" | "done" | "annule";
 
 interface KanbanColumnProps {
   title: string;
   status: ColumnStatus;
   tasks: OT[];
   onCardClick?: (ot: OT) => void;
+  onCardCancel?: (ot: OT) => void;
 }
 
 const dotColor: Record<ColumnStatus, string> = {
   todo: "bg-[#98A6A8]",
   inprogress: "bg-[#0C6CF2]",
   done: "bg-[#00924A]",
+  annule: "bg-[#D93F3F]",
 };
 
-export function KanbanColumn({ title, status, tasks, onCardClick, onDrop }: KanbanColumnProps & { onDrop?: (taskId: string, newStatus: ColumnStatus) => void }) {
+export function KanbanColumn({ title, status, tasks, onCardClick, onCardCancel, onDrop }: KanbanColumnProps & { onDrop?: (taskId: string, newStatus: ColumnStatus) => void }) {
   return (
     <div 
       onDragOver={(e) => {
@@ -45,7 +47,7 @@ export function KanbanColumn({ title, status, tasks, onCardClick, onDrop }: Kanb
       {/* Tasks */}
       <div className="flex flex-col gap-4 p-5 overflow-y-auto flex-1">
         {tasks.map((ot) => (
-          <KanbanCard key={ot.id} ot={ot} onClick={() => onCardClick?.(ot)} />
+          <KanbanCard key={ot.id} ot={ot} onClick={() => onCardClick?.(ot)} onCancel={() => onCardCancel?.(ot)} />
         ))}
       </div>
     </div>

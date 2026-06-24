@@ -5,6 +5,12 @@ import { MoteurDetailHeader } from "./MoteurDetailHeader";
 
 jest.mock("jspdf", () => ({ __esModule: true, default: jest.fn() }));
 jest.mock("jspdf-autotable", () => ({ __esModule: true, default: jest.fn() }));
+jest.mock("@/hooks/use-vibrations", () => ({
+  useVibrations: () => ({ data: [], isLoading: false }),
+}));
+jest.mock("@/lib/auth-context", () => ({
+  useAuth: () => ({ user: { fullName: "Test User" } }),
+}));
 
 const mockPdf = (jest.requireMock("jspdf") as any).default;
 
@@ -47,17 +53,15 @@ describe("MoteurDetailHeader", () => {
     expect(screen.getByText("Optimal")).toBeInTheDocument();
   });
 
-  it("renders alerte label when etatLabel is Attention", () => {
-    render(<MemoryRouter><MoteurDetailHeader motor={mockMotor} etatLabel="Attention" /></MemoryRouter>);
-    // Need to pass updated motor
+  it("renders critique label when etatLabel is Attention", () => {
     render(<MemoryRouter><MoteurDetailHeader motor={{ ...mockMotor, etatLabel: "Attention" }} /></MemoryRouter>);
-    expect(screen.getAllByText("Alerte").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Critique").length).toBeGreaterThan(0);
   });
 
   it("renders Créer OT link", () => {
     render(<MemoryRouter><MoteurDetailHeader motor={mockMotor} /></MemoryRouter>);
     const otLink = screen.getByText("Créer OT");
-    expect(otLink.closest("a")).toHaveAttribute("href", "/ordres-de-travail/creer");
+    expect(otLink.closest("a")).toHaveAttribute("href", "/ordres-de-travail/creer?motorId=MOT-001");
   });
 
   it("renders Rapport Complet button", () => {

@@ -81,6 +81,17 @@ const navItems = [
     ),
   },
   {
+    label: "Utilisateurs",
+    href: "/users",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <path d="M12 15.75V14.25C12 12.5943 10.6557 11.25 9 11.25H4.5C2.84425 11.25 1.5 12.5943 1.5 14.25V15.75" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M3.75 5.25C3.75 6.90575 5.09425 8.25 6.75 8.25C8.40575 8.25 9.75 6.90575 9.75 5.25C9.75 3.59425 8.40575 2.25 6.75 2.25C5.09425 2.25 3.75 3.59425 3.75 5.25V5.25" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M14.25 6V10.5M16.5 8.25H12" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
     label: "Paramètres",
     href: "/parametres",
     icon: (
@@ -116,7 +127,7 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
   });
 
   const filteredNavItems = dynamicNavItems.filter((item) => {
-    if (["Rapports BI", "Audit Blockchain"].includes(item.label)) {
+    if (["Rapports BI", "Audit Blockchain", "Utilisateurs"].includes(item.label)) {
       return isAdmin;
     }
     return true;

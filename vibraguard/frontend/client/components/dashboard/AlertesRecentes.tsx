@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAlerts } from "@/hooks/use-alerts";
 import { formatTime } from "@/lib/utils";
@@ -33,9 +34,11 @@ function WarningIcon() {
 
 function TempIcon() {
   return (
-    <div className="flex w-10 h-10 shrink-0 items-center justify-center rounded-[10px] bg-[rgba(245,158,11,0.10)]">
+    <div className="flex w-10 h-10 shrink-0 items-center justify-center rounded-[10px] bg-[rgba(14,165,233,0.10)]">
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path d="M11.6666 3.33334V12.1167C12.9731 12.871 13.6101 14.4089 13.2196 15.8662C12.8292 17.3234 11.5086 18.3368 9.99989 18.3368C8.49121 18.3368 7.17062 17.3234 6.78014 15.8662C6.38967 14.4089 7.02667 12.871 8.33323 12.1167V3.33334C8.33323 2.41348 9.08004 1.66667 9.99989 1.66667C10.9198 1.66667 11.6666 2.41348 11.6666 3.33334" stroke="#F59E0B" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="10" cy="10" r="8.33333" stroke="#0EA5E9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M10 9.16667V13.3333" stroke="#0EA5E9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="10" cy="6.66667" r="0.833333" fill="#0EA5E9" />
       </svg>
     </div>
   );
@@ -49,6 +52,8 @@ function AlerteIcon({ type }: { type: AlertData["iconType"] }) {
 
 export function AlertesRecentes() {
   const navigate = useNavigate();
+  const [page, setPage] = useState(1);
+  const perPage = 5;
 
   const { data: rawAlerts = [], isLoading } = useAlerts();
 
@@ -67,6 +72,9 @@ export function AlertesRecentes() {
       iconType: a.priority === "high" ? "critical" : a.priority === "medium" ? "warning" : "temp"
     };
   });
+
+  const totalPages = Math.max(1, Math.ceil(alertes.length / perPage));
+  const paginated = alertes.slice((page - 1) * perPage, page * perPage);
 
   if (isLoading) {
     return (
@@ -96,9 +104,9 @@ export function AlertesRecentes() {
         </Link>
       </div>
  
-      {/* Alerts list - Limited to 5 and scrollable */}
+      {/* Alerts list */}
       <div className="flex flex-col gap-3 flex-1 max-h-[500px] overflow-y-auto pr-1">
-        {alertes.slice(0, 5).map((alerte) => (
+        {paginated.map((alerte) => (
           <button
             key={alerte.id}
             onClick={() => navigate(`/moteurs/${alerte.motorId}`)}
@@ -115,6 +123,17 @@ export function AlertesRecentes() {
           </button>
         ))}
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-3 mt-3 border-t border-white/[0.05]">
+          <span className="text-[11px] text-[#64748B]">{alertes.length} alertes</span>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className="px-2.5 py-1 rounded text-[11px] font-medium text-[#94A3B8] hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">Précédent</button>
+            <span className="text-[11px] text-[#64748B]">{page}/{totalPages}</span>
+            <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages} className="px-2.5 py-1 rounded text-[11px] font-medium text-[#94A3B8] hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">Suivant</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

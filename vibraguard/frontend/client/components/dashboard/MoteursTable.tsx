@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useMoteurs } from "@/hooks/use-moteurs";
@@ -34,8 +35,13 @@ function TrendFlat() {
 
 export function MoteursTable() {
   const navigate = useNavigate();
+  const [page, setPage] = useState(1);
+  const perPage = 10;
 
   const { data: rows = [], isLoading } = useMoteurs();
+
+  const totalPages = Math.max(1, Math.ceil(rows.length / perPage));
+  const paginated = rows.slice((page - 1) * perPage, page * perPage);
 
   if (isLoading) {
     return (
@@ -69,13 +75,13 @@ export function MoteursTable() {
               <th className="pb-3 text-[12px] font-medium text-[#64748B] border-b border-white/[0.05] pr-4">Moteur</th>
               <th className="pb-3 text-[12px] font-medium text-[#64748B] border-b border-white/[0.05] pr-4">Type</th>
               <th className="pb-3 text-[12px] font-medium text-[#64748B] border-b border-white/[0.05] pr-4">État Santé</th>
-              <th className="pb-3 text-[12px] font-medium text-[#64748B] border-b border-white/[0.05] pr-4">Vibration RMS</th>
+              <th className="pb-3 text-[12px] font-medium text-[#64748B] border-b border-white/[0.05] pr-4">Vibration Initiale</th>
               <th className="pb-3 text-[12px] font-medium text-[#64748B] border-b border-white/[0.05]">Action</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, i) => (
-              <tr key={row.id} className={cn("cursor-pointer hover:bg-white/[0.03] transition-colors", i < rows.length - 1 ? "border-b border-white/[0.02]" : "")}>
+            {paginated.map((row, i) => (
+              <tr key={row.id} className={cn("cursor-pointer hover:bg-white/[0.03] transition-colors", i < paginated.length - 1 ? "border-b border-white/[0.02]" : "")}>
                 <td className="py-5 pr-4">
                   <button
                     onClick={() => navigate(`/moteurs/${row.id}`)}
@@ -100,10 +106,10 @@ export function MoteursTable() {
                 </td>
                 <td className="py-5 pr-4">
                   <div className="flex items-center gap-1">
-                    <span className="text-sm font-semibold" style={{ color: row.vibrationColor }}>
+                    <span className="text-sm font-semibold text-[#E2E8F0]">
                       {String(row.vibration).replace(' mm/s', '')} mm/s
                     </span>
-                    {row.trendIcon === "up" && <TrendUp color={row.vibrationColor} />}
+                    {row.trendIcon === "up" && <TrendUp color="#94A3B8" />}
                     {row.trendIcon === "flat" && <TrendFlat />}
                   </div>
                 </td>
@@ -120,6 +126,17 @@ export function MoteursTable() {
           </tbody>
         </table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-3 mt-3 border-t border-white/[0.05]">
+          <span className="text-[11px] text-[#64748B]">{rows.length} moteurs</span>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className="px-2.5 py-1 rounded text-[11px] font-medium text-[#94A3B8] hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">Précédent</button>
+            <span className="text-[11px] text-[#64748B]">{page}/{totalPages}</span>
+            <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages} className="px-2.5 py-1 rounded text-[11px] font-medium text-[#94A3B8] hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">Suivant</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -7,16 +7,14 @@ import os
 
 # ==========================================
 # CONFIGURATION
-# ==========================================
-MQTT_BROKER = os.getenv("MQTT_BROKER", "localhost")  # Fallback to mywire
-MQTT_PORT = int(os.getenv("MQTT_PORT", 30083))        # Default MQTT port for external access
+# ==================================
+MQTT_BROKER = os.getenv("MQTT_BROKER", "localhost")
+MQTT_PORT = int(os.getenv("MQTT_PORT", 30083))
 MQTT_TOPIC = os.getenv("MQTT_TOPIC", "vibraguard/sensors")
-CLIENT_ID = f"vibraguard_external_simulator_{uuid.uuid4()}" # Unique client ID
-MOTOR_ID = os.getenv("MOTOR_ID", "MTR-Malaxeur-1") # Specify the motor ID here
-
-# Optional: Add Username and Password if your broker requires authentication
-MQTT_USER = None   # e.g., "my_username"
-MQTT_PASS = None   # e.g., "my_password"
+CLIENT_ID = f"vibraguard_external_simulator_{uuid.uuid4()}"
+MOTOR_ID = os.getenv("MOTOR_ID", "MTR-Convoyeur-1")
+MQTT_USER = os.getenv("MQTT_USER", "vibraguard")
+MQTT_PASS = os.getenv("MQTT_PASS", "VibraGuard2024!")
 
 
 # ==========================================
@@ -24,7 +22,9 @@ MQTT_PASS = None   # e.g., "my_password"
 # ==========================================
 def generate_sensor_data():
     """Generates synthetic sensor data aligned with training CSV types."""
-    is_anomaly = random.random() < 1
+    is_anomaly = random.random() < 0 #normal
+    #is_anomaly = random.random() < 1 #anomaly
+    #is_anomaly = random.random() < 0.5 #50%
     
     if is_anomaly:
         scenario = random.choice(["ROULEMENT", "DESEQUILIBRE", "DESALIGNEMENT", "SURCHAUFFE", "ELECTRIQUE"])
@@ -39,7 +39,7 @@ def generate_sensor_data():
                 "current_rms": random.uniform(8.5, 9.5),
                 "current_thd": random.uniform(4.0, 6.0),
                 "temperature": random.uniform(55.0, 65.0),
-                "status": "anomalous"
+                #"status": "anomalous"
             }
         elif scenario == "DESEQUILIBRE":
             # DESEQUILIBRE: Very High RMS, moderate Peak
@@ -51,7 +51,7 @@ def generate_sensor_data():
                 "current_rms": random.uniform(9.5, 11.0),
                 "current_thd": random.uniform(5.0, 8.0),
                 "temperature": random.uniform(60.0, 75.0),
-                "status": "anomalous"
+                #"status": "anomalous"
             }
         elif scenario == "DESALIGNEMENT":
             # DESALIGNEMENT: Moderate RMS and Peak, some temperature rise
@@ -63,7 +63,7 @@ def generate_sensor_data():
                 "current_rms": random.uniform(9.0, 10.5),
                 "current_thd": random.uniform(6.0, 9.0),
                 "temperature": random.uniform(70.0, 80.0),
-                "status": "anomalous"
+                #"status": "anomalous"
             }
         elif scenario == "SURCHAUFFE":
             # SURCHAUFFE: Extreme Temperature
@@ -75,7 +75,7 @@ def generate_sensor_data():
                 "current_rms": random.uniform(11.0, 13.0),
                 "current_thd": random.uniform(7.0, 10.0),
                 "temperature": random.uniform(95.0, 115.0),
-                "status": "anomalous"
+                #"status": "anomalous"
             }
         else: # ELECTRIQUE
             # SURCHARGE_ELECTRIQUE: High Current and THD
@@ -87,7 +87,7 @@ def generate_sensor_data():
                 "current_rms": random.uniform(15.0, 22.0),
                 "current_thd": random.uniform(18.0, 30.0),
                 "temperature": random.uniform(75.0, 85.0),
-                "status": "anomalous"
+                #"status": "anomalous"
             }
     else:
         # NORMAL / NONE
@@ -99,7 +99,7 @@ def generate_sensor_data():
             "current_rms": random.uniform(8.0, 9.0),
             "current_thd": random.uniform(4.0, 6.0),
             "temperature": random.uniform(50.0, 60.0),
-            "status": "normal"
+            #"status": "normal"
         }
     return data
 
@@ -108,9 +108,9 @@ def generate_sensor_data():
 # ==========================================
 def on_connect(client, userdata, flags, reason_code, properties):
     if reason_code == 0:
-        print(f"✅ Successfully connected to external MQTT Broker at {MQTT_BROKER}")
+        print(f"[OK] Successfully connected to external MQTT Broker at {MQTT_BROKER}")
     else:
-        print(f"❌ Failed to connect, return code {reason_code}")
+        print(f"[FAIL] Failed to connect, return code {reason_code}")
 
 def on_publish(client, userdata, mid, reason_code, properties):
     pass # Optional: can be used to track successful message deliveries
@@ -137,7 +137,7 @@ def main():
         print("Connecting...")
         client.connect(MQTT_BROKER, MQTT_PORT, 60)
     except Exception as e:
-        print(f"❌ Connection failed: {str(e)}")
+        print(f"[FAIL] Connection failed: {str(e)}")
         print(f"Note: Ensure that port {MQTT_PORT} is open on the router/firewall for {MQTT_BROKER}")
         return
 
@@ -152,12 +152,12 @@ def main():
             sensor_data = generate_sensor_data()
             payload = json.dumps(sensor_data)
             
-            # 2. Publish to the remote domain
-            result = client.publish(MQTT_TOPIC, payload, qos=0)
+            # 2. Publish to the remote domain with QoS 1 so messages are stored by broker
+            result = client.publish(MQTT_TOPIC, payload, qos=1)
             
             # 3. Log to console
-            status_indicator = "🔴" if sensor_data["temperature"] > 70.0 else "🟢"
-            print(f"[{status_indicator}] Sent to {MQTT_BROKER} -> {payload}")
+            status_indicator = "ANOM" if sensor_data["temperature"] > 70.0 else "OK"
+            print(f"Sent to {MQTT_BROKER} -> {payload}")
             
             # 4. Wait before sending the next one
             time.sleep(2)

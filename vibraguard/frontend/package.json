@@ -27,8 +27,10 @@
   },
   "dependencies": {
     "@vitejs/plugin-react": "^5.1.4",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "ethers": "^6.16.0",
+    "exceljs": "^4.4.0",
     "express": "^5.1.0",
     "http-proxy-middleware": "^3.0.5",
     "jspdf": "^4.2.1",
@@ -84,7 +86,6 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
-    "cors": "^2.8.5",
     "cypress": "^15.17.0",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",

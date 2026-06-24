@@ -20,6 +20,7 @@ import Reports from "./pages/Reports";
 import ReportShare from "./pages/ReportShare";
 import AuditBlockchain from "./pages/AuditBlockchain";
 import Parametres from "./pages/Parametres";
+import Users from "./pages/Users";
 import ProfilUtilisateur from "./pages/ProfilUtilisateur";
 import Notifications from "./pages/Notifications";
 import UtilisateurDetail from "./pages/parametres/UtilisateurDetail";
@@ -32,6 +33,7 @@ import NotFound from "./pages/NotFound";
 
 import { AuthProvider } from "@/lib/auth-context";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import GuestRoute from "@/components/auth/GuestRoute";
 
 const queryClient = new QueryClient();
 
@@ -43,9 +45,9 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            <Route path="/" element={<GuestRoute><Index /></GuestRoute>} />
+            <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+            <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
 
@@ -62,10 +64,11 @@ const App = () => (
             <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
             <Route path="/audit" element={<ProtectedRoute allowedRoles={["admin"]}><AuditBlockchain /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+            <Route path="/users" element={<ProtectedRoute allowedRoles={["admin"]}><Users /></ProtectedRoute>} />
+            <Route path="/users/ajouter" element={<ProtectedRoute allowedRoles={["admin"]}><AjouterUtilisateur /></ProtectedRoute>} />
+            <Route path="/users/:id" element={<ProtectedRoute allowedRoles={["admin"]}><UtilisateurDetail /></ProtectedRoute>} />
             <Route path="/parametres" element={<ProtectedRoute><Parametres /></ProtectedRoute>} />
             <Route path="/parametres/profil" element={<ProtectedRoute><ProfilUtilisateur /></ProtectedRoute>} />
-            <Route path="/parametres/utilisateurs/ajouter" element={<ProtectedRoute allowedRoles={["admin"]}><AjouterUtilisateur /></ProtectedRoute>} />
-            <Route path="/parametres/utilisateurs/:id" element={<ProtectedRoute allowedRoles={["admin"]}><UtilisateurDetail /></ProtectedRoute>} />
 
             {/* Public Shared Report Route */}
             <Route path="/reports/share/:id" element={<ReportShare />} />

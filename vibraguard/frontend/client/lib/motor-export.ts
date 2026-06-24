@@ -7,8 +7,6 @@ export interface MotorExportRow {
   etatSante?: string;
   vibrationRMS?: number | string;
   vibration?: string;
-  derniereAlerte?: string;
-  derniereAlerteType?: string;
 }
 
 function escapeCsvValue(value: unknown) {
@@ -40,9 +38,7 @@ function buildCsvRows(motors: MotorExportRow[]) {
     "Type",
     "Puissance",
     "Etat Sante",
-    "Vibration RMS (mm/s)",
-    "Derniere Alerte",
-    "Type Derniere Alerte",
+    "Vibration RMS Initial (mm/s)",
     "Exported At",
   ];
 
@@ -55,8 +51,6 @@ function buildCsvRows(motors: MotorExportRow[]) {
     motor.puissance || "",
     motor.etatSante || "",
     getVibrationValue(motor),
-    motor.derniereAlerte || "",
-    motor.derniereAlerteType || "",
     exportedAt,
   ]);
 

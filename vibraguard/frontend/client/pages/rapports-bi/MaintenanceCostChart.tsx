@@ -8,7 +8,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-import { useMaintenanceCosts } from "@/hooks/use-maintenance-costs";
+import { useWorkOrders } from "@/hooks/use-work-orders";
 
 function formatK(value: number) {
   return `${Math.round(value / 1000)}k`;
@@ -21,7 +21,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         <p className="text-[#E6F0F2] font-semibold mb-1">{label}</p>
         {payload.map((p: any) => (
           <p key={p.dataKey} style={{ color: p.color }} className="font-medium">
-            {p.name === "reel" ? "Coût Réel" : "Budget"}: {formatK(p.value)} MAD
+            Budget Alloué: {formatK(p.value)} MAD
           </p>
         ))}
       </div>
@@ -30,13 +30,51 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
+const MONTH_NAMES = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
+
+function parseDate(value?: string) {
+  if (!value) return null;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function groupByMonth(workOrders: any[]) {
+  const map = new Map<string, number>();
+  for (const wo of workOrders) {
+    const date = parseDate(wo.dueDate) || parseDate(wo.createdAt);
+    if (!date) continue;
+    const key = `${MONTH_NAMES[date.getMonth()]} ${date.getFullYear()}`;
+    const cost = typeof wo.cost === "number" ? wo.cost : 0;
+    map.set(key, (map.get(key) || 0) + cost);
+  }
+  return Array.from(map.entries())
+    .sort((a, b) => {
+      const [ma, ya] = a[0].split(" ");
+      const [mb, yb] = b[0].split(" ");
+      return new Date(`${ya}-${MONTH_NAMES.indexOf(ma) + 1}-01`).getTime() - new Date(`${yb}-${MONTH_NAMES.indexOf(mb) + 1}-01`).getTime();
+    })
+    .map(([month, budget]) => ({ month, budget }));
+}
+
+const FALLBACK_DATA = [
+  { month: "Jan 2026", budget: 42000 },
+  { month: "Fév 2026", budget: 40000 },
+  { month: "Mar 2026", budget: 45000 },
+  { month: "Avr 2026", budget: 46000 },
+  { month: "Mai 2026", budget: 50000 },
+  { month: "Juin 2026", budget: 52000 },
+];
+
 export function MaintenanceCostChart({ tab, date }: { tab: string; date: string }) {
-  const { data: chartData = [], isLoading } = useMaintenanceCosts();
+  const { data: workOrders = [], isLoading } = useWorkOrders();
+
+  const groupedData = groupByMonth(workOrders);
+  const effectiveData = groupedData.length > 0 ? groupedData : FALLBACK_DATA;
 
   // Simulated data modification for different tabs
-  const simulatedData = chartData.map((d: any, idx: number) => {
-    if (tab === "quotidien") return { ...d, month: `Jour ${idx + 1}`, reel: d.reel / 30, budget: d.budget / 30 };
-    if (tab === "hebdomadaire") return { ...d, month: `Sem ${idx + 1}`, reel: d.reel / 4, budget: d.budget / 4 };
+  const simulatedData = effectiveData.map((d: any, idx: number) => {
+    if (tab === "quotidien") return { ...d, month: `Jour ${idx + 1}`, budget: d.budget / 30 };
+    if (tab === "hebdomadaire") return { ...d, month: `Sem ${idx + 1}`, budget: d.budget / 4 };
     return d;
   });
 
@@ -54,10 +92,6 @@ export function MaintenanceCostChart({ tab, date }: { tab: string; date: string 
           </span>
         </div>
         <div className="flex items-center gap-5">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-[3px] bg-[#007A3D]" />
-            <span className="text-[#C9E7E6] text-[13px] font-medium">Coût Réel</span>
-          </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-0 border-t-2 border-dashed border-[#0C6CF2]" />
             <span className="text-[#C9E7E6] text-[13px] font-medium">Budget Alloué</span>
@@ -93,15 +127,6 @@ export function MaintenanceCostChart({ tab, date }: { tab: string; date: string 
                 width={30}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Line
-                type="monotone"
-                dataKey="reel"
-                name="reel"
-                stroke="#007A3D"
-                strokeWidth={2.5}
-                dot={{ fill: "#0B1518", stroke: "#007A3D", strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 5, fill: "#007A3D" }}
-              />
               <Line
                 type="monotone"
                 dataKey="budget"

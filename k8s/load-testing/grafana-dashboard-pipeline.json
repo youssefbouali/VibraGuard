@@ -1,0 +1,324 @@
+{
+  "title": "VibraGuard - Pipeline Load Test",
+  "uid": "vibraguard-pipeline-load-test",
+  "tags": ["vibraguard", "load-test", "pipeline"],
+  "schemaVersion": 36,
+  "version": 1,
+  "timezone": "browser",
+  "panels": [
+    {
+      "title": "Pipeline Throughput (msg/s)",
+      "type": "stat",
+      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 6},
+      "targets": [
+        {"expr": "pipeline_load_test_throughput", "legendFormat": "Throughput", "instant": true}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "yellow", "value": 10000},
+              {"color": "green", "value": 12000}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Delivery Ratio (%)",
+      "type": "stat",
+      "gridPos": {"x": 6, "y": 0, "w": 6, "h": 6},
+      "targets": [
+        {"expr": "pipeline_load_test_delivery_ratio", "legendFormat": "Delivery", "instant": true}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "yellow", "value": 0.99},
+              {"color": "green", "value": 0.995}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Messages",
+      "type": "stat",
+      "gridPos": {"x": 12, "y": 0, "w": 6, "h": 6},
+      "targets": [
+        {"expr": "pipeline_load_test_messages_sent", "legendFormat": "Sent", "instant": true},
+        {"expr": "pipeline_load_test_messages_received", "legendFormat": "Received", "instant": true}
+      ]
+    },
+    {
+      "title": "Spark E2E Latency (ms)",
+      "type": "stat",
+      "gridPos": {"x": 18, "y": 0, "w": 6, "h": 6},
+      "targets": [
+        {"expr": "pipeline_load_test_spark_e2e_ms", "legendFormat": "Spark E2E", "instant": true}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 1000},
+              {"color": "red", "value": 2000}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Pipeline Latency P95 (ms)",
+      "type": "bargauge",
+      "gridPos": {"x": 0, "y": 6, "w": 12, "h": 8},
+      "targets": [
+        {"expr": "pipeline_load_test_mqtt_p95_ms", "legendFormat": "MQTT Publish"},
+        {"expr": "pipeline_load_test_bridge_p95_ms", "legendFormat": "Bridge (MQTT->Kafka)"},
+        {"expr": "pipeline_load_test_spark_e2e_ms", "legendFormat": "Spark E2E"},
+        {"expr": "pipeline_load_test_mqtt_p95_ms + pipeline_load_test_bridge_p95_ms + pipeline_load_test_spark_e2e_ms", "legendFormat": "Latence Totale Pipeline"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 500},
+              {"color": "red", "value": 2000}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Throughput Over Time (msg/s)",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 14, "w": 24, "h": 8},
+      "targets": [
+        {"expr": "pipeline_load_test_throughput", "legendFormat": "Throughput"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "yellow", "value": 10000},
+              {"color": "green", "value": 12000}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Latency P95 Over Time (ms)",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 22, "w": 24, "h": 8},
+      "targets": [
+        {"expr": "pipeline_load_test_mqtt_p95_ms", "legendFormat": "MQTT Publish"},
+        {"expr": "pipeline_load_test_bridge_p95_ms", "legendFormat": "Bridge"},
+        {"expr": "pipeline_load_test_spark_e2e_ms", "legendFormat": "Spark E2E"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        }
+      }
+    },
+    {
+      "title": "Infrastructure",
+      "type": "row",
+      "gridPos": {"x": 0, "y": 30, "w": 24, "h": 1},
+      "collapsed": true,
+      "panels": [
+        {
+          "title": "Pod CPU Usage",
+          "type": "timeseries",
+          "gridPos": {"x": 0, "y": 31, "w": 12, "h": 8},
+          "targets": [
+            {"expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"vibraguard\",container!=\"POD\"}[5m])) by (pod,container)", "legendFormat": "{{pod}}"},
+            {"expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"vibraguard\",container!=\"POD\",container=~\"kafka|mosquitto|bridge|api-gateway|motor-service|spark-processor\"}[1m])) by (container)", "legendFormat": "{{container}}"}
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "cores",
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 0.8},
+                  {"color": "red", "value": 1.5}
+                ]
+              }
+            }
+          },
+          "description": "CPU usage per pod in the vibraguard namespace"
+        },
+        {
+          "title": "Pod Memory Usage",
+          "type": "timeseries",
+          "gridPos": {"x": 12, "y": 31, "w": 12, "h": 8},
+          "targets": [
+            {"expr": "sum(container_memory_working_set_bytes{namespace=\"vibraguard\",container!=\"POD\"}) by (pod,container)", "legendFormat": "{{pod}}"},
+            {"expr": "sum(container_memory_working_set_bytes{namespace=\"vibraguard\",container!=\"POD\",container=~\"kafka|mosquitto|bridge|api-gateway|motor-service|spark-processor\"}) by (container)", "legendFormat": "{{container}}"}
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 524288000},
+                  {"color": "red", "value": 1073741824}
+                ]
+              }
+            }
+          },
+          "description": "Memory usage (working set) per pod"
+        },
+        {
+          "title": "Pod Network I/O",
+          "type": "timeseries",
+          "gridPos": {"x": 0, "y": 39, "w": 12, "h": 8},
+          "targets": [
+            {"expr": "sum(rate(container_network_receive_bytes_total{namespace=\"vibraguard\",container!=\"POD\",pod=~\".*(kafka|mosquitto|bridge|api-gateway).*\"}[1m])) by (pod)", "legendFormat": "RX {{pod}}"},
+            {"expr": "sum(rate(container_network_transmit_bytes_total{namespace=\"vibraguard\",container!=\"POD\",pod=~\".*(kafka|mosquitto|bridge|api-gateway).*\"}[1m])) by (pod)", "legendFormat": "TX {{pod}}"}
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "Bps"
+            }
+          },
+          "description": "Network receive/transmit bytes per second for pipeline pods"
+        },
+        {
+          "title": "Kafka Disk Usage",
+          "type": "timeseries",
+          "gridPos": {"x": 12, "y": 39, "w": 12, "h": 8},
+          "targets": [
+            {"expr": "sum(container_fs_usage_bytes{namespace=\"vibraguard\",container=\"kafka\"}) by (pod)", "legendFormat": "Kafka {{pod}}"},
+            {"expr": "sum(container_fs_usage_bytes{namespace=\"vibraguard\",container=\"mosquitto\"}) by (pod)", "legendFormat": "Mosquitto {{pod}}"}
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes"
+            }
+          },
+          "description": "Filesystem usage for Kafka and Mosquitto pods"
+        },
+        {
+          "title": "Pod Restarts",
+          "type": "stat",
+          "gridPos": {"x": 0, "y": 47, "w": 8, "h": 6},
+          "targets": [
+            {"expr": "sum(kube_pod_container_status_restarts_total{namespace=\"vibraguard\"}) by (pod,container)", "legendFormat": "{{pod}}", "instant": true}
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 3},
+                  {"color": "red", "value": 10}
+                ]
+              }
+            }
+          },
+          "description": "Total container restarts per pod"
+        },
+        {
+          "title": "Pod Status",
+          "type": "stat",
+          "gridPos": {"x": 8, "y": 47, "w": 8, "h": 6},
+          "targets": [
+            {"expr": "kube_pod_status_phase{namespace=\"vibraguard\",phase=\"Running\"}", "legendFormat": "Running", "instant": true},
+            {"expr": "kube_pod_status_phase{namespace=\"vibraguard\",phase=\"Pending\"}", "legendFormat": "Pending", "instant": true},
+            {"expr": "kube_pod_status_phase{namespace=\"vibraguard\",phase=\"Failed\"}", "legendFormat": "Failed", "instant": true}
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 0},
+                  {"color": "red", "value": 0}
+                ]
+              },
+              "mappings": [
+                {"type": "value", "value": "null", "text": "N/A"}
+              ]
+            }
+          },
+          "description": "Pod phase counts (Running/Pending/Failed)"
+        },
+        {
+          "title": "Resource Requests vs Limits",
+          "type": "bargauge",
+          "gridPos": {"x": 16, "y": 47, "w": 8, "h": 6},
+          "targets": [
+            {"expr": "sum(kube_pod_container_resource_requests_cpu_cores{namespace=\"vibraguard\",container!=\"POD\") by (container)", "legendFormat": "CPU Req {{container}}"},
+            {"expr": "sum(kube_pod_container_resource_limits_cpu_cores{namespace=\"vibraguard\",container!=\"POD\") by (container)", "legendFormat": "CPU Lim {{container}}"}
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "cores"
+            }
+          },
+          "description": "CPU requests vs limits per container"
+        },
+        {
+          "title": "Node CPU",
+          "type": "timeseries",
+          "gridPos": {"x": 0, "y": 53, "w": 12, "h": 8},
+          "targets": [
+            {"expr": "1 - avg(rate(node_cpu_seconds_total{mode=\"idle\"}[1m]))", "legendFormat": "CPU Util"},
+            {"expr": "avg(rate(node_cpu_seconds_total{mode=\"iowait\"}[1m]))", "legendFormat": "IO Wait"}
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1
+            }
+          },
+          "description": "Node-level CPU utilization and I/O wait"
+        },
+        {
+          "title": "Node Memory",
+          "type": "timeseries",
+          "gridPos": {"x": 12, "y": 53, "w": 12, "h": 8},
+          "targets": [
+            {"expr": "1 - sum(node_memory_MemAvailable_bytes) / sum(node_memory_MemTotal_bytes)", "legendFormat": "Memory Util"}
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1
+            }
+          },
+          "description": "Node-level memory utilization"
+        }
+      ]
+    }
+  ]
+}

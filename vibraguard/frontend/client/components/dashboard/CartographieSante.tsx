@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useMoteurs } from "@/hooks/use-moteurs";
@@ -80,11 +81,14 @@ function MoteurIcon({ type, color }: { type: Moteur["iconType"]; color: string }
 
 export function CartographieSante() {
   const { data: apiMoteurs, isLoading } = useMoteurs();
+  const [page, setPage] = useState(1);
+  const perPage = 12;
 
   const mappedMoteurs: Moteur[] = (apiMoteurs || []).map(m => {
     let status: MoteurStatus = "ok";
-    if (m.etatLabel === "Critique") status = "critical";
-    else if (m.etatLabel === "Attention" || m.etatLabel === "Alerte") status = "warning";
+    const label = m.etatLabel || "";
+    if (label.includes("Critique")) status = "critical";
+    else if (label.includes("Attention") || label.includes("Alerte")) status = "warning";
     
     return {
       id: m.id,
@@ -92,6 +96,9 @@ export function CartographieSante() {
       iconType: "turbine",
     };
   });
+
+  const totalPages = Math.max(1, Math.ceil(mappedMoteurs.length / perPage));
+  const paginated = mappedMoteurs.slice((page - 1) * perPage, page * perPage);
 
   return (
     <div className="flex flex-col h-full rounded-2xl border border-white/[0.08] bg-[rgba(17,26,36,0.50)] backdrop-blur-xl p-6 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.30)]">
@@ -108,9 +115,9 @@ export function CartographieSante() {
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-4 gap-3 flex-1 content-start">
+      <div className="grid grid-cols-4 gap-3 content-start">
         {isLoading && <div className="text-white col-span-4 italic">Chargement...</div>}
-        {mappedMoteurs.map((m) => {
+        {paginated.map((m) => {
           const dotColor = statusDotColor[m.status];
           const iconColor = statusIconColor[m.status];
           const textColor = statusTextColor[m.status];
@@ -122,7 +129,6 @@ export function CartographieSante() {
                 statusBorder[m.status]
               )}
             >
-              {/* Status dot */}
               <span
                 className="absolute top-2 right-2 w-2 h-2 rounded-full"
                 style={{ backgroundColor: dotColor, boxShadow: `0 0 8px 0 ${dotColor}` }}
@@ -135,6 +141,19 @@ export function CartographieSante() {
           );
         })}
       </div>
+
+      {!isLoading && totalPages > 1 && (
+        <div className="flex items-center justify-between pt-4 mt-4 border-t border-white/[0.05]">
+          <span className="text-[11px] text-[#64748B]">
+            {mappedMoteurs.length} moteurs
+          </span>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className="px-2.5 py-1 rounded text-[11px] font-medium text-[#94A3B8] hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">Précédent</button>
+            <span className="text-[11px] text-[#64748B]">{page}/{totalPages}</span>
+            <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages} className="px-2.5 py-1 rounded text-[11px] font-medium text-[#94A3B8] hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">Suivant</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

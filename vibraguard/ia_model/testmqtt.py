@@ -2,6 +2,7 @@ import asyncio
 import time
 import json
 import statistics
+import os
 from gmqtt import Client as MQTTClient
 
 # Configuration
@@ -9,6 +10,8 @@ BROKER = "localhost"
 PORT = 30083
 NUM_CLIENTS = 10000
 TOPIC = "vibraguard/sensors"
+MQTT_USER = os.getenv("MQTT_USER", "vibraguard")
+MQTT_PASS = os.getenv("MQTT_PASS", "VibraGuard2024!")
 
 # Metrics storage
 latencies = []
@@ -18,6 +21,7 @@ start_time = time.time()
 async def sensor_task(client_id):
     global messages_sent
     client = MQTTClient(client_id)
+    client.set_auth_credentials(MQTT_USER, MQTT_PASS)
     await client.connect(BROKER, PORT)
     
     # Simulate a single burst

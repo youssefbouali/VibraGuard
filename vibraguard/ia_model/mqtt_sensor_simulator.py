@@ -9,8 +9,11 @@ import os
 MQTT_BROKER = os.getenv("MQTT_BROKER", "localhost")
 MQTT_PORT = int(os.getenv("MQTT_PORT", 1883))
 MQTT_TOPIC = os.getenv("MQTT_TOPIC", "vibraguard/sensors")
+MQTT_USER = os.getenv("MQTT_USER", "vibraguard")
+MQTT_PASS = os.getenv("MQTT_PASS", "VibraGuard2024!")
 
 client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+client.username_pw_set(MQTT_USER, MQTT_PASS)
 
 def connect_mqtt():
     try:

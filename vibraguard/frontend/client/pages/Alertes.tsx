@@ -57,7 +57,6 @@ const ALERTES_DATA: Alerte[] = [
 
 type SeveriteFilter = "Toutes" | "Critique" | "Majeur" | "Mineur";
 type DateFilter = "7 Derniers Jours" | "30 Derniers Jours" | "Aujourd'hui";
-type MoteurFilter = "Zone Broyage" | "Zone Convoyage" | "Tous";
 
 import { useAlerts } from "@/hooks/use-alerts";
 
@@ -69,7 +68,6 @@ export default function Alertes() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [severiteFilter, setSeveriteFilter] = useState<SeveriteFilter>("Toutes");
   const [dateFilter, setDateFilter] = useState<DateFilter>("7 Derniers Jours");
-  const [moteurFilter, setMoteurFilter] = useState<MoteurFilter>("Zone Broyage");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Map backend alerts to frontend format
@@ -187,21 +185,9 @@ export default function Alertes() {
               onChange={(v) => setDateFilter(v as DateFilter)}
             />
 
-            {/* Moteur filter */}
-            <FilterDropdown
-              icon={
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M7.99992 13.3333V14.6666M7.99992 1.33325V2.66659M11.3333 13.3333V14.6666M11.3333 1.33325V2.66659M1.33325 7.99992H2.66659M1.33325 11.3333H2.66659M1.33325 4.66659H2.66659M13.3333 7.99992H14.6666M13.3333 11.3333H14.6666M13.3333 4.66659H14.6666M4.66659 13.3333V14.6666M4.66659 1.33325V2.66659" stroke="#64748B" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M3.99984 2.66675H11.9998C12.7357 2.66675 13.3332 3.26419 13.3332 4.00008V12.0001C13.3332 12.736 12.7357 13.3334 11.9998 13.3334H3.99984C3.26395 13.3334 2.6665 12.736 2.6665 12.0001V4.00008C2.6665 3.26419 3.26395 2.66675 3.99984 2.66675V2.66675" stroke="#64748B" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M5.99992 5.33325H9.99992C10.3679 5.33325 10.6666 5.63198 10.6666 5.99992V9.99992C10.6666 10.3679 10.3679 10.6666 9.99992 10.6666H5.99992C5.63198 10.6666 5.33325 10.3679 5.33325 9.99992V5.99992C5.33325 5.63198 5.63198 5.33325 5.99992 5.33325V5.33325" stroke="#64748B" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              }
-              label="Moteur:"
-              value={moteurFilter}
-              options={["Zone Broyage", "Zone Convoyage", "Tous"]}
-              onChange={(v) => setMoteurFilter(v as MoteurFilter)}
-            />
           </div>
+
+          {/* Search */}
 
           {/* Search */}
           <div className="flex items-center gap-3 h-11 px-4 rounded-lg border border-white/10 bg-[rgba(17,26,36,0.60)] min-w-[220px] max-w-[360px] flex-1">

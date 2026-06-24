@@ -20,10 +20,10 @@ interface User {
   phoneNumber?: string;
 }
 
-const ROLES = ["Admin", "Ingénieur Data", "Technicien", "Responsable"];
+const ROLES = ["Admin", "Technicien", "Responsable"];
 const DEPARTMENTS = [
   "Direction",
-  "Analyse & ML",
+  "Maintenance Prédictive",
   "Maintenance Ligne A",
   "Maintenance Ligne B",
   "Opérations",
@@ -180,7 +180,7 @@ export default function UtilisateurDetail() {
         phoneNumber
       });
       toast.success("Utilisateur mis à jour avec succès");
-      navigate("/parametres");
+      navigate("/users");
     } catch (error) {
       console.error("Failed to update user:", error);
       toast.error("Erreur lors de la mise à jour");
@@ -194,7 +194,7 @@ export default function UtilisateurDetail() {
       <DashboardLayout
         breadcrumbItems={[
           { label: "Paramètres", href: "/parametres" },
-          { label: "Utilisateurs", href: "/parametres" },
+          { label: "Utilisateurs", href: "/users" },
           { label: "Chargement..." },
         ]}
       >
@@ -210,7 +210,7 @@ export default function UtilisateurDetail() {
       <DashboardLayout
         breadcrumbItems={[
           { label: "Paramètres", href: "/parametres" },
-          { label: "Utilisateurs", href: "/parametres" },
+          { label: "Utilisateurs", href: "/users" },
           { label: "Utilisateur non trouvé" },
         ]}
       >
@@ -225,7 +225,7 @@ export default function UtilisateurDetail() {
     <DashboardLayout
       breadcrumbItems={[
         { label: "Paramètres", href: "/parametres" },
-        { label: "Utilisateurs", href: "/parametres" },
+        { label: "Utilisateurs", href: "/users" },
         { label: `Modifier - ${name}` },
       ]}
     >
@@ -235,7 +235,7 @@ export default function UtilisateurDetail() {
           <h1 className="text-[#E6F0F2] text-[28px] font-semibold">Modifier Utilisateur</h1>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate("/parametres")}
+              onClick={() => navigate("/users")}
               className="flex items-center gap-2 h-10 px-4 rounded-md border border-black/[0.08] text-[#E6F0F2] text-sm font-semibold hover:bg-white/5 transition-colors"
             >
               Annuler

@@ -94,7 +94,7 @@ cv_scores = cross_val_score(rf_model, X_train_scaled, y_train, cv=5, n_jobs=-1)
 
 print(f"Train Accuracy: {train_accuracy*100:.2f}%")
 print(f"Test Accuracy: {test_accuracy*100:.2f}%")
-print(f"Accuracy: {test_accuracy*100:.2f}%")
+#print(f"Accuracy: {test_accuracy*100:.2f}%")
 print(f"Precision: {precision*100:.2f}%")
 print(f"Recall: {recall*100:.2f}%")
 print(f"F1: {f1*100:.2f}%")

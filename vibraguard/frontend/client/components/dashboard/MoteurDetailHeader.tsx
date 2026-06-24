@@ -1,18 +1,29 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
+import { useVibrations } from "@/hooks/use-vibrations";
+import { toast } from "sonner";
 
 export function MoteurDetailHeader({ motor }: { motor: any }) {
-  const isCritique = motor.etatLabel.includes("Critique") || motor.etatLabel.includes("Alerte");
-  
-  const handleDownloadReport = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { data: vibrations = [] } = useVibrations(motor.id);
+  const isCritique = motor.etatLabel.includes("Critique");
+
+  const lastVibration = vibrations.length > 0 ? vibrations[vibrations.length - 1] : null;
+  const formatNumber = (value?: number | null) =>
+    typeof value === "number" && Number.isFinite(value) ? value.toFixed(2) : "N/A";
+
+  const handleDownloadReport = async () => {
     const doc = new jsPDF();
 
     // Title
     doc.setFontSize(20);
     doc.setTextColor(0, 122, 61); // Green theme
     doc.text(`Rapport Technique : ${motor.id}`, 14, 22);
-    
+
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text(`Généré le : ${new Date().toLocaleString()}`, 14, 30);
@@ -26,17 +37,35 @@ export function MoteurDetailHeader({ motor }: { motor: any }) {
         ['Type', motor.type],
         ['État de Santé', motor.etatLabel],
         ['Santé (%)', `${motor.etatPct}%`],
-        ['Vibration RMS', motor.vibration],
+        ['Vibration Initiale', motor.vibration || 'N/A'],
+        ['Vibration Actuelle', lastVibration ? `${formatNumber(lastVibration.vibRms)} mm/s` : 'N/A'],
+        ['Vib Peak', lastVibration ? formatNumber(lastVibration.vibPeak) : 'N/A'],
+        ['Vib Kurtosis', lastVibration ? formatNumber(lastVibration.vibKurtosis) : 'N/A'],
+        ['Température', lastVibration ? `${formatNumber(lastVibration.temperature)} °C` : 'N/A'],
+        ['Courant RMS', lastVibration ? `${formatNumber(lastVibration.currentRms)} A` : 'N/A'],
         ['Vitesse Nominale', motor.speed || 'N/A'],
         ['Puissance', motor.power || 'N/A'],
         ['Localisation', motor.localisation || ''],
       ],
       theme: 'striped',
-      headStyles: { fillStyle: 'fill', fillColor: [0, 122, 61] }
+      headStyles: { fillColor: [0, 122, 61] }
     });
 
-    // Save PDF
-    doc.save(`Rapport_${motor.id}.pdf`);
+    try {
+      const fileContent = doc.output("dataurlstring");
+      await api.generateReport({
+        title: `Rapport ${motor.id}`,
+        type: "pdf",
+        frequency: "Ponctuel",
+        motorId: motor.id,
+        createdBy: user?.fullName,
+        fileContent,
+      });
+      toast.success("Rapport généré et stocké sur IPFS");
+      navigate("/reports");
+    } catch (error) {
+      toast.error("Erreur lors de la génération du rapport");
+    }
   };
 
   return (
@@ -73,7 +102,7 @@ export function MoteurDetailHeader({ motor }: { motor: any }) {
                 </g>
                 <defs><clipPath id="critique-clip"><rect width="12" height="12" fill="white"/></clipPath></defs>
               </svg>
-              {motor.etatLabel === "Normal" ? "Optimal" : motor.etatLabel === "Attention" ? "Alerte" : motor.etatLabel}
+              {motor.etatLabel === "Normal" ? "Optimal" : motor.etatLabel === "Attention" ? "Critique" : motor.etatLabel}
             </span>
           </div>
 
@@ -100,7 +129,7 @@ export function MoteurDetailHeader({ motor }: { motor: any }) {
         {/* Action buttons */}
         <div className="flex flex-col gap-3 shrink-0 sm:items-end">
           <Link 
-            to="/ordres-de-travail/creer"
+            to={`/ordres-de-travail/creer?motorId=${motor.id}`}
             className="flex items-center gap-2 px-5 h-11 rounded-md bg-[#007A3D] hover:bg-[#006633] transition-colors text-white text-[14px] font-semibold whitespace-nowrap"
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">

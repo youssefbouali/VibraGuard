@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { cn } from "@/lib/utils";
 import { useAlerts } from "@/hooks/use-alerts";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import { 
   Bell, 
   CheckCircle, 
@@ -21,8 +22,11 @@ type NotificationLevel = "Critique" | "Alerte" | "Attention" | "Tous";
 
 export default function Notifications() {
   const { data: alerts = [], isLoading, refetch } = useAlerts() as any;
+  const { user } = useAuth();
   const [filter, setFilter] = useState<NotificationLevel>("Tous");
   const [search, setSearch] = useState("");
+  const [notifPage, setNotifPage] = useState(1);
+  const notifsPerPage = 10;
 
   const handleMarkAllRead = async () => {
     try {
@@ -60,8 +64,13 @@ export default function Notifications() {
   const filteredAlerts = alerts.filter((a: any) => {
     const matchesFilter = filter === "Tous" || a.level === filter;
     const matchesSearch = a.message.toLowerCase().includes(search.toLowerCase());
-    return matchesFilter && matchesSearch;
+    const matchesUser = !a.recipientEmail || a.recipientEmail === user?.email;
+    return matchesFilter && matchesSearch && matchesUser;
   });
+
+  useEffect(() => {
+    setNotifPage(1);
+  }, [filter, search]);
 
   return (
     <DashboardLayout breadcrumb="Notifications">
@@ -128,7 +137,11 @@ export default function Notifications() {
               <p className="text-[#64748B] text-sm">Essayez de modifier vos filtres ou votre recherche.</p>
             </div>
           ) : (
-            filteredAlerts.map((alert: any) => (
+            <>
+            {(() => {
+              const totalNotifPages = Math.max(1, Math.ceil(filteredAlerts.length / notifsPerPage));
+              const paginatedNotifs = filteredAlerts.slice((notifPage - 1) * notifsPerPage, notifPage * notifsPerPage);
+              return paginatedNotifs.map((alert: any) => (
               <div 
                 key={alert.id}
                 onClick={() => handleMarkAsRead(alert.id, alert.status)}
@@ -201,6 +214,18 @@ export default function Notifications() {
                 )}
               </div>
             ))
+            })()}
+            {filteredAlerts.length > notifsPerPage && (
+              <div className="flex items-center justify-between pt-4 mt-2 border-t border-white/[0.05]">
+                <span className="text-[13px] text-[#64748B]">{filteredAlerts.length} notifications</span>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => setNotifPage(Math.max(1, notifPage - 1))} disabled={notifPage === 1} className="flex items-center h-7 px-3 rounded text-[12px] font-medium text-[#94A3B8] hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">Précédent</button>
+                  <span className="text-[12px] text-[#64748B]">{notifPage}/{Math.ceil(filteredAlerts.length / notifsPerPage)}</span>
+                  <button onClick={() => setNotifPage(Math.min(Math.ceil(filteredAlerts.length / notifsPerPage), notifPage + 1))} disabled={notifPage === Math.ceil(filteredAlerts.length / notifsPerPage)} className="flex items-center h-7 px-3 rounded text-[12px] font-medium text-[#94A3B8] hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">Suivant</button>
+                </div>
+              </div>
+            )}
+            </>
           )}
         </div>
       </div>

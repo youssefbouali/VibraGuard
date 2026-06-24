@@ -15,7 +15,7 @@ const features = [
       </svg>
     ),
     title: "Alertes intelligentes",
-    description: "Système de notification multi-canaux (SMS, Email, Push) avec escalade automatique basée sur la criticité.",
+    description: "Système de notification avec escalade automatique basée sur la criticité.",
   },
 ];
 

@@ -13,25 +13,35 @@ spec:
       labels:
         app: mqtt-bridge
     spec:
-      containers:
-        - name: bridge
-          image: vibraguard-ia:latest
-          imagePullPolicy: Never
-          command: ["python3", "-u", "mqtt_to_kafka.py"]
-          env:
-            - name: PYTHONUNBUFFERED
-              value: "1"
-            - name: MQTT_BROKER
-              value: "mosquitto"
-            - name: KAFKA_BROKER
-              value: "kafka:9092"
-          resources:
-            requests:
-              cpu: "500m"
-              memory: 256Mi
-            limits:
-              cpu: "2"
-              memory: 512Mi
+          containers:
+            - name: bridge
+              image: vibraguard-ia:latest
+              imagePullPolicy: Never
+              command: ["python3", "-u", "mqtt_to_kafka.py"]
+              env:
+                - name: PYTHONUNBUFFERED
+                  value: "1"
+                - name: MQTT_BROKER
+                  value: "mosquitto"
+                - name: MQTT_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: mqtt-credentials
+                      key: username
+                - name: MQTT_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: mqtt-credentials
+                      key: password
+                - name: KAFKA_BROKER
+                  value: "kafka:9092"
+              resources:
+                requests:
+                  cpu: "500m"
+                  memory: 256Mi
+                limits:
+                  cpu: "2"
+                  memory: 512Mi
 ---
 apiVersion: batch/v1
 kind: Job

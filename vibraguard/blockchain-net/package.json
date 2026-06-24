@@ -7,7 +7,9 @@
     "compile": "hardhat compile",
     "deploy": "hardhat run scripts/deploy.js --network localhost",
     "test": "hardhat test",
-    "test:coverage": "hardhat coverage"
+    "test:coverage": "hardhat coverage",
+    "backup:export": "hardhat run scripts/export-backup.js --network localhost",
+    "backup:import": "hardhat run scripts/import-backup.js --network localhost"
   },
   "keywords": [],
   "author": "",

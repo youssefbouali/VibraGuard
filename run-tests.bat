@@ -11,13 +11,15 @@ echo   VibraGuard Test Suite
 echo ============================================
 echo.
 
-REM Backend Tests
+REM Backend Tests (with JaCoCo coverage)
 if exist "vibraguard\backend" (
-    echo Running Backend Tests...
+    echo Running Backend Tests with JaCoCo Coverage...
     cd vibraguard\backend
-    call mvn test -q
+    call mvn test -q -Pcoverage
     if !errorlevel! equ 0 (
         echo Backend Tests PASSED
+        echo JaCoCo reports: vibraguard\backend\*\target\site\jacoco\index.html
+        echo Aggregated report: vibraguard\backend\target\site\jacoco\index.html
     ) else (
         echo Backend Tests FAILED
         set /a failed+=1

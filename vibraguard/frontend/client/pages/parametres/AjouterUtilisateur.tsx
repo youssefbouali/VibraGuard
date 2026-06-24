@@ -2,13 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { api } from "@/lib/api";
 
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
-const ROLES = ["Admin", "Ingénieur Data", "Technicien", "Responsable"];
+const ROLES = ["Admin", "Technicien", "Responsable"];
 const DEPARTMENTS = [
     "Direction",
-    "Analyse & ML",
+    "Maintenance Prédictive",
     "Maintenance Ligne A",
     "Maintenance Ligne B",
     "Opérations",
@@ -131,24 +132,43 @@ export default function AjouterUtilisateur() {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
-    const handleCreate = () => {
-        // In a real app, you'd validate and make an API call here
-        if (!name || !email || !role || !department) {
+    const handleCreate = async () => {
+        if (!name || !email || !role || !department || !password) {
             toast.error("Veuillez remplir tous les champs obligatoires.");
             return;
         }
+        if (password !== confirmPassword) {
+            toast.error("Les mots de passe ne correspondent pas.");
+            return;
+        }
 
-        toast.success("Utilisateur créé avec succès !");
-        setTimeout(() => {
-            navigate("/parametres");
-        }, 1000);
+        try {
+            const roleMap: Record<string, string> = {
+                "Admin": "ADMIN",
+                "Technicien": "USER",
+                "Responsable": "USER",
+            };
+            await api.registerUser({
+                fullName: name,
+                email,
+                password,
+                department,
+                role: roleMap[role] || "USER",
+                enterprise: "OCP Group",
+                phoneNumber: "",
+                status,
+            });
+            toast.success("Utilisateur créé avec succès !");
+            navigate("/users");
+        } catch (err: any) {
+            toast.error(err.message || "Erreur lors de la création de l'utilisateur");
+        }
     };
 
     return (
         <DashboardLayout
             breadcrumbItems={[
-                { label: "Paramètres", href: "/parametres" },
-                { label: "Utilisateurs", href: "/parametres" },
+                { label: "Utilisateurs", href: "/users" },
                 { label: "Ajouter un utilisateur" },
             ]}
         >
@@ -161,7 +181,7 @@ export default function AjouterUtilisateur() {
                     </div>
                     <div className="flex items-center gap-3">
                         <button
-                            onClick={() => navigate("/parametres")}
+                            onClick={() => navigate("/users")}
                             className="flex items-center gap-2 h-10 px-4 rounded-md border border-black/[0.08] text-[#E6F0F2] text-sm font-semibold hover:bg-white/5 transition-colors"
                         >
                             Annuler

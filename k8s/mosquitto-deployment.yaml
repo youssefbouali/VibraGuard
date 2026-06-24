@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mosquitto
+  namespace: vibraguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mosquitto
+  template:
+    metadata:
+      labels:
+        app: mosquitto
+    spec:
+      containers:
+        - name: mosquitto
+          image: eclipse-mosquitto:latest
+          command: ["/bin/sh", "/mosquitto/config-readonly/init.sh"]
+          ports:
+            - containerPort: 1883
+              name: mqtt
+          env:
+            - name: MQTT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mqtt-credentials
+                  key: username
+            - name: MQTT_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: mqtt-credentials
+                  key: password
+          volumeMounts:
+            - mountPath: /mosquitto/config-readonly
+              name: config
+            - mountPath: /mosquitto/config
+              name: writable-config
+      volumes:
+        - name: config
+          configMap:
+            name: mosquitto-config
+        - name: writable-config
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mosquitto
+  namespace: vibraguard
+spec:
+  type: NodePort
+  selector:
+    app: mosquitto
+  ports:
+    - port: 1883
+      targetPort: 1883
+      name: mqtt
+      nodePort: 30083

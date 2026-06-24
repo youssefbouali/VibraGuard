@@ -1,0 +1,94 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pipeline-load-test
+  namespace: vibraguard
+  labels:
+    app: pipeline-load-test
+    type: performance-test
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app: pipeline-load-test
+    spec:
+      containers:
+      - name: pipeline-load-test
+        image: alpine:3.18
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          apk add --no-cache curl python3 py3-pip
+          pip3 install paho-mqtt kafka-python --break-system-packages 2>/dev/null || pip3 install paho-mqtt kafka-python
+
+          cp /script/pipeline_load_test.py /tmp/load_test.py
+
+          export MQTT_BROKER="mosquitto"
+          export MQTT_PORT="1883"
+          export MQTT_TOPIC="vibraguard/sensors"
+          export KAFKA_BROKER="kafka:9092"
+          export KAFKA_TOPIC="sensor-data"
+          export BACKEND_URL="http://api-gateway.vibraguard.svc.cluster.local/api/v1"
+          export NUM_WORKERS=20
+          export MSGS_PER_WORKER=200
+          export TARGET_THROUGHPUT=10000
+          export TARGET_LATENCY_MS=2000
+          TOTAL_MESSAGES=$((NUM_WORKERS * MSGS_PER_WORKER))
+
+          echo "=========================================="
+          echo "  VibraGuard - Pipeline Load Test"
+          echo "  MQTT  : $MQTT_BROKER:$MQTT_PORT / $MQTT_TOPIC"
+          echo "  Kafka : $KAFKA_BROKER / $KAFKA_TOPIC"
+          echo "  API   : $BACKEND_URL"
+          echo "  Workers: $NUM_WORKERS | Messages/worker: $MSGS_PER_WORKER"
+          echo "  Messages total   : $TOTAL_MESSAGES"
+          echo "  Objectif Debit   : >= $TARGET_THROUGHPUT msg/s"
+          echo "  Objectif Latence : < $TARGET_LATENCY_MS ms"
+          echo "=========================================="
+
+          echo ""
+          echo "[1/6] Verification connectivite MQTT..."
+          for i in $(seq 1 10); do
+            python3 -c "import paho.mqtt.client as mqtt, time; c=mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION2); c.connect('$MQTT_BROKER',$MQTT_PORT,10); c.publish('vibraguard/healthcheck','ping',qos=0); c.disconnect(); print('OK')" 2>/dev/null && echo "  Broker MQTT accessible!" && break
+            echo "  Tentative $i/10 - En attente du broker MQTT..."
+            sleep 3
+          done
+
+          echo "[2/6] Verification connectivite Kafka..."
+          for i in $(seq 1 10); do
+            python3 -c "import socket; s=socket.socket(); s.settimeout(2); s.connect(('kafka',9092)); s.close(); print('OK')" 2>/dev/null && echo "  Broker Kafka accessible!" && break
+            echo "  Tentative $i/10 - En attente du broker Kafka..."
+            sleep 3
+          done
+
+          echo "[3/6] Verification backend API..."
+          for i in $(seq 1 15); do
+            curl -sf "$BACKEND_URL/iot/motors" >/dev/null 2>&1 && echo "  Backend API accessible!" && break
+            echo "  Tentative $i/15 - En attente backend..."
+            sleep 2
+          done || echo "  [WARN] Verification backend ignoree"
+
+          echo ""
+          echo "[4/6] Script Python pret dans /tmp/load_test.py"
+
+          echo "[5/6] Execution du test de charge pipeline..."
+          echo "  Workers: $NUM_WORKERS | Messages/worker: $MSGS_PER_WORKER"
+          echo ""
+          python3 /tmp/load_test.py
+        resources:
+          requests:
+            cpu: "2"
+            memory: 512Mi
+          limits:
+            cpu: "4"
+            memory: 1Gi
+        volumeMounts:
+        - mountPath: /script
+          name: test-script
+      restartPolicy: Never
+      volumes:
+      - name: test-script
+        configMap:
+          name: pipeline-load-test-script

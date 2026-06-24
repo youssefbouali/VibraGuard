@@ -67,21 +67,44 @@ export function TendanceVibratoire({ vibrations = [] }: { vibrations?: any[] }) 
           <span className="text-[16px] font-semibold text-[#EAF6F5]">Analyse {currentMetric.label} ({currentMetric.unit})</span>
         </div>
 
-        {/* Metric Selector Tabs */}
-        <div className="flex items-center bg-[#0D1A1F] rounded-md p-1 border border-white/5">
-          {METRICS.map(m => (
-            <button
-              key={m.key}
-              onClick={() => setSelectedMetric(m.key)}
-              className={`px-3 py-1 text-[11px] font-medium rounded transition-all ${
-                selectedMetric === m.key 
-                  ? "bg-[#0EA5E9] text-white shadow-lg" 
-                  : "text-[#64748B] hover:text-[#C9EDEB]"
-              }`}
-            >
-              {m.label}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          {safeVibrations.length > VISIBLE_COUNT && (
+            <div className="flex items-center gap-1 mr-1">
+              <button
+                onClick={() => setPanOffset(prev => Math.max(-maxPan, prev - 15))}
+                className="p-1 rounded hover:bg-white/10 text-[#64748B] hover:text-white transition-colors"
+                title="Défiler vers la gauche"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setPanOffset(prev => Math.min(0, prev + 15))}
+                className="p-1 rounded hover:bg-white/10 text-[#64748B] hover:text-white transition-colors"
+                title="Défiler vers la droite"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </button>
+            </div>
+          )}
+          <div className="flex items-center bg-[#0D1A1F] rounded-md p-1 border border-white/5">
+            {METRICS.map(m => (
+              <button
+                key={m.key}
+                onClick={() => setSelectedMetric(m.key)}
+                className={`px-3 py-1 text-[11px] font-medium rounded transition-all ${
+                  selectedMetric === m.key 
+                    ? "bg-[#0EA5E9] text-white shadow-lg" 
+                    : "text-[#64748B] hover:text-[#C9EDEB]"
+                }`}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -96,7 +119,7 @@ export function TendanceVibratoire({ vibrations = [] }: { vibrations?: any[] }) 
         style={{ cursor: isDragging ? "grabbing" : safeVibrations.length > VISIBLE_COUNT ? "grab" : "default" }}
       >
         <div className="relative w-full overflow-visible">
-          <svg viewBox={`-60 0 ${chartW + 80} ${chartH + 40}`} className="w-full" preserveAspectRatio="none">
+          <svg viewBox={`-60 0 ${chartW + 80} ${chartH + 40}`} className="w-full" preserveAspectRatio="none" style={{ pointerEvents: 'none' }}>
             {/* Grid lines and Y-axis labels */}
             {[0, 0.25, 0.5, 0.75, 1].map((frac) => {
               const y = frac * chartH;

@@ -11,6 +11,23 @@ coverage:
     - 70
     - 100
 
+  status:
+    project:
+      default:
+        target: 80%
+        threshold: 2%
+      backend:
+        target: 80%
+        flags:
+          - backend
+      frontend:
+        target: 70%
+        flags:
+          - frontend
+    patch:
+      default:
+        target: 75%
+
 ignore:
   - "node_modules"
   - "dist"
@@ -22,18 +39,32 @@ ignore:
   - "**/*.test.js"
   - "**/*.spec.ts"
   - "**/*.spec.js"
+  - "**/entity/**"
+  - "**/repository/**"
+  - "**/dto/**"
+  - "**/config/**"
+  - "**/*Application*"
+  - "**/model/**"
 
 comment:
-  layout: "reach,diff,files,footer"
+  layout: "reach,diff,files,fixed-footer,flags"
   behavior: default
   require_changes: false
 
 flags:
   backend:
     carryforward: true
+    paths:
+      - vibraguard/backend/
   frontend:
     carryforward: true
+    paths:
+      - vibraguard/frontend/
   blockchain:
     carryforward: true
+    paths:
+      - vibraguard/blockchain-net/
   python:
     carryforward: true
+    paths:
+      - vibraguard/ia_model/

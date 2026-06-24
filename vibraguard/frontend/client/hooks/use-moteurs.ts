@@ -13,6 +13,7 @@ export interface Moteur {
   derniereAlerte: string;
   derniereAlerteType?: string;
   alerteRef?: string;
+  actif?: boolean;
   // Legacy fields if still used
   etatLabel?: string;
   vibration?: string;
@@ -75,7 +76,7 @@ export function useMoteurs() {
             // Match by motorId or if message contains motorId
             if (m.id === data.motorId || (data.message && data.message.includes(m.id))) {
               const newHealth = data.priority === "high" ? 45 : 65;
-              const newLabel = data.priority === "high" ? "Critique" : "Alerte";
+              const newLabel = "Critique";
               const newColor = data.priority === "high" ? "#EF4444" : "#F59E0B";
               
               return { 

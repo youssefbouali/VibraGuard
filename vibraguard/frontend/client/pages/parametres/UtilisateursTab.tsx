@@ -19,11 +19,11 @@ interface User {
 const ITEMS_PER_PAGE = 6;
 
 export function UtilisateursTab() {
-  const ROLES = ["Tous les rôles", "Admin", "Ingénieur Data", "Technicien", "Responsable"];
+  const ROLES = ["Tous les rôles", "Admin", "Technicien", "Responsable"];
   const DEPARTMENTS = [
     "Tous les départements",
     "Direction",
-    "Analyse & ML",
+    "Maintenance Prédictive",
     "Maintenance Ligne A",
     "Maintenance Ligne B",
     "Opérations",
@@ -35,11 +35,6 @@ export function UtilisateursTab() {
       border: "border-[rgba(217,63,63,0.30)]",
       bg: "bg-[rgba(217,63,63,0.15)]",
       text: "text-[#D93F3F]",
-    },
-    "Ingénieur Data": {
-      border: "border-[rgba(12,108,242,0.30)]",
-      bg: "bg-[rgba(12,108,242,0.15)]",
-      text: "text-[#0C6CF2]",
     },
     Technicien: {
       border: "border-[rgba(207,239,241,0.30)]",
@@ -79,18 +74,6 @@ export function UtilisateursTab() {
         <span className="text-xs font-semibold text-[#CFEFF1]">Inactif</span>
       </span>
     );
-  };
-
-  const LastConnectionCell = ({ value }: { value: string }) => {
-    if (value === "En ligne") {
-      return (
-        <span className="flex items-center gap-2 text-sm font-medium text-[#007A3D]">
-          <span className="w-[6px] h-[6px] rounded-full bg-[#007A3D] shadow-[0_0_6px_0_#007A3D] flex-shrink-0" />
-          En ligne
-        </span>
-      );
-    }
-    return <span className="text-sm text-[#CFEFF1]">{value}</span>;
   };
 
   const getInitials = (name: string) => {
@@ -360,7 +343,7 @@ export function UtilisateursTab() {
       {/* Add user button */}
       <div>
         <button
-          onClick={() => navigate("/parametres/utilisateurs/ajouter")}
+          onClick={() => navigate("/users/ajouter")}
           className="flex items-center gap-2 h-11 px-5 rounded-md bg-[#007A3D] text-white text-sm font-semibold hover:bg-[#006633] transition-colors"
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -393,12 +376,12 @@ export function UtilisateursTab() {
       {/* Table */}
       <div className="rounded-lg border border-black/[0.08] bg-[#08151A] overflow-hidden">
         {/* Table header */}
-        <div className="hidden md:grid grid-cols-[2fr_1.2fr_1.4fr_1fr_1.3fr_auto] bg-[#091519] border-b border-black/[0.08]">
-          {["Utilisateur", "Rôle", "Département", "Statut", "Dernière connexion", "Actions"].map(
+        <div className="hidden md:grid grid-cols-[2fr_1.2fr_1.4fr_1fr_auto] bg-[#091519] border-b border-black/[0.08]">
+          {["Utilisateur", "Rôle", "Département", "Statut", "Actions"].map(
             (col, i) => (
               <div
                 key={col}
-                className={`px-6 py-4 text-[13px] font-medium text-[#CFEFF1] ${i === 5 ? "text-right pr-6" : ""}`}
+                className={`px-6 py-4 text-[13px] font-medium text-[#CFEFF1] ${i === 4 ? "text-right pr-6" : ""}`}
               >
                 {col}
               </div>
@@ -418,7 +401,7 @@ export function UtilisateursTab() {
               {paginatedUsers.map((u, idx) => (
                 <div
                   key={u.id}
-                  className={`flex flex-col md:grid md:grid-cols-[2fr_1.2fr_1.4fr_1fr_1.3fr_auto] items-start md:items-center gap-3 md:gap-0 px-6 py-4 ${idx < paginatedUsers.length - 1 ? "border-b border-black/[0.08]" : ""
+                  className={`flex flex-col md:grid md:grid-cols-[2fr_1.2fr_1.4fr_1fr_auto] items-start md:items-center gap-3 md:gap-0 px-6 py-4 ${idx < paginatedUsers.length - 1 ? "border-b border-black/[0.08]" : ""
                     } hover:bg-white/[0.02] transition-colors`}
                 >
               {/* User info */}
@@ -448,16 +431,11 @@ export function UtilisateursTab() {
               <div>
                 <StatusBadge status={u.status} />
               </div>
- 
-              {/* Last connection */}
-              <div>
-                <LastConnectionCell value={u.lastConnection} />
-              </div>
- 
+
               {/* Actions */}
                 <div className="flex items-center gap-2 justify-end">
                   <button
-                    onClick={() => navigate(`/parametres/utilisateurs/${u.id}`)}
+                    onClick={() => navigate(`/users/${u.id}`)}
                     className="flex items-center justify-center w-8 h-8 rounded hover:bg-white/5 transition-colors"
                   >
                     <EditIcon />

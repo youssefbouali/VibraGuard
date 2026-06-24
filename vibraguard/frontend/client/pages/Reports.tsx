@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { api } from "@/lib/api";
+import { api, apiRequest } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
-import { Copy, Download, Trash2, Plus, Calendar, User, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Copy, Download, Plus, Calendar, User, ShieldCheck, ShieldAlert } from "lucide-react";
 import { verifyReportIntegrity, type ReportIntegrityResult } from "@/lib/blockchain";
 
 interface Report {
@@ -41,9 +41,23 @@ interface MotorReport {
   zone?: string;
   localisation?: string;
   puissance?: string;
-  etatSante?: string;
-  vibrationRMS?: number;
+  // API fields (from /api/v1/iot/motors)
+  etatLabel?: string;    // actual field returned: e.g. "85% Normal"
+  etatSante?: string;    // alias if ever mapped
+  vibration?: string | number; // actual field returned: e.g. "1.23"
+  vibrationRMS?: number; // alias if ever mapped
   derniereAlerte?: string;
+}
+
+interface VibrationData {
+  motorId?: string;
+  time: string;
+  vibRms: number;
+  vibPeak: number;
+  vibKurtosis: number;
+  temperature: number;
+  currentRms: number;
+  isAnomalous: boolean;
 }
 
 interface WorkOrderReport {
@@ -178,6 +192,8 @@ export default function Reports() {
   const [formData, setFormData] = useState({
     type: "pdf",
   });
+  const [reportPage, setReportPage] = useState(1);
+  const reportsPerPage = 10;
 
   useEffect(() => {
     loadReports();
@@ -200,18 +216,33 @@ export default function Reports() {
     try {
       setGenerating(true);
 
-      const [kpis, motors, alerts, workOrders, mtbfBySite] = await Promise.all([
+      const [kpis, motors, alerts, workOrders, mtbfBySite, allVibrations] = await Promise.all([
         api.getBIKPIs() as Promise<ReportKpis>,
         api.getMotors() as Promise<MotorReport[]>,
         api.getAlerts() as Promise<AlertReport[]>,
         api.getWorkOrders() as Promise<WorkOrderReport[]>,
         api.getMtbfBySite() as Promise<SiteMetric[]>,
+        apiRequest<VibrationData[]>("GET", "/api/v1/iot/motors/vibrations"),
       ]);
 
       const safeMotors = Array.isArray(motors) ? motors : [];
       const safeAlerts = Array.isArray(alerts) ? alerts : [];
       const safeWorkOrders = Array.isArray(workOrders) ? workOrders : [];
       const safeMtbfBySite = Array.isArray(mtbfBySite) ? mtbfBySite : [];
+      const safeVibrations = Array.isArray(allVibrations) ? allVibrations : [];
+
+      // Build map of motorId -> latest vibration (by time)
+      const latestVibrationByMotor = new Map<string, VibrationData>();
+      for (const v of safeVibrations) {
+        if (!v.motorId) continue;
+        const existing = latestVibrationByMotor.get(v.motorId);
+        if (!existing || new Date(v.time).getTime() > new Date(existing.time).getTime()) {
+          latestVibrationByMotor.set(v.motorId, v);
+        }
+      }
+
+      const formatNumber = (value?: number | null) =>
+        typeof value === "number" && Number.isFinite(value) ? value.toFixed(2) : "N/A";
 
       const mtbfValue = formatHours(kpis?.mtbf);
       const mttrValue = formatHours(kpis?.mttr);
@@ -225,7 +256,7 @@ export default function Reports() {
         const { jsPDF } = await import("jspdf");
         const { default: autoTable } = await import("jspdf-autotable");
 
-        const doc = new jsPDF() as any;
+        const doc = new jsPDF("landscape") as any;
         doc.setFontSize(22);
         doc.setTextColor(0, 122, 61);
         doc.text("VibraGuard - Rapport", 14, 22);
@@ -236,12 +267,12 @@ export default function Reports() {
 
         autoTable(doc, {
           startY: 45,
-          head: [["Paramètre", "Valeur", "Tendance"]],
+          head: [["Paramètre", "Valeur"]],
           body: [
-            ["MTBF", mtbfValue, "Live"],
-            ["MTTR", mttrValue, "Live"],
-            ["Disponibilité", availabilityValue, "Live"],
-            ["Coût Maintenance", maintenanceCostValue, "Live"],
+            ["MTBF", mtbfValue],
+            ["MTTR", mttrValue],
+            ["Disponibilité", availabilityValue],
+            ["Coût Maintenance", maintenanceCostValue],
           ],
           theme: "grid",
           headStyles: { fillColor: [0, 122, 61] },
@@ -277,21 +308,51 @@ export default function Reports() {
 
         autoTable(doc, {
           startY: (doc as any).lastAutoTable.finalY + 18,
-          head: [["ID", "Type", "Zone", "Localisation", "Etat", "Vibration", "Dernière alerte"]],
+          head: [[
+            "ID",
+            "Type",
+            "Zone",
+            "Localisation",
+            "Etat",
+            "Vibration Initiale",
+            "Vibration Actuelle",
+            "Vib Peak",
+            "Vib Kurtosis",
+            "Température",
+            "Courant RMS",
+          ]],
           body: safeMotors.length > 0
-            ? safeMotors.map((motor) => [
-                motor.id || "N/A",
-                motor.type || "N/A",
-                motor.zone || "N/A",
-                motor.localisation || "N/A",
-                motor.etatSante || "N/A",
-                formatMotorVibration(motor.vibrationRMS),
-                motor.derniereAlerte || "Aucune",
-              ])
-            : [["Aucun moteur", "-", "-", "-", "-", "-", "-"]],
+            ? safeMotors.map((motor) => {
+                // API returns etatLabel (e.g. "85% Normal") and vibration (string e.g. "1.23")
+                const etat = motor.etatSante || motor.etatLabel || "Normal";
+                const initialVibNum =
+                  typeof motor.vibrationRMS === "number" && Number.isFinite(motor.vibrationRMS)
+                    ? motor.vibrationRMS
+                    : typeof motor.vibration === "string"
+                    ? parseFloat(motor.vibration)
+                    : typeof motor.vibration === "number"
+                    ? motor.vibration
+                    : NaN;
+                const initialVibStr = Number.isFinite(initialVibNum) ? `${initialVibNum.toFixed(2)} mm/s` : "N/A";
+                const lastVib = latestVibrationByMotor.get(motor.id);
+                return [
+                  motor.id || "-",
+                  motor.type || "-",
+                  motor.zone || motor.site || "-",
+                  motor.localisation || "-",
+                  etat,
+                  initialVibStr,
+                  lastVib ? `${formatNumber(lastVib.vibRms)} mm/s` : "N/A",
+                  lastVib ? formatNumber(lastVib.vibPeak) : "N/A",
+                  lastVib ? formatNumber(lastVib.vibKurtosis) : "N/A",
+                  lastVib ? `${formatNumber(lastVib.temperature)} °C` : "N/A",
+                  lastVib ? `${formatNumber(lastVib.currentRms)} A` : "N/A",
+                ];
+              })
+            : [["Aucun moteur", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-"]],
           theme: "grid",
           headStyles: { fillColor: [0, 122, 61] },
-          styles: { fontSize: 8, cellPadding: 2 },
+          styles: { fontSize: 7, cellPadding: 1.5 },
         });
 
         fileContent = doc.output("dataurlstring");
@@ -299,10 +360,12 @@ export default function Reports() {
 
       const newReport = await api.generateReport({
         ...formData,
+        createdBy: user?.fullName,
         fileContent,
       });
 
       setReports([newReport, ...reports]);
+      setReportPage(1);
       setShowGenerateModal(false);
       toast.success("Rapport généré et stocké sur IPFS");
     } catch (error) {
@@ -362,19 +425,6 @@ export default function Reports() {
         toast.error("Échec de la copie");
       }
       document.body.removeChild(textArea);
-    }
-  };
-
-  const handleDelete = async (reportId: string) => {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer ce rapport ?")) return;
-
-    try {
-      await api.deleteReport(reportId);
-      setReports(reports.filter((r) => r.id !== reportId));
-      toast.success("Rapport supprimé");
-    } catch (error) {
-      console.error(error);
-      toast.error("Erreur lors de la suppression");
     }
   };
 
@@ -465,6 +515,9 @@ export default function Reports() {
     });
   };
 
+  const totalReportPages = Math.max(1, Math.ceil(reports.length / reportsPerPage));
+  const paginatedReports = reports.slice((reportPage - 1) * reportsPerPage, reportPage * reportsPerPage);
+
   return (
     <DashboardLayout breadcrumb="Rapports">
       <div className="flex flex-col flex-1 min-w-0">
@@ -533,8 +586,9 @@ export default function Reports() {
                 </p>
               </div>
             ) : (
+              <>
               <div className="grid gap-4">
-                {reports.map((report) => (
+                {paginatedReports.map((report) => (
                   <div
                     key={report.id}
                     className="flex items-center gap-4 p-4 rounded-lg border border-white/10 bg-white/[0.02] hover:bg-white/5 transition-colors"
@@ -632,17 +686,21 @@ export default function Reports() {
                           <ShieldCheck className="w-4 h-4" />
                         )}
                       </button>
-                      <button
-                        onClick={() => handleDelete(report.id)}
-                        className="flex items-center justify-center w-10 h-10 rounded-md hover:bg-red-500/10 transition-colors text-[#98A6A8] hover:text-red-500"
-                        title="Supprimer le rapport"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
                     </div>
                   </div>
                 ))}
               </div>
+              {reports.length > reportsPerPage && (
+                <div className="flex items-center justify-between pt-4 mt-4 border-t border-white/[0.05]">
+                  <span className="text-[13px] text-[#64748B]">{reports.length} rapports</span>
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => setReportPage(Math.max(1, reportPage - 1))} disabled={reportPage === 1} className="flex items-center h-7 px-3 rounded text-[12px] font-medium text-[#94A3B8] hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">Précédent</button>
+                    <span className="text-[12px] text-[#64748B]">{reportPage}/{totalReportPages}</span>
+                    <button onClick={() => setReportPage(Math.min(totalReportPages, reportPage + 1))} disabled={reportPage === totalReportPages} className="flex items-center h-7 px-3 rounded text-[12px] font-medium text-[#94A3B8] hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">Suivant</button>
+                  </div>
+                </div>
+              )}
+              </>
             )}
           </div>
         </div>

@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mosquitto-config
+  namespace: vibraguard
+data:
+  mosquitto.conf: |
+    listener 1883
+    allow_anonymous false
+    password_file /mosquitto/config/passwd
+    max_queued_messages 100000
+    max_inflight_messages 500
+    sys_interval 0
+  init.sh: |
+    #!/bin/sh
+    cp /mosquitto/config-readonly/mosquitto.conf /mosquitto/config/mosquitto.conf
+    rm -f /mosquitto/config/passwd
+    mosquitto_passwd -c -b /mosquitto/config/passwd "$MQTT_USER" "$MQTT_PASS"
+    chown mosquitto:mosquitto /mosquitto/config/passwd /mosquitto/config/mosquitto.conf
+    chmod 0700 /mosquitto/config/passwd
+    exec mosquitto -c /mosquitto/config/mosquitto.conf

@@ -20,7 +20,7 @@ echo "🚀 Starting VibraGuard Platform Deployment from: $ROOT_DIR"
 # 1. Verify/Start Minikube
 if ! minikube status > /dev/null 2>&1; then
     echo "📦 Starting Minikube..."
-    minikube start --driver=docker --cpus=4 --memory=8192mb --ports=30008:30008,30007:30007,30083:30083,30090:30090,30092:30092
+    minikube start --driver=docker --cpus=6 --memory=12288mb --ports=30008:30008,30007:30007,30083:30083,30090:30090,30092:30092
 else
     echo "✅ Minikube is already running."
 fi
@@ -45,8 +45,11 @@ else
     mvn clean package -DskipTests
 fi
 
-cd api-gateway
-docker build -t vibraguard-backend:latest .
+# Build all microservice Docker images
+for SERVICE in api-gateway auth-service motor-service alert-service workorder-service inventory-service blockchain-service bi-service; do
+    cd "$ROOT_DIR/vibraguard/backend/$SERVICE"
+    docker build -t vibraguard-$SERVICE:latest .
+done
 
 echo "🏗️  Building Blockchain Component (Dockerized)..."
 cd "$ROOT_DIR/vibraguard/blockchain-net"
@@ -78,10 +81,14 @@ else
     echo "✅ Oracle DB is already running."
 fi
 
-# Distributed Services
-helm upgrade --install mosquitto k8s-at-home/mosquitto -n $NAMESPACE \
-    --set service.main.type=NodePort \
-    --set "service.main.ports.mqtt.nodePort=30083"
+# MQTT Credentials
+kubectl apply -f "$ROOT_DIR/k8s/mqtt-credentials.yaml" -n $NAMESPACE
+
+# Mosquitto Config
+kubectl apply -f "$ROOT_DIR/k8s/mosquitto-config.yaml" -n $NAMESPACE
+
+# Mosquitto MQTT Broker with authentication
+kubectl apply -f "$ROOT_DIR/k8s/mosquitto-deployment.yaml" -n $NAMESPACE
 
 # Kafka: Custom Kubernetes Container Built from Apache Archive
 echo "📦 Building Custom Kafka Docker Image..."
@@ -150,29 +157,98 @@ kubectl create configmap workorder-registry-config \
     --from-literal=CONTRACT_ADDRESS="0x0000000000000000000000000000000000000000" \
     -n $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
 
-# Generate/Update manifests (kept for portability matching your all.sh logic)
-cat <<EOF > k8s/backend-deployment.yaml
+# Generate microservice manifests
+cat <<EOF > k8s/api-gateway.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backend
+  name: api-gateway
   namespace: $NAMESPACE
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: backend
+      app: api-gateway
   template:
     metadata:
       labels:
-        app: backend
+        app: api-gateway
     spec:
       containers:
-        - name: backend
-          image: vibraguard-backend:latest
+        - name: api-gateway
+          image: vibraguard-api-gateway:latest
           imagePullPolicy: Never
           ports:
             - containerPort: 8080
+          env:
+            - name: AUTH_SERVICE_URL
+              value: "http://auth-service:8081"
+            - name: MOTOR_SERVICE_URL
+              value: "http://motor-service:8082"
+            - name: ALERT_SERVICE_URL
+              value: "http://alert-service:8083"
+            - name: WORKORDER_SERVICE_URL
+              value: "http://workorder-service:8084"
+            - name: INVENTORY_SERVICE_URL
+              value: "http://inventory-service:8085"
+            - name: BLOCKCHAIN_SERVICE_URL
+              value: "http://blockchain-service:8086"
+            - name: BI_SERVICE_URL
+              value: "http://bi-service:8088"
+            - name: MOTOR_SERVICE_HOST
+              value: "motor-service"
+            - name: ALERT_SERVICE_HOST
+              value: "alert-service"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: $NAMESPACE
+spec:
+  type: NodePort
+  selector:
+    app: api-gateway
+  ports:
+    - port: 80
+      targetPort: 8080
+      nodePort: 30007
+EOF
+
+for SVC in auth-service motor-service alert-service workorder-service inventory-service blockchain-service bi-service; do
+    PORT=""
+    case $SVC in
+        auth-service) PORT=8081 ;;
+        motor-service) PORT=8082 ;;
+        alert-service) PORT=8083 ;;
+        workorder-service) PORT=8084 ;;
+        inventory-service) PORT=8085 ;;
+        blockchain-service) PORT=8086 ;;
+        bi-service) PORT=8088 ;;
+    esac
+
+    cat <<EOF > k8s/$SVC.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: $SVC
+  namespace: $NAMESPACE
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: $SVC
+  template:
+    metadata:
+      labels:
+        app: $SVC
+    spec:
+      containers:
+        - name: $SVC
+          image: vibraguard-$SVC:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: $PORT
           env:
             - name: DB_URL
               value: "jdbc:oracle:thin:@oracle-db.vibraguard.svc.cluster.local:1521:xe"
@@ -186,23 +262,20 @@ spec:
                 secretKeyRef:
                   name: oracle-db-credentials
                   key: password
-EOF
-
-cat <<EOF > k8s/backend-service.yaml
+---
 apiVersion: v1
 kind: Service
 metadata:
-  name: backend
+  name: $SVC
   namespace: $NAMESPACE
 spec:
-  type: NodePort
   selector:
-    app: backend
+    app: $SVC
   ports:
-    - port: 80
-      targetPort: 8080
-      nodePort: 30007
+    - port: $PORT
+      targetPort: $PORT
 EOF
+done
 
 cat <<EOF > k8s/frontend-deployment.yaml
 apiVersion: apps/v1
@@ -228,7 +301,7 @@ spec:
             - containerPort: 3000
           env:
             - name: BACKEND_URL
-              value: "http://backend"
+              value: "http://api-gateway"
             - name: VITE_WORKORDER_REGISTRY_ADDRESS
               valueFrom:
                 configMapKeyRef:
@@ -277,7 +350,7 @@ spec:
             - containerPort: 8545
 EOF
 
-cat <<EOF > k8s/blockchain-service.yaml
+cat <<EOF > k8s/blockchain-net-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -290,13 +363,6 @@ spec:
     - port: 8545
       targetPort: 8545
 EOF
-
-
-
-
-
-
-
 
 
 
@@ -409,6 +475,16 @@ spec:
                   value: "1"
                 - name: MQTT_BROKER
                   value: "mosquitto"
+                - name: MQTT_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: mqtt-credentials
+                      key: username
+                - name: MQTT_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: mqtt-credentials
+                      key: password
                 - name: KAFKA_BROKER
                   value: "kafka:9092"
               resources:
@@ -545,20 +621,13 @@ kubectl get svc -n $NAMESPACE
 cd "$ROOT_DIR/vibraguard/frontend"
 docker build -t vibraguard-frontend:latest .
 
-#docker run -t \
-#	  --user root \
-#	  -v $(pwd):/zap/wrk \
-#	  zaproxy/zap-stable zap-baseline.py \
-#	  -t http://$(minikube ip):30008 \
-#	  -r zap-report.html
-
 MINIKUBE_IP=$(minikube ip)
 echo ""
 echo "Access points:"
-echo "Frontend: http://$MINIKUBE_IP:30008"
-echo "Backend:  http://$MINIKUBE_IP:30007"
-echo "Prometheus: http://127.0.0.1:30090 or http://<host-ip>:30090"
-#echo "IPFS API: http://$MINIKUBE_IP:$(kubectl get svc -n $NAMESPACE ipfs -o jsonpath='{.spec.ports[0].nodePort}')"
+echo "Frontend:    http://$MINIKUBE_IP:30008"
+echo "API Gateway: http://$MINIKUBE_IP:30007"
+echo "Prometheus:  http://127.0.0.1:30090"
+echo "Grafana:     http://127.0.0.1:30092"
 echo "======================================================"
 
 # Safety: Ensure monitoring UIs are accessible externally (in case minikube wasn't restarted)
