@@ -1,0 +1,126 @@
+{
+  "title": "VibraGuard - Kubernetes Infrastructure",
+  "uid": "vibraguard-k8s-infra",
+  "tags": ["vibraguard", "kubernetes", "infrastructure"],
+  "schemaVersion": 36,
+  "version": 1,
+  "timezone": "browser",
+  "panels": [
+    {
+      "title": "Pods Overview",
+      "type": "row",
+      "gridPos": {"x": 0, "y": 0, "w": 24, "h": 1}
+    },
+    {
+      "title": "Pod CPU Usage",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 7, "w": 12, "h": 8},
+      "targets": [
+        {"expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"vibraguard\",container!=\"POD\"}[1m])) by (pod)", "legendFormat": "{{pod}}"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cores",
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 0.8},
+              {"color": "red", "value": 1.5}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Pod Memory Usage",
+      "type": "timeseries",
+      "gridPos": {"x": 12, "y": 7, "w": 12, "h": 8},
+      "targets": [
+        {"expr": "sum(container_memory_working_set_bytes{namespace=\"vibraguard\",container!=\"POD\"}) by (pod)", "legendFormat": "{{pod}}"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 524288000},
+              {"color": "red", "value": 1073741824}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Node Memory",
+      "type": "timeseries",
+      "gridPos": {"x": 12, "y": 16, "w": 12, "h": 8},
+      "targets": [
+        {"expr": "1 - sum(node_memory_MemAvailable_bytes) / sum(node_memory_MemTotal_bytes)", "legendFormat": "Memory Util"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 0.8},
+              {"color": "red", "value": 0.95}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Pod Status",
+      "type": "stat",
+      "gridPos": {"x": 0, "y": 24, "w": 8, "h": 6},
+      "targets": [
+        {"expr": "kube_pod_status_phase{namespace=\"vibraguard\",phase=\"Running\"}", "legendFormat": "Running", "instant": true},
+        {"expr": "kube_pod_status_phase{namespace=\"vibraguard\",phase=\"Pending\"}", "legendFormat": "Pending", "instant": true},
+        {"expr": "kube_pod_status_phase{namespace=\"vibraguard\",phase=\"Failed\"}", "legendFormat": "Failed", "instant": true},
+        {"expr": "kube_pod_status_phase{namespace=\"vibraguard\",phase=\"Succeeded\"}", "legendFormat": "Succeeded", "instant": true}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 0},
+              {"color": "red", "value": 0}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Pod Restarts",
+      "type": "stat",
+      "gridPos": {"x": 8, "y": 24, "w": 8, "h": 6},
+      "targets": [
+        {"expr": "sum(kube_pod_container_status_restarts_total{namespace=\"vibraguard\"}) by (pod)", "legendFormat": "{{pod}}", "instant": true}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 3},
+              {"color": "red", "value": 10}
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

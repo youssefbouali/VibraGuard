@@ -36,6 +36,8 @@ public class SecurityConfig {
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/forgot-password", "/api/v1/auth/reset-password").permitAll()
                         .pathMatchers(HttpMethod.POST, "/api/v1/iot/motors/vibrations").permitAll()
+                        .pathMatchers(HttpMethod.PUT, "/api/v1/iot/motors/**").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/api/v1/iot/motors/**").permitAll()
                         .pathMatchers(HttpMethod.POST, "/api/v1/ml/alerts").permitAll()
                         .pathMatchers(HttpMethod.POST, "/api/v1/bi/kpis/upsert").permitAll()
                         .pathMatchers("/ws/**").permitAll()

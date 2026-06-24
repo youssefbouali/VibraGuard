@@ -87,6 +87,28 @@ export function VibrationChart() {
         </div>
         
         <div className="flex items-center gap-2">
+          {vibrations.length > VISIBLE_COUNT && (
+            <div className="flex items-center gap-1 mr-1">
+              <button
+                onClick={() => setPanOffset(prev => Math.max(-maxPan, prev - 15))}
+                className="p-1 rounded hover:bg-white/10 text-[#64748B] hover:text-white transition-colors"
+                title="Défiler vers la gauche"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setPanOffset(prev => Math.min(0, prev + 15))}
+                className="p-1 rounded hover:bg-white/10 text-[#64748B] hover:text-white transition-colors"
+                title="Défiler vers la droite"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </button>
+            </div>
+          )}
           <Select value={selectedMetric} onValueChange={setSelectedMetric}>
             <SelectTrigger className="w-[120px] h-8 bg-white/5 border-white/10 text-white text-[11px]">
               <SelectValue placeholder="Métrique" />
@@ -128,7 +150,7 @@ export function VibrationChart() {
             <span className="text-white">Chargement...</span>
           </div>
         )}
-        <svg viewBox="0 0 606 356" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+        <svg viewBox="0 0 606 356" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full" preserveAspectRatio="xMidYMid meet" style={{ pointerEvents: 'none' }}>
           <g clipPath="url(#vib-clip)">
             {/* Grid lines */}
             <line x1="40.35" y1="59.3" x2="606" y2="59.3" stroke="white" strokeOpacity="0.05" strokeWidth="1.2"/>

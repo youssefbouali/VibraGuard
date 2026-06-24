@@ -1,16 +1,10 @@
 import paho.mqtt.client as mqtt
 from kafka import KafkaProducer
-from queue import SimpleQueue
-
-
 import json
 import os
 import threading
 import time
-
 import orjson
-
-
 
 MQTT_BROKER = os.getenv("MQTT_BROKER", "mosquitto")
 MQTT_PORT = int(os.getenv("MQTT_PORT", 1883))
@@ -21,9 +15,10 @@ MQTT_PASS = os.getenv("MQTT_PASS", "VibraGuard2024!")
 KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka:9092")
 KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "sensor-data")
 
-producer = None
-msg_queue = SimpleQueue()
 sent_count = 0
+sent_lock = threading.Lock()
+
+producer = None
 
 def get_producer():
     global producer
@@ -32,9 +27,11 @@ def get_producer():
             producer = KafkaProducer(
                 bootstrap_servers=[KAFKA_BROKER],
                 value_serializer=orjson.dumps,
-                acks=0,
-                linger_ms=10,
-                batch_size=65536,
+                acks=1,
+                retries=10,
+                enable_idempotence=False,
+                linger_ms=5,
+                batch_size=262144,
                 compression_type=None,
                 max_in_flight_requests_per_connection=10,
             )
@@ -53,32 +50,28 @@ def init_producer_with_retry():
 
 init_producer_with_retry()
 
-def kafka_sender():
-    global sent_count
-    prod = get_producer()
-    if not prod:
-        return
-    while True:
-        data = msg_queue.get()
-        try:
-            prod.send(KAFKA_TOPIC, data)
-            sent_count += 1
-        except Exception as e:
-            print(f"Kafka send error: {e}")
-
-sender_thread = threading.Thread(target=kafka_sender, daemon=True)
-sender_thread.start()
-
 def on_connect(client, userdata, flags, rc, properties=None):
     print(f"Connected to MQTT with result code {rc}")
     client.subscribe(MQTT_TOPIC, qos=1)
 
 def on_message(client, userdata, msg):
+    global sent_count
+    prod = get_producer()
+    if not prod:
+        return
     try:
         data = json.loads(msg.payload.decode())
-        msg_queue.put_nowait(data)
+        data['_ts_bridge'] = time.time()
+        future = prod.send(KAFKA_TOPIC, data)
+        future.add_callback(lambda _: increment_sent())
+        future.add_errback(lambda e: print(f"Kafka send error: {e}"))
     except Exception as e:
         print(f"Error processing message: {e}")
+
+def increment_sent():
+    global sent_count
+    with sent_lock:
+        sent_count += 1
 
 client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 client.on_connect = on_connect
@@ -91,7 +84,8 @@ try:
     print(f"Bridge running. Ctrl+C to stop.")
     while True:
         time.sleep(60)
-        print(f"Stats: {sent_count} msgs sent to Kafka, queue size: {msg_queue.qsize()}")
+        with sent_lock:
+            print(f"Stats: {sent_count} msgs sent to Kafka")
 except KeyboardInterrupt:
     print("Stopping...")
 finally:

@@ -18,9 +18,18 @@ Run specific test:
 mvn test -Dtest=ApiGatewayApplicationTests
 ```
 
-Generate coverage report:
+Generate coverage report (with JaCoCo):
 ```bash
-mvn test jacoco:report
+# Run tests with coverage profile
+mvn test -Pcoverage
+
+# View individual reports: <service>/target/site/jacoco/index.html
+# View aggregated report: target/site/jacoco/index.html
+```
+
+Run coverage check (enforces 80% line, 70% branch):
+```bash
+mvn verify -Pcoverage
 ```
 
 ### Frontend (React/Vitest)

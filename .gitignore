@@ -9,6 +9,7 @@ surefire-reports/
 jacoco.exec
 vibraguard/kafka_*
 vibraguard/backup_*
+vibraguard/backend/jmeter/*
 
 # IDEs
 .idea/

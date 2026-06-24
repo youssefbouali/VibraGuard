@@ -10,7 +10,7 @@ Usage:
   python scripts/db_tool.py --export --mongodb-only
   python scripts/db_tool.py --export --oracle-only --output-dir ./backup_20260619
 
-  python scripts/db_tool.py --import --dump-dir ./backup_20260621_140022
+  python scripts/db_tool.py --import --dump-dir ./backup_20260622_120808
   python scripts/db_tool.py --import --blockchain-only --dump-dir ./backup_20260621_140022
   python scripts/db_tool.py --import --no-blockchain --dump-dir ./backup_20260619
   python scripts/db_tool.py --import --mongodb-only --dump-dir ./backup_20260619

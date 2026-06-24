@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: vibraguard-frontend:v2
+          image: vibraguard-frontend:latest
           imagePullPolicy: Never
           ports:
             - containerPort: 3000

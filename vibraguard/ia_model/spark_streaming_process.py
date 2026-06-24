@@ -199,7 +199,7 @@ df_with_predictions = df_parsed.withColumn(
 query = df_with_predictions.writeStream \
     .foreachBatch(write_to_backend) \
     .outputMode("append") \
-    .trigger(processingTime='2 seconds') \
+    .trigger(processingTime='1 second') \
     .option("checkpointLocation", "/tmp/spark-checkpoints") \
     .start()
 

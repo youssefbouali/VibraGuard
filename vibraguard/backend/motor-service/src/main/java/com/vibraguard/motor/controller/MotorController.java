@@ -4,7 +4,9 @@ import com.vibraguard.motor.entity.*;
 import com.vibraguard.motor.repository.*;
 import com.vibraguard.motor.service.VibrationStreamService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -115,7 +117,8 @@ public class MotorController {
     @GetMapping("/{id}")
     public Mono<Motor> getMotorById(@PathVariable("id") String id) {
         return Mono.fromCallable(() -> {
-            Motor m = motorRepository.findById(id).orElseThrow();
+            Motor m = motorRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Motor not found: " + id));
             List<VibrationData> allVibs = vibrationRepository.findByMotorId(id);
             List<VibrationData> motorVibs = allVibs.size() > 100
                 ? allVibs.subList(allVibs.size() - 100, allVibs.size())
