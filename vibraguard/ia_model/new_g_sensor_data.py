@@ -7,7 +7,7 @@ import random
 # Configuration
 np.random.seed(42)
 SAMPLING_RATE = 1000  # Hz pour vibration
-NUM_SAMPLES = 9000  # Nombre d'échantillons à générer
+NUM_SAMPLES = 1000  # Nombre d'échantillons à générer
 NORMAL_RATIO = 0.50  # 50% de données normales (équilibré)
 NOISE_RATE = 0.079  # Taux de bruit d'étiquetage
 ANOMALY_TYPES = ['DESALIGNEMENT', 'DESEQUILIBRE', 'DEFAUT_ROULEMENT', 'SURCHARGE_ELECTRIQUE', 'SURCHAUFFE']

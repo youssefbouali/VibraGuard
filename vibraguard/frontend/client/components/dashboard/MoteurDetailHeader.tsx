@@ -37,7 +37,7 @@ export function MoteurDetailHeader({ motor }: { motor: any }) {
         ['Type', motor.type],
         ['État de Santé', motor.etatLabel],
         ['Santé (%)', `${motor.etatPct}%`],
-        ['Vibration Initiale', motor.vibration || 'N/A'],
+        ['Vibration', motor.vibration || 'N/A'],
         ['Vibration Actuelle', lastVibration ? `${formatNumber(lastVibration.vibRms)} mm/s` : 'N/A'],
         ['Vib Peak', lastVibration ? formatNumber(lastVibration.vibPeak) : 'N/A'],
         ['Vib Kurtosis', lastVibration ? formatNumber(lastVibration.vibKurtosis) : 'N/A'],

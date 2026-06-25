@@ -75,7 +75,7 @@ export function MoteursTable() {
               <th className="pb-3 text-[12px] font-medium text-[#64748B] border-b border-white/[0.05] pr-4">Moteur</th>
               <th className="pb-3 text-[12px] font-medium text-[#64748B] border-b border-white/[0.05] pr-4">Type</th>
               <th className="pb-3 text-[12px] font-medium text-[#64748B] border-b border-white/[0.05] pr-4">État Santé</th>
-              <th className="pb-3 text-[12px] font-medium text-[#64748B] border-b border-white/[0.05] pr-4">Vibration Initiale</th>
+              <th className="pb-3 text-[12px] font-medium text-[#64748B] border-b border-white/[0.05] pr-4">Vibration</th>
               <th className="pb-3 text-[12px] font-medium text-[#64748B] border-b border-white/[0.05]">Action</th>
             </tr>
           </thead>

@@ -696,7 +696,12 @@ kubectl expose deployment ipfs \
 
 # MongoDB deployment is now managed via k8s manifests
 
-
+# AI Pipeline (MQTT Bridge + Spark Streaming)
+#echo "Déploiement de l'AI Pipeline (Bridge & Spark)..."
+#kubectl apply -f k8s/mqtt-credentials.yaml -n vibraguard 2>/dev/null || true
+#kubectl apply -f k8s/mosquitto-config.yaml -n vibraguard 2>/dev/null || true
+#kubectl apply -f k8s/mosquitto-deployment.yaml -n vibraguard 2>/dev/null || true
+#kubectl apply -f k8s/ai-pipeline.yaml -n vibraguard 2>/dev/null || true
 
 # Elasticsearch
 echo "Déploiement d'Elasticsearch..."
@@ -742,4 +747,4 @@ echo "🔌 Ensuring port-forwarding for external access..."
 kubectl port-forward --address 0.0.0.0 svc/prometheus-server -n vibraguard 30090:80 > /dev/null 2>&1 &
 kubectl port-forward --address 0.0.0.0 svc/jaeger-query -n vibraguard 30086:16686 > /dev/null 2>&1 &
 kubectl port-forward --address 0.0.0.0 svc/kibana -n vibraguard 30001:5601 > /dev/null 2>&1 &
-echo "✅ All monitoring ports (30090, 30086, 30001) are now forwarded."
+echo "✅ All monitoring ports (30090, 30086, 30001) are now forwarded."

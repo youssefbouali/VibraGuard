@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isToday } from "date-fns";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -9,13 +9,15 @@ export function cn(...inputs: ClassValue[]) {
 export function formatTime(timeStr: string) {
   if (!timeStr) return "";
   try {
-    // Standard ISO parse
-    return format(parseISO(timeStr), "HH:mm:ss");
+    const date = parseISO(timeStr);
+    if (isToday(date)) {
+      return format(date, "HH:mm:ss");
+    } else {
+      return format(date, "dd MMM yyyy, HH:mm:ss");
+    }
   } catch (e) {
-    // Fallback for non-standard or overly precise strings
     const parts = timeStr.split('T');
     if (parts.length > 1) {
-      // Extract HH:mm:ss
       return parts[1].substring(0, 8);
     }
     return timeStr;
