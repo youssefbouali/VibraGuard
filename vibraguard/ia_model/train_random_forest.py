@@ -5,7 +5,6 @@ import os
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
-from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import label_binarize
 from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
@@ -55,42 +54,45 @@ X_test = pd.DataFrame(imputer.transform(X_test), columns=feature_columns)
 X_train = X_train.clip(lower=X_train.quantile(0.01), upper=X_train.quantile(0.99), axis=1)
 X_test = X_test.clip(lower=X_train.quantile(0.01), upper=X_train.quantile(0.99), axis=1)
 
-# Normalisation des features
-scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled = scaler.transform(X_test)
-
 # Entrainement du Random Forest
 print("Training Random Forest...")
+#print("Original classes sizes:")
+#print(y_train.value_counts())
+
+from sklearn.utils.class_weight import compute_class_weight
+classes = np.unique(y_train)
+weights = compute_class_weight('balanced', classes=classes, y=y_train)
+print("\nClass weights applied for balancing:")
+for c, w in zip(classes, weights):
+    print(f"Class {c}: {w:.4f}")
 rf_model = RandomForestClassifier(
     n_estimators=100,
     max_depth=10,
     min_samples_split=5,
     min_samples_leaf=2,
     random_state=42,
-    n_jobs=-1
+    n_jobs=-1,
+    class_weight="balanced"
 )
-rf_model.fit(X_train_scaled, y_train)
+rf_model.fit(X_train, y_train)
 print("Model trained!")
 
-# Sauvegarde du modele et du scaler
-print("Saving model and scaler...")
+# Sauvegarde du modele
+print("Saving model...")
 joblib.dump(rf_model, 'vibraguard_rf_model.joblib')
-joblib.dump(scaler, 'vibraguard_scaler.joblib')
 print("vibraguard_rf_model.joblib saved")
-print("vibraguard_scaler.joblib saved")
 
 # Predictions et evaluation
-y_train_pred = rf_model.predict(X_train_scaled)
+y_train_pred = rf_model.predict(X_train)
 train_accuracy = accuracy_score(y_train, y_train_pred)
-y_pred = rf_model.predict(X_test_scaled)
+y_pred = rf_model.predict(X_test)
 test_accuracy = accuracy_score(y_test, y_pred)
 precision = precision_score(y_test, y_pred, average='weighted')
 recall = recall_score(y_test, y_pred, average='weighted')
 f1 = f1_score(y_test, y_pred, average='weighted')
 
 # Cross-Validation
-cv_scores = cross_val_score(rf_model, X_train_scaled, y_train, cv=5, n_jobs=-1)
+cv_scores = cross_val_score(rf_model, X_train, y_train, cv=5, n_jobs=-1)
 
 print(f"Train Accuracy: {train_accuracy*100:.2f}%")
 print(f"Test Accuracy: {test_accuracy*100:.2f}%")
@@ -153,7 +155,7 @@ y_test_bin = label_binarize(y_test, classes=rf_model.classes_)
 n_classes = y_test_bin.shape[1]
 
 # Get probability predictions
-y_score = rf_model.predict_proba(X_test_scaled)
+y_score = rf_model.predict_proba(X_test)
 
 # Compute ROC curve and ROC area for each class
 fpr = dict()

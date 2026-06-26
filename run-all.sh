@@ -20,7 +20,8 @@ echo "🚀 Starting VibraGuard Platform Deployment from: $ROOT_DIR"
 # 1. Verify/Start Minikube
 if ! minikube status > /dev/null 2>&1; then
     echo "📦 Starting Minikube..."
-    minikube start --driver=docker --cpus=6 --memory=12288mb --ports=30008:30008,30007:30007,30083:30083,30090:30090,30092:30092
+    minikube start --driver=docker --cpus=4 --memory=8192mb --ports=30008:30008,30007:30007,30083:30083,30090:30090,30092:30092
+    #minikube start --driver=docker --cpus=6 --memory=12288mb --ports=30008:30008,30007:30007,30083:30083,30090:30090,30092:30092
 else
     echo "✅ Minikube is already running."
 fi

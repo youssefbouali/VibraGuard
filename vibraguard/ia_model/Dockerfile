@@ -17,6 +17,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY train_random_forest.py .
 COPY sensor_data_training.csv .
 COPY spark_streaming_process.py .
+COPY spark_streaming_direct.py .
+COPY mllib_spark_streaming_process.py .
+COPY mllib_train_random_forest.py .
 COPY mqtt_to_kafka.py .
 COPY mqtt_sensor_simulator.py .
 COPY vibraguard_rf_model.joblib .
