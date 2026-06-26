@@ -17,6 +17,7 @@ MQTT_USER = os.getenv("MQTT_USER", "vibraguard")
 MQTT_PASS = os.getenv("MQTT_PASS", "VibraGuard2024!")
 
 
+
 # ==========================================
 # DATA GENERATION
 # ==========================================
