@@ -13,3 +13,5 @@ if [ "$LOCAL" != "$REMOTE" ]; then
 
     minikube delete && sh run-all.sh 
 fi
+
+#
